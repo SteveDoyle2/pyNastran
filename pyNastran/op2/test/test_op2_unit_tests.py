@@ -1054,32 +1054,6 @@ class TestNX(Tester):
             binary_debug=True, quiet=True, stop_on_failure=True,
             dev=False, xref_safe=False, post=None, load_as_h5=False)
 
-    def test_nx_cbush_psd(self):
-        log = get_logger(level='warning')
-        folder = MODEL_PATH / 'bugs' / 'random_cbush_example'
-        op2_filename = folder / 'cbush_example.op2'
-        bdf_filename = folder / 'cbush_example.bdf'
-        op2_model, unused_is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
-            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
-            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
-            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
-            binary_debug=True, quiet=True, stop_on_failure=True,
-            dev=False, xref_safe=False, post=None, load_as_h5=False)
-
-    def test_nx_cbeam_psd(self):
-        log = get_logger(level='warning')
-        folder = MODEL_PATH / 'bugs' / 'random_cbeam_example'
-        op2_filename = folder / 'cbeam_example.op2'
-        bdf_filename = folder / 'cbeam_example.bdf'
-        op2_model, unused_is_passed = run_op2(
-            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
-            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
-            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
-            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
-            binary_debug=True, quiet=True, stop_on_failure=True,
-            dev=False, xref_safe=False, post=None, load_as_h5=False)
-
     def test_nx_rotor_1(self):
         log = get_logger(level='warning')
         folder = MODEL_PATH / 'nx' / 'rotor'
@@ -1703,6 +1677,152 @@ class TestMSC(Tester):
         os.remove(f06_filename)
 
 
+class TestOP2Random(Tester):
+
+    def test_nx_cbush_psd(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'bugs' / 'random_cbush_example'
+        op2_filename = folder / 'cbush_example.op2'
+        bdf_filename = folder / 'cbush_example.bdf'
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_nx_cbeam_psd(self):
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'bugs' / 'random_cbeam_example'
+        op2_filename = folder / 'cbeam_example.op2'
+        bdf_filename = folder / 'cbeam_example.bdf'
+        op2_model, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=IS_H5PY, is_mag_phase=False, is_sort2=False,
+            is_nx=True, delete_f06=True, build_pandas=True, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+    def test_bdf_op2_other_01(self):
+        """checks ofprand1.bdf which tests nonlinear elements"""
+        log = get_logger(level='warning')
+        #bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
+        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
+        #op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
+
+        #bdf_filename = MODEL_PATH / 'other' / 'ofprand1.bdf'
+        op2_filename = MODEL_PATH / 'other' / 'ofprand1.op2'
+        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
+        #diff_cards2 = list(set(diff_cards))
+        #diff_cards2.sort()
+        #assert len(diff_cards2) == 0, diff_cards2
+
+        include_results = None
+        #include_results = 'ato.displacements'
+        #include_results = 'psd.cquad8_force'
+        #include_results = 'ato.cbend_force'
+        op2, is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=False, xref_safe=True,
+            write_f06=True, write_op2=False,
+            is_mag_phase=False,
+            is_sort2=False, is_nx=None, delete_f06=True,
+            subcases=None,
+            exclude_results=None,
+            include_results=include_results,
+            short_stats=False,
+            compare=True, debug=False, binary_debug=True,
+            quiet=True, stop_on_skip=False,
+            stop_on_failure=True, dev=False,
+            build_pandas=False, log=log)  # TODO: enable pandas...
+        if IS_PANDAS:
+            op2.op2_results.stress.cbush_stress[1].build_dataframe()
+        #op2 = read_op2_geom(op2_filename, debug=False)
+        #op2.write_f06(f06_filename)
+        #os.remove(f06_filename)
+
+    def test_random_ctria3(self):
+        """runs a random test"""
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'random'
+        op2_filename = folder / 'random_test_bar_plus_tri.op2'
+        f06_filename = folder / 'random_test_bar_plus_tri.test_op2.f06'
+        op2 = read_op2_geom(op2_filename, debug=False, log=log)
+
+        op2res = op2.op2_results
+        assert len(op2res.psd.displacements) == 1
+        assert len(op2res.rms.displacements) == 1
+        assert len(op2res.crm.displacements) == 1
+        assert len(op2res.no.displacements) == 1
+        assert len(op2res.psd.accelerations) == 1
+        assert len(op2res.rms.accelerations) == 1
+        assert len(op2res.crm.accelerations) == 1
+        assert len(op2res.no.accelerations) == 1
+        assert len(op2res.crm.cbar_force) == 1, len(op2res.crm.cbar_force)
+        assert len(op2res.psd.cbar_force) == 1
+        assert len(op2res.rms.cbar_force) == 1
+        assert len(op2res.no.cbar_force) == 1
+        assert len(op2res.crm.cquad4_force) == 1
+        assert len(op2res.psd.cquad4_force) == 1
+        assert len(op2res.rms.cquad4_force) == 1
+        assert len(op2res.no.cquad4_force) == 1
+        assert len(op2res.crm.ctria3_force) == 1
+        assert len(op2res.psd.ctria3_force) == 1
+        assert len(op2res.rms.ctria3_force) == 1
+        assert len(op2res.no.ctria3_force) == 1
+        assert len(op2res.no.cbar_force) == 1
+        assert len(op2res.no.cbar_force) == 1
+        assert len(op2res.no.cbar_force) == 1
+        assert len(op2.eigenvalues) == 1
+        assert 'BHH' in op2.matrices
+        assert 'KHH' in op2.matrices
+
+        #psd.displacements_psd[1]
+        #rms.displacements[1]
+        #crm.displacements[1]
+        #no.displacements[1]
+        #psd.accelerations[1]
+        #rms.accelerations[1]
+        #crm.accelerations[1]
+        #no.accelerations[1]
+        #crm.cbar_force[1]
+        #psd.cbar_force[1]
+        #rms.cbar_force[1]
+        #no.cbar_force[1]
+        #eigenvalues[u'RANDOM TEST']
+        #crm.cquad4_force[1]
+        #psd.cquad4_force[1]
+        #rms.cquad4_force[1]
+        #no.cquad4_force[1]
+        #crm.ctria3_force[1]
+        #psd.ctria3_force[1]
+        #rms.ctria3_force[1]
+        #no.ctria3_force[1]
+        #Matrix['BHH'];   shape=(20, 20);
+        # type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
+        #Matrix['KHH'];   shape=(20, 20);
+        # type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
+
+        op2.write_f06(f06_filename)
+        os.remove(f06_filename)
+
+    def test_random_ctria3_oesrmx1(self):
+        """runs a random test"""
+        log = get_logger(level='warning')
+        folder = MODEL_PATH / 'random'
+        op2_filename = folder / 'rms_tri_oesrmx1.op2'
+        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
+        #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
+        unused_op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
+            write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
+            is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
+            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
+            binary_debug=True, quiet=True, stop_on_failure=True,
+            dev=False, xref_safe=False, post=None, load_as_h5=False)
+
+
 class TestOP2Main(Tester):
     """various OP2 tests"""
     # def _spike(self):
@@ -2219,43 +2339,6 @@ class TestOP2Main(Tester):
                 quiet=True,
                 stop_on_failure=True, dev=False,
                 build_pandas=True, log=log)
-
-    def test_bdf_op2_other_01(self):
-        """checks ofprand1.bdf which tests nonlinear elements"""
-        log = get_logger(level='warning')
-        #bdf_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.bdf'
-        #f06_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.test_op2.f06'
-        #op2_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.op2'
-
-        #bdf_filename = MODEL_PATH / 'other' / 'ofprand1.bdf'
-        op2_filename = MODEL_PATH / 'other' / 'ofprand1.op2'
-        #fem1, fem2, diff_cards = self.run_bdf('', bdf_filename, log=log)
-        #diff_cards2 = list(set(diff_cards))
-        #diff_cards2.sort()
-        #assert len(diff_cards2) == 0, diff_cards2
-
-        include_results = None
-        #include_results = 'ato.displacements'
-        #include_results = 'psd.cquad8_force'
-        #include_results = 'ato.cbend_force'
-        op2, is_passed = run_op2(
-            op2_filename, make_geom=True, write_bdf=True, read_bdf=False, xref_safe=True,
-            write_f06=True, write_op2=False,
-            is_mag_phase=False,
-            is_sort2=False, is_nx=None, delete_f06=True,
-            subcases=None,
-            exclude_results=None,
-            include_results=include_results,
-            short_stats=False,
-            compare=True, debug=False, binary_debug=True,
-            quiet=True, stop_on_skip=False,
-            stop_on_failure=True, dev=False,
-            build_pandas=False, log=log)  # TODO: enable pandas...
-        if IS_PANDAS:
-            op2.op2_results.stress.cbush_stress[1].build_dataframe()
-        #op2 = read_op2_geom(op2_filename, debug=False)
-        #op2.write_f06(f06_filename)
-        #os.remove(f06_filename)
 
     def test_bdf_op2_other_02(self):
         """
@@ -4734,86 +4817,6 @@ class TestOP2Main(Tester):
         eigenvector = model.eigenvectors[isubcase]
         #print(eigenvector)
         assert len(eigenvector.modes) == 2, eigenvector.modes
-
-    def test_random_ctria3(self):
-        """runs a random test"""
-        log = get_logger(level='warning')
-        folder = MODEL_PATH / 'random'
-        op2_filename = folder / 'random_test_bar_plus_tri.op2'
-        f06_filename = folder / 'random_test_bar_plus_tri.test_op2.f06'
-        op2 = read_op2_geom(op2_filename, debug=False, log=log)
-
-        op2res = op2.op2_results
-        assert len(op2res.psd.displacements) == 1
-        assert len(op2res.rms.displacements) == 1
-        assert len(op2res.crm.displacements) == 1
-        assert len(op2res.no.displacements) == 1
-        assert len(op2res.psd.accelerations) == 1
-        assert len(op2res.rms.accelerations) == 1
-        assert len(op2res.crm.accelerations) == 1
-        assert len(op2res.no.accelerations) == 1
-        assert len(op2res.crm.cbar_force) == 1, len(op2res.crm.cbar_force)
-        assert len(op2res.psd.cbar_force) == 1
-        assert len(op2res.rms.cbar_force) == 1
-        assert len(op2res.no.cbar_force) == 1
-        assert len(op2res.crm.cquad4_force) == 1
-        assert len(op2res.psd.cquad4_force) == 1
-        assert len(op2res.rms.cquad4_force) == 1
-        assert len(op2res.no.cquad4_force) == 1
-        assert len(op2res.crm.ctria3_force) == 1
-        assert len(op2res.psd.ctria3_force) == 1
-        assert len(op2res.rms.ctria3_force) == 1
-        assert len(op2res.no.ctria3_force) == 1
-        assert len(op2res.no.cbar_force) == 1
-        assert len(op2res.no.cbar_force) == 1
-        assert len(op2res.no.cbar_force) == 1
-        assert len(op2.eigenvalues) == 1
-        assert 'BHH' in op2.matrices
-        assert 'KHH' in op2.matrices
-
-        #psd.displacements_psd[1]
-        #rms.displacements[1]
-        #crm.displacements[1]
-        #no.displacements[1]
-        #psd.accelerations[1]
-        #rms.accelerations[1]
-        #crm.accelerations[1]
-        #no.accelerations[1]
-        #crm.cbar_force[1]
-        #psd.cbar_force[1]
-        #rms.cbar_force[1]
-        #no.cbar_force[1]
-        #eigenvalues[u'RANDOM TEST']
-        #crm.cquad4_force[1]
-        #psd.cquad4_force[1]
-        #rms.cquad4_force[1]
-        #no.cquad4_force[1]
-        #crm.ctria3_force[1]
-        #psd.ctria3_force[1]
-        #rms.ctria3_force[1]
-        #no.ctria3_force[1]
-        #Matrix['BHH'];   shape=(20, 20);
-        # type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
-        #Matrix['KHH'];   shape=(20, 20);
-        # type=numpy.matrixlib.defmatrix.matrix; dtype=float64; desc=symmetric
-
-        op2.write_f06(f06_filename)
-        os.remove(f06_filename)
-
-    def test_random_ctria3_oesrmx1(self):
-        """runs a random test"""
-        log = get_logger(level='warning')
-        folder = MODEL_PATH / 'random'
-        op2_filename = folder / 'rms_tri_oesrmx1.op2'
-        #bdf_filename = folder / 'rms_tri_oesrmx1.bdf'
-        #unused_op2 = read_op2_geom(op2_filename, debug=False, log=log)
-        unused_op2, unused_is_passed = run_op2(
-            op2_filename, make_geom=True, write_bdf=True, read_bdf=None, write_f06=True,
-            write_op2=False, write_hdf5=False, is_mag_phase=False, is_sort2=False,
-            is_nx=None, delete_f06=False, build_pandas=False, subcases=None,
-            exclude_results=None, short_stats=False, compare=True, debug=False, log=log,
-            binary_debug=True, quiet=True, stop_on_failure=True,
-            dev=False, xref_safe=False, post=None, load_as_h5=False)
 
     def test_aero_cpmopt(self):
         """test optimization with multiple GEOM1 tables and multiple CSTM tables"""

@@ -604,26 +604,12 @@ def oes_cquad4_144(op2: OP2, data: bytes, ndata: int, dt, is_magnitude_phase: bo
                                       nelements, nnodes_all-1,
                                       dt, is_magnitude_phase)
 
-    # elif result_type == 2 and num_wide == (2 + 9*nnodes_all):  # random
-    elif num_wide == (2 + 9 * nnodes_all) and op2.table_name in {  # complex
-        b'OESPSD1', b'OESPSD2',
-        b'OSTRPSD1', b'OSTRPSD2', }:
-        # 47 = 2 + 9*5
-        if data is None:
-            return ndata, None, None
-
-        obj = None
-        n = cquad4_real_vm_17b(
-            op2, data, obj,
-            nelements, nnodes_all)
-        return ndata, None, None
-
     elif num_wide == (2 + 9 * nnodes_all) and op2.table_name in {  # random
         # TODO: ATO is transient; others are random, so may need to split...
-        b'OESATO1', b'OESNO1', b'OESCRM1', b'OESRMS1',
-        b'OESATO2', b'OESNO2', b'OESCRM2',
-        b'OSTRATO1', b'OSTRNO1', b'OSTRCRM1', b'OSTRRMS1',
-        b'OSTRATO2', b'OSTRNO2', b'OSTRCRM2'}:
+        b'OESATO1', b'OESNO1', b'OESCRM1', b'OESRMS1', b'OESPSD1',
+        b'OESATO2', b'OESNO2', b'OESCRM2', b'OESPSD2',
+        b'OSTRATO1', b'OSTRNO1', b'OSTRCRM1', b'OSTRRMS1', b'OSTRPSD1',
+        b'OSTRATO2', b'OSTRNO2', b'OSTRCRM2', b'OSTRPSD2'}:
         # 47 - CQUAD8-64
         # 38 - CTRIAR-70
         ntotal = num_wide * 4 * factor

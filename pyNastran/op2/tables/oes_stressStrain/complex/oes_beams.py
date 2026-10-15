@@ -1,3 +1,4 @@
+import copy
 import inspect
 from struct import Struct, pack
 
@@ -7,7 +8,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object,
+    slice_eids_by_index)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 from pyNastran.op2.writer.utils import op2_stringify
 
@@ -29,6 +31,18 @@ class ComplexBeamArray(OES_Object):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.sd = obj.sd[irow]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
@@ -280,7 +294,7 @@ class ComplexBeamArray(OES_Object):
 
         # returns unique sorted set
         inonzero = np.union1d(ielem_sdzero, isd_nonzero)
-        self.nelements = len(inonzero)
+        self.nelements = len(ueids)  # unique elements, not stations
         self.element_node = self.element_node[inonzero, :]
         self.sd = self.sd[inonzero]
         self.data = self.data[:, inonzero, :]
@@ -388,7 +402,7 @@ class ComplexBeamArray(OES_Object):
         nelements = self.nelements
         ntimes = self.ntimes
         #ntotal = self.ntotal
-        nelements2 = self.element_node.shape[0]
+        nelements2 = len(np.unique(self.element_node[:, 0]))
         assert nelements == nelements2, f'nelements={nelements} nelements2={nelements2}'
         msg = []
 

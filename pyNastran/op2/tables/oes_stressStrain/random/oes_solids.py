@@ -1,3 +1,4 @@
+import copy
 # pylint: disable=C0301,R0913,R0914,R0904,C0111,R0201,R0902
 from itertools import count
 
@@ -5,7 +6,7 @@ import numpy as np
 from numpy import zeros, where, searchsorted
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_eids_by_index
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
@@ -19,6 +20,18 @@ class RandomSolidArray(OES_Object):
         #self.ntimes = 0  # or frequency/mode
         #self.ntotal = 0
         self.nelements = 0  # result specific
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.element_cid = obj.element_cid[np.isin(obj.element_cid[:, 0], eids), :]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def is_real(self) -> bool:
@@ -53,10 +66,17 @@ class RandomSolidArray(OES_Object):
             nelements = self.nelements
             ntotal = self.ntotal
         else:
-            nelements = self.ntimes
-            ntimes = self.nelements
-            ntotal = self.ntotal
-            dtype = self._get_analysis_code_dtype()
+            # SORT2 (e.g., OESPSD2): 1 record per element; 1 row per freq
+            #  - len(_ntotals) = nelements
+            #  - _ntotals[0] = nfreq * (nnodes+1)  (_data_factor=nnodes+1)
+            # store it as SORT1 (ntimes, nelements*(nnodes+1), 6)
+            nnodes_centroid = self.nnodes_per_element + 1
+            nelements = len(self._ntotals)
+            ntimes = self._ntotals[0] // nnodes_centroid
+            ntotal = nelements * nnodes_centroid
+            self.ntimes = ntimes
+            self.nelements = nelements
+            self.ntotal = ntotal
 
         self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
 
@@ -146,6 +166,34 @@ class RandomSolidArray(OES_Object):
                 if i > 0:
                     raise ValueError(msg)
         return True
+
+    def finalize(self):
+        """flips the SORT2 flags to SORT1; the data is already stored as SORT1"""
+        if self.is_sort1:
+            return
+        self.set_as_sort1()
+
+    def add_sort2(self, dt, eid, cid, inode, node_id,
+                  oxx, oyy, ozz, txy, tyz, txz):
+        """
+        SORT2 has 1 record per element (self.itime is the element counter)
+        with nnodes+1 (centroid first) rows for every time/frequency
+        (self.itotal counts the entries within the record).
+        """
+        assert self.is_sort2, self
+        assert isinstance(eid, integer_types) and eid > 0, 'dt=%s eid=%s' % (dt, eid)
+        nnodes_centroid = self.nnodes_per_element + 1
+        ielement = self.itime
+        itime, inode2 = divmod(self.itotal, nnodes_centroid)
+        assert inode == inode2, (inode, inode2)
+        jnode = ielement * nnodes_centroid + inode
+        self._times[itime] = dt
+        if itime == 0:
+            self.element_node[jnode, :] = [eid, node_id]  # 0 is center
+            if inode == 0:
+                self.element_cid[ielement, :] = [eid, cid]
+        self.data[itime, jnode, :] = [oxx, oyy, ozz, txy, tyz, txz]
+        self.itotal += 1
 
     def add_node_sort1(self, dt, eid, unused_inode, node_id, oxx, oyy, ozz, txy, tyz, txz):
         self.data[self.itime, self.itotal, :] = [oxx, oyy, ozz, txy, tyz, txz]
@@ -299,6 +347,8 @@ class RandomSolidStrainArray(RandomSolidArray, StrainObject):
 
 def _get_solid_msgs(self):
     assert self.table_name in ['OESATO1', 'OSTRATO1',
+                               'OESPSD1', 'OSTRPSD1',
+                               'OESCRM1', 'OSTRCRM1',
                                'OESRMS1', 'OSTRRMS1',
                                'OESNO1', 'OSTRNO1'], self.table_name
     if self.is_stress:

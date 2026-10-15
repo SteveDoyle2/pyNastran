@@ -768,9 +768,13 @@ def get_sort_element_sizes(self, debug: bool=False) -> tuple[int, int, int]:
             print(f'SORT1 {self.__class__.__name__} ntimes={ntimes} nelements={nelements}')
     elif self.is_sort2:
         # flip this to sort1
+        # SORT2 has 1 table3/table4 pair per element and 1 row per time:
+        #  - ntimes (counter)  = number of elements (records)
+        #  - ntotal (counter)  = number of times (rows per record)
+        # for 1 row per element, ntotal (rows in data) = nelements
         ntimes = self.ntotal
         nelements = self.ntimes
-        ntotal = self.nelements
+        ntotal = nelements
         #nx = ntimes
         #ny = nnodes
         if debug:

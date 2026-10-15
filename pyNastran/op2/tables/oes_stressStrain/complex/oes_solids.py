@@ -1,10 +1,11 @@
+import copy
 #pylint: disable=C0301,C0111
 import numpy as np
 from numpy import zeros, concatenate
 
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_eids_by_index
 from pyNastran.op2.op2_interface.write_utils import to_column_bytes, get_complex_fdtype
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
@@ -25,6 +26,18 @@ class ComplexSolidArray(OES_Object):
             pass
         else:
             raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.element_cid = obj.element_cid[np.isin(obj.element_cid[:, 0], eids), :]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     def h5_table_dict(self) -> dict:
         neid = len(self.element_cid)

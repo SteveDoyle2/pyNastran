@@ -1,8 +1,10 @@
+import copy
 import numpy as np
 from numpy import zeros, searchsorted, ravel
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object,
+    slice_eids_by_index)
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 from pyNastran.utils.numpy_utils import integer_types
@@ -30,6 +32,15 @@ class RandomBarArray(OES_Object):
             #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def nnodes_per_element(self) -> int:
@@ -90,6 +101,7 @@ class RandomBarArray(OES_Object):
 
         self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(nelements, dtype=idtype)
+        self.nelements = nelements
 
         #[s1a, s2a, s3a, s4a, axial,
         # s1b, s2b, s3b, s4b]

@@ -1,8 +1,10 @@
+import copy
 import numpy as np
 from numpy import zeros, searchsorted, allclose
 
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object,
+    slice_eids_by_index)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header #, get_key0
@@ -14,6 +16,15 @@ class RandomRodArray(OES_Object):
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         self.nelements = 0  # result specific
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def nnodes_per_element(self) -> int:
@@ -69,7 +80,7 @@ class RandomRodArray(OES_Object):
     def build_data(self, ntimes, nelements, dtype, idtype='int32', fdtype='float32'):
         """actually performs the build step"""
         #self.ntimes = ntimes
-        #self.nelements = nelements
+        self.nelements = nelements
         self._times = np.zeros(ntimes, dtype=self.analysis_fmt)
         self.element = np.zeros(nelements, dtype=idtype)
 

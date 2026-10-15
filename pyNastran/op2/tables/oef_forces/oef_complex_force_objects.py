@@ -1,3 +1,4 @@
+import copy
 import inspect
 from struct import Struct, pack
 from abc import abstractmethod
@@ -13,7 +14,8 @@ from pyNastran.op2.result_objects.utils_pandas import (
     build_pandas_transient_elements, build_pandas_transient_element_node)
 from pyNastran.op2.tables.oef_forces.oef_force_objects import ForceObject, oef_complex_data_code
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    oes_complex_data_code, set_element_case, set_freq_case, set_complex_modes_case)
+    oes_complex_data_code, set_element_case, set_freq_case, set_complex_modes_case,
+    slice_eids_by_index)
 from pyNastran.op2.op2_interface.write_utils import (
     view_dtype,  # get_title_subtitle_label,
     view_idtype_as_fdtype,
@@ -75,6 +77,15 @@ class ComplexRodForceArray(ComplexForceObject):
             pass
         else:
             raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
@@ -423,6 +434,15 @@ class ComplexCShearForceArray(BaseElement):
         # else:
         #     raise NotImplementedError('SORT2')
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
+
     @property
     def is_real(self) -> bool:
         return False
@@ -732,6 +752,15 @@ class ComplexSpringDamperForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
@@ -1121,6 +1150,15 @@ class ComplexViscForceArray(BaseElement):
         else:
             raise NotImplementedError('SORT2')
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
+
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
         h5_table_dict = {
@@ -1365,6 +1403,15 @@ class ComplexPlateForceArray(ComplexForceObject):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     def h5_table_dict(self) -> dict:
         from tables import Int64Col, Float64Col
@@ -1794,6 +1841,18 @@ class ComplexPlate2ForceArray(ComplexForceObject):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.element = obj.element[np.isin(obj.element, eids)]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     def h5_table_dict(self) -> dict:
         neid = len(self.element)
@@ -2391,6 +2450,15 @@ class ComplexCBarWeldForceArray(ComplexForceObject):
         #else:
             #raise NotImplementedError('SORT2')
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
+
     @property
     def headers(self) -> list[str]:
         headers = ['bending_moment_1a', 'bending_moment_2a',
@@ -2792,6 +2860,18 @@ class ComplexCBeamForceArray(ComplexForceObject):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.element = obj.element[irow]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def headers(self) -> list[str]:
@@ -3206,6 +3286,17 @@ class ComplexCBendForceArray(BaseElement):  # 69-CBEND
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def is_real(self) -> bool:
@@ -3833,6 +3924,15 @@ class ComplexForceMomentArray(ComplexForceObject):
         #self.ntotal = 0
         self.itime = 0
         self.nelements = 0  # result specific
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def headers(self) -> list[str]:

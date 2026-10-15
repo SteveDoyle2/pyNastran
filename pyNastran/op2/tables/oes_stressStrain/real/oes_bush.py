@@ -234,12 +234,17 @@ class RealBushArray(OES_Object):
         msg += self.get_data_code()
         return msg
 
+    def finalize(self):
+        """nelements is the number of unique elements"""
+        OES_Object.finalize(self)
+        self.nelements = len(np.unique(self.element))
+
     def slice_by_element_id(self, eids: np.ndarray, assume_exists: bool=False, inplace: bool=False):
         eids, ieid, neid2 = slice_eids_by_index(self.element, eids, assume_exists)
         obj = self if inplace else copy.deepcopy(self)
-        self.element = obj.element[ieid]
-        self.data = obj.data[:, ieid, :]
-        self.nelements = len(ieid)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = len(ieid)
         return obj
 
     def get_element_index(self, eids):

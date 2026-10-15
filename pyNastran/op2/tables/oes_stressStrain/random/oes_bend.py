@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from numpy import zeros
 
@@ -5,7 +6,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object,
+    slice_eids_by_index)
 from pyNastran.f06.f06_formatting import write_floats_13e, _eigenvalue_header
 
 
@@ -31,6 +33,18 @@ class RandomBendArray(OES_Object):
             #self.add = self.add_sort2
             #self.add_new_eid = self.add_new_eid_sort2
             #self.addNewNode = self.addNewNodeSort2
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.angle = obj.angle[irow]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def is_real(self) -> bool:
@@ -92,6 +106,7 @@ class RandomBendArray(OES_Object):
         #self.element = self.element[i]
         self.element_node = self.element_node[i, :]
         self.data = self.data[:, i, :]
+        self.nelements = len(np.unique(self.element_node[:, 0]))
 
     def build_dataframe(self):
         """creates a pandas dataframe"""

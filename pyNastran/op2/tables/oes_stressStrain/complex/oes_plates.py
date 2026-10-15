@@ -1,3 +1,4 @@
+import copy
 import inspect
 from struct import Struct, pack
 import warnings
@@ -9,7 +10,8 @@ from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
     StressObject, StrainObject, OES_Object, oes_complex_data_code, get_scode,
-    set_freq_case, set_complex_modes_case)
+    set_freq_case, set_complex_modes_case,
+    slice_eids_by_index)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 from pyNastran.op2.op2_interface.write_utils import set_table3_field, view_dtype, view_idtype_as_fdtype
 
@@ -48,6 +50,23 @@ class ComplexPlateArray(OES_Object):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def finalize(self):
+        """nelements is the number of unique elements"""
+        OES_Object.finalize(self)
+        self.nelements = len(np.unique(self.element_node[:, 0]))
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.fiber_distance = obj.fiber_distance[irow]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     def get_neid(self) -> int:
         nnode = self.nnodes_per_element

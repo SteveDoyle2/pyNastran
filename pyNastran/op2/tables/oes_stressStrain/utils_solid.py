@@ -262,10 +262,6 @@ def oes_csolid(oes: OES,
 
     elif op2.format_code == 1 and op2.num_wide == numwide_random:  # random
         op2.log.debug(f'numwide_random={numwide_random}')
-        if not op2.is_sort1:
-            log.debug(f'support CSolid random SORT{op2.sort_method}')
-            return ndata, None, None
-
         ntotal = numwide_random * 4
         nelements = ndata // ntotal
         assert ndata % ntotal == 0, ndata
@@ -824,11 +820,13 @@ def oes_csolid_random(op2: OP2, data: bytes,
 
     ntotal1 = 16 * op2.factor
     ntotal2 = 28 * op2.factor
+    is_sort2 = op2.sort_method == 2
     for unused_i in range(nelements):
         edata = data[n:n+ntotal1]
         out = struct1.unpack(edata)
         (eid_device, cid, unused_abcd, grid) = out
 
+        # SORT1: eid_device; SORT2: dt (eid is in table 3)
         eid, dt = get_eid_dt_from_eid_device(
             eid_device, op2.nonlinear_factor, op2.sort_method)
         assert eid > 0, eid
@@ -857,7 +855,10 @@ def oes_csolid_random(op2: OP2, data: bytes,
                 #grid = grid_device
 
             grid = grid_device
-            if inode == 0:
+            if is_sort2:
+                obj.add_sort2(dt, eid, cid, inode, grid,
+                              sxx, syy, szz, txy, tyz, txz)
+            elif inode == 0:
                 #  this is correct, but fails
                 #element_name = op2.element_name + str(nnodes)
                 obj.add_eid_sort1(element_name, cid, dt, eid, grid,
