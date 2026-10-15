@@ -1250,8 +1250,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OUGATO2' : [reader_oug._read_oug2_3, reader_oug._read_oug_ato, 'g-set auto-correlation for U'],
             b'OUGCRM2' : [reader_oug._read_oug2_3, reader_oug._read_oug_crm, 'g-set cumulative RMS for U'],
             b'OUGPSD2' : [reader_oug._read_oug2_3, reader_oug._read_oug_psd, 'g-set PSD for U'],
-            b'OUGRMS2' : [self._table_passer, self._table_passer, 'g-set RMS for U'],  # buggy on isat random
-            b'OUGNO2'  : [self._table_passer, self._table_passer, 'g-set number of crossings for U'],  # buggy on isat random
+            # *RMS2/*NO2 tables are actually SORT1 (all nodes in 1 record, nid*10+device),
+            # so use the SORT1 table3 parser; the SORT2 one treats the nid as dt
+            b'OUGRMS2' : [reader_oug._read_oug1_3, reader_oug._read_oug_rms, 'g-set RMS for U'],
+            b'OUGNO2'  : [reader_oug._read_oug1_3, reader_oug._read_oug_no, 'g-set number of crossings for U'],
             #b'OUGRMS2' : [reader_oug._read_oug2_3, reader_oug._read_oug_rms],  # buggy on isat random
             #b'OUGNO2'  : [reader_oug._read_oug2_3, reader_oug._read_oug_no],  # buggy on isat random
 
@@ -1312,8 +1314,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OQGATO2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set auto-correlation for spc/mpc force'],
             b'OQGCRM2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set cumulative RMS for spc/mpc force'],
             b'OQGPSD2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set PSD for spc/mpc force'],
-            b'OQGRMS2' : [self._table_passer, self._table_passer, 'g-set RMS for spc/mpc force'],  # buggy on isat random
-            b'OQGNO2'  : [self._table_passer, self._table_passer, 'g-set number of crossings for spc/mpc force'],  # buggy on isat random
+            # *RMS2/*NO2 are actually SORT1 (see OUGRMS2)
+            b'OQGRMS2' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'g-set RMS for spc/mpc force'],
+            b'OQGNO2'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_4, 'g-set number of crossings for spc/mpc force'],
             #b'OQGRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set RMS for spc/mpc force'],  # buggy on isat random
             #b'OQGNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_4, 'g-set number of crossings for spc/mpc force'],  # buggy on isat random
 
@@ -1331,8 +1334,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OQMATO2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_ato, 'g-set auto-correlation for mpc force'],
             b'OQMCRM2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_crm, 'g-set cumulative RMS for mpc force'],
             b'OQMPSD2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_psd, 'g-set PSD for mpc force'],
-            b'OQMRMS2' : [self._table_passer, self._table_passer, 'g-set RMS for mpc force'],  # buggy on isat random
-            b'OQMNO2'  : [self._table_passer, self._table_passer, 'g-set number of crossings for mpc force'],  # buggy on isat random
+            # *RMS2/*NO2 are actually SORT1 (see OUGRMS2)
+            b'OQMRMS2' : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_rms, 'g-set RMS for mpc force'],
+            b'OQMNO2'  : [reader_oqg._read_oqg1_3, reader_oqg._read_oqg_mpc_no, 'g-set number of crossings for mpc force'],
             #b'OQMRMS2' : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_rms, 'g-set RMS for mpc force'],  # buggy on isat random
             #b'OQMNO2'  : [reader_oqg._read_oqg2_3, reader_oqg._read_oqg_mpc_no, 'g-set number of crossings for mpc force'],  # buggy on isat random
 
