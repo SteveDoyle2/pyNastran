@@ -1373,8 +1373,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OESPSD2' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'PSD for stress'],
             #b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for stress'],  # buggy on isat random
             #b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress'],  # buggy on isat random
-            b'OESRMS2' : [self._table_passer, self._table_passer, 'RMS for stress'],  # buggy on isat random
-            b'OESNO2'  : [self._table_passer, self._table_passer, 'number of crossings for stress'],  # buggy on isat random
+            # *RMS2/*NO2 are actually SORT1 (see OUGRMS2)
+            b'OESRMS2' : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'RMS for stress'],
+            b'OESNO2'  : [reader_oes._read_oes1_3, reader_oes._read_oes1_4, 'number of crossings for stress'],
 
             b'OESPSD2C' : [reader_oes._read_oes2_3, reader_oes._read_oes2_4, 'PSD for composite stress'],  # isat_random (nx)
             b'OSTPSD2C' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'PSD for composite strain'], # isat_random (nx)
@@ -1390,8 +1391,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OSTRATO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'auto-correlation for strain'],
             b'OSTRCRM2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'cumulative RMS for strain'],
             b'OSTRPSD2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'PSD for composite strain'],
-            b'OSTRRMS2' : [self._table_passer, self._table_passer, 'RMS for composite strain'], # buggy on isat random
-            b'OSTRNO2' : [self._table_passer, self._table_passer, 'number of crossings for strain'],  # buggy on isat random
+            # *RMS2/*NO2 are actually SORT1 (see OUGRMS2)
+            b'OSTRRMS2' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'RMS for strain'],
+            b'OSTRNO2' : [reader_oes._read_oes1_3, reader_oes._read_ostr1_4, 'number of crossings for strain'],
             #b'OSTRRMS2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'RMS for composite strain'], # buggy on isat random
             #b'OSTRNO2' : [reader_oes._read_oes2_3, reader_oes._read_ostr2_4, 'number of crossings for strain'],  # buggy on isat random
 
@@ -1408,8 +1410,9 @@ class OP2_Scalar(OP2Common, FortranFormat):
             b'OEFATO2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'auto-correlation for element force'],
             b'OEFCRM2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'cumulative RMS for element force'],
             b'OEFPSD2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'PSD for composite element force'],
-            b'OEFRMS2' : [self._table_passer, self._table_passer, 'RMS for element force'], # buggy on isat random
-            b'OEFNO2'  : [self._table_passer, self._table_passer, 'number of crossings for element force'],
+            # *RMS2/*NO2 are actually SORT1 (see OUGRMS2)
+            b'OEFRMS2' : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'RMS for element force'],
+            b'OEFNO2'  : [reader_oef._read_oef1_3, reader_oef._read_oef1_4, 'number of crossings for element force'],
             #b'OEFRMS2' : [reader_oef._read_oef2_3, reader_oef._read_oef2_4, 'number of crossings for element force'], # buggy on isat random
         }
 

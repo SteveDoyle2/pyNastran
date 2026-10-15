@@ -281,10 +281,10 @@ class RandomBendArray(OES_Object):
             table_header = '                                               ( CUMULATIVE ROOT MEAN SQUARE )'
         elif self.table_name in ['OESPSD2', 'OSTRPSD2']:
             table_header = '                                             ( POWER SPECTRAL DENSITY FUNCTION )'
-        #elif self.table_name in ['OESNO2', 'OSTRNO2']:
-            #pass
-        #elif self.table_name in ['OESNO2', 'OSTRNO2']:
-            #pass
+        elif self.table_name in ['OESRMS1', 'OSTRRMS1']:
+            table_header = '                                                     ( ROOT MEAN SQUARE )'
+        elif self.table_name in ['OESNO1', 'OSTRNO1']:
+            table_header = '                                                 ( NUMBER OF ZERO CROSSINGS )'
         else:
             raise NotImplementedError(self.table_name)
 

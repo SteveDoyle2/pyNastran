@@ -28,12 +28,14 @@ SORT1_TABLES_BYTES = [
     b'OESXRMS1', b'OESPSD1C', b'OESXNO1', b'OESXNO1C', b'OESXRM1C',
     b'OSTRMS1C', b'OSTPSD1C', b'OSTNO1C', b'OSTRRMS1',
     b'OEFATO1', b'OEFRMS1', b'OEFPSD1', b'OEFNO1', b'OEFCRM1',
-    b'OESPSD1',
+    b'OESPSD1', b'OESRMS1', b'OESNO1',
     b'OSTRNO1',
     b'OSTRPSD1',
 
-    # mislabeled tables
+    # mislabeled tables; *RMS2/*NO2 are actually SORT1
     b'OESRMS2', b'OESNO2',
+    b'OSTRRMS2', b'OSTRNO2',
+    b'OEFRMS2', b'OEFNO2',
 
     b'RAFCONS', b'RAFEATC',
     b'OUG1F',
@@ -50,7 +52,7 @@ SORT2_TABLES_BYTES = [
 
     b'OES2', b'OES2C', b'OESVM2',
     b'OSTR2', b'OSTR2C', b'OSTRVM2',
-    b'OEF2', b'OEFNO2',
+    b'OEF2',
 
     # shock
     b'DOES1',

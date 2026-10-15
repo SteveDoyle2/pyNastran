@@ -1301,10 +1301,17 @@ class OES:
             self._set_as_random()
             prefix = 'no.'
         elif table_name_bytes in [b'OESNO2', b'OSTRNO2']:
-            self._set_as_random()
-            self._set_as_sort1()
-            op2.data_code['nonlinear_factor'] = None
+            # same as OESRMS2/OSTRRMS2
             op2._analysis_code_fmt = b'i'
+            self._set_as_random()
+            self._set_as_sort1()  # it's not really SORT2...
+            op2.sort_method = 1
+            if table_name_bytes == b'OESNO2':
+                op2.table_name = b'OESNO1'
+            elif table_name_bytes == b'OSTRNO2':
+                op2.table_name = b'OSTRNO1'
+            else:
+                raise NotImplementedError(table_name_bytes)
             prefix = 'no.'
         #----------------------------------------------------------------
 

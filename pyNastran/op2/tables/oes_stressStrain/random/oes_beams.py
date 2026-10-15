@@ -332,7 +332,8 @@ class RandomBeamStressArray(RandomBeamArray, StressObject):
     def _get_msgs(self) -> list[str]:
         assert self.element_type == 2, self.element_type
 
-        assert self.table_name in ['OESXNO1', 'OESXRMS1', 'OESATO2', 'OESATO1', 'OESCRM1', 'OESPSD1'], f'table_name={self.table_name!r}'
+        assert self.table_name in ['OESXNO1', 'OESXRMS1', 'OESNO1', 'OESRMS1',
+                                   'OESATO2', 'OESATO1', 'OESCRM1', 'OESPSD1'], f'table_name={self.table_name!r}'
         msg = [
             '                                  S T R E S S E S   I N   B E A M   E L E M E N T S        ( C B E A M )\n',
             '                    STAT DIST/\n',

@@ -298,7 +298,9 @@ class RandomSolidStrainArray(RandomSolidArray, StrainObject):
         return headers
 
 def _get_solid_msgs(self):
-    assert self.table_name in ['OESATO1', 'OSTRATO1'], self.table_name
+    assert self.table_name in ['OESATO1', 'OSTRATO1',
+                               'OESRMS1', 'OSTRRMS1',
+                               'OESNO1', 'OSTRNO1'], self.table_name
     if self.is_stress:
         base_msg = [
             '0                CORNER        ------CENTER AND CORNER POINT STRESSES---------       DIR.  COSINES       MEAN                   \n',
