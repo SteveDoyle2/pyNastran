@@ -4437,7 +4437,7 @@ class TestOP2Main(Tester):
 
         cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
-        assert cquad4_stress.nelements == 40, cquad4_stress.nelements  # TODO: wrong?
+        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # unique elements
 
         #print(stress.ctria3_stress.keys())
         ctria3_stress = stress.ctria3_stress[isubcase]
