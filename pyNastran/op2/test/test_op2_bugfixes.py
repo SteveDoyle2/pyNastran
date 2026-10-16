@@ -17,6 +17,7 @@ from io import BytesIO, StringIO
 from pathlib import Path
 
 import numpy as np
+from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.op2.op2 import read_op2
@@ -32,6 +33,8 @@ from pyNastran.op2.tables.oes_stressStrain.real.oes_springs import RealSpringStr
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_rods import ComplexRodStressArray
 from pyNastran.op2.tables.oes_stressStrain.complex.oes_springs import ComplexSpringStressArray
 from unittest.mock import MagicMock
+
+from pyNastran.op2.test.test_op2 import run_op2
 from pyNastran.op2.tables.oes_stressStrain import utils_cshear
 
 from pyNastran.op2.tables.oug.oug_displacements import RealDisplacementArray, ComplexDisplacementArray
@@ -1859,5 +1862,75 @@ class TestLinearCombination(unittest.TestCase):
         assert np.all(data[:, :, 3] == 1)
 
 
+class TestXmcTables(unittest.TestCase):
+    """Tests for OES1XMC/OSTR1XMC/OEF1XMC result table support.
+
+    Newer MSC Nastran versions (and compatible solvers) can write element
+    stress/strain/force results as OES1XMC/OSTR1XMC/OEF1XMC tables, which
+    are format-identical to the OES1X/OSTR1X/OEF1X base tables.  Before
+    the fix, reading such a file aborted the entire parse with
+    ``NotImplementedError: Invalid Table = b'OES1XMC'``.
+
+    The model (``models/bugs/xmc_tables/xmc_20elem.op2``) is a small
+    20-element result-only OP2 extracted from a real static analysis
+    (SOL 101) solver output.  The table headers and element records are
+    taken verbatim from the source file; each of the three XMC tables
+    contains 4 CBAR, 4 CQUAD4, 4 CROD, 4 CTRIA3, and 4 CWELD elements.
+    CWELD stress/strain are not supported by the OES/OSTR readers
+    (skipped with a warning), so only cweld_force is expected.
+    """
+
+    def test_xmc_tables_read(self):
+        """OES1XMC/OSTR1XMC/OEF1XMC are read as their base tables."""
+        op2_filename = MODEL_PATH / 'bugs' / 'xmc_tables' / 'xmc_20elem.op2'
+        op2_filename_out = MODEL_PATH / 'bugs' / 'xmc_tables' / 'xmc_20elem_out.op2'
+        log = SimpleLogger(level='warning')
+        op2, unused_is_passed = run_op2(
+            op2_filename, make_geom=False, write_bdf=False, write_f06=True,
+            log=log, stop_on_failure=True, binary_debug=False, quiet=True)
+
+        model = read_op2(op2_filename, debug=None)
+        model.write_op2(op2_filename_out)
+        model2 = read_op2(op2_filename_out, debug=None)
+
+        expected_results = {
+            'stress.cbar_stress', 'stress.cquad4_stress',
+            'stress.crod_stress', 'stress.ctria3_stress',
+            'strain.cbar_strain', 'strain.cquad4_strain',
+            'strain.crod_strain', 'strain.ctria3_strain',
+            'force.cbar_force', 'force.cquad4_force', 'force.crod_force',
+            'force.ctria3_force', 'force.cweld_force',
+        }
+        assert expected_results.issubset(set(model.result_names)), model.result_names
+
+        isubcase = 101027
+        for name in sorted(expected_results):
+            result_dict = model.get_result(name)
+            assert list(result_dict.keys()) == [isubcase], (name, list(result_dict.keys()))
+            result = result_dict[isubcase]
+
+            # every result holds 4 distinct element ids
+            element_node = getattr(result, 'element_node', None)
+            if element_node is not None:
+                eids = np.unique(element_node[:, 0])
+            else:
+                eids = result.element
+            assert len(eids) == 4, (name, eids)
+            assert len(set(eids.tolist())) == 4, name
+
+            # data arrays are filled
+            assert result.data.shape[0] == 1, name
+            assert result.data.shape[1] > 0, name
+            assert result.data.shape[2] > 0, name
+
+        # spot checks: distinct values within a table (not all zeros/identical)
+        crod_stress = model.op2_results.stress.crod_stress[isubcase]
+        assert not np.allclose(crod_stress.data[0, 0].astype('float64'), crod_stress.data[0, 1].astype('float64'))
+
+        cweld_force = model.op2_results.force.cweld_force[isubcase]
+        assert cweld_force.nelements == 4
+
+
 if __name__ == '__main__':  # pragma: no cover
-    unittest.main()
+    with np.errstate(divide='raise', over='raise', under='raise', invalid='raise'):
+        unittest.main()

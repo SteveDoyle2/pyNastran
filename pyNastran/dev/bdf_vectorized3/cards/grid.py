@@ -657,7 +657,7 @@ class GRID(VectorizedBaseCard):
             else:
                 lines = [f'GRID    {nid}        {x}{y}{z}\n'
                          for nid, x, y, z in zip(nid_list, x_list, y_list, z_list)]
-            bdf_file.write(''.join(lines))
+            bdf_file.writelines(lines)
         elif extra_basic:  # cp=cd != 0, but seid=ps=0
             cps = np.char.rjust(array_default_int(self.cp, size=8, default=0), 8)
             cds = np.char.rjust(array_default_int(self.cd, size=8, default=0), 8)
@@ -677,7 +677,7 @@ class GRID(VectorizedBaseCard):
             else:
                 lines = [f'GRID    {nid}{cp}{x}{y}{z}{cd}\n'
                          for nid, cp, cd, x, y, z in zip(nid_list, cp_list, cd_list, x_list, y_list, z_list)]
-            bdf_file.write(''.join(lines))
+            bdf_file.writelines(lines)
         else:
             # ps=seid != 0
             cps = np.char.rjust(array_default_int(self.cp, size=8, default=0), 8)
@@ -704,7 +704,7 @@ class GRID(VectorizedBaseCard):
                 lines = [f'GRID    {nid}{cp}{x}{y}{z}{cd}{ps}{seid}\n'
                          for nid, cp, cd, x, y, z, ps, seid in zip(
                              nid_list, cp_list, cd_list, x_list, y_list, z_list, ps_list, seid_list)]
-            bdf_file.write(''.join(lines))
+            bdf_file.writelines(lines)
         return
 
     def _write_flags(self):

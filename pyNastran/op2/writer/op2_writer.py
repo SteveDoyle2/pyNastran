@@ -363,6 +363,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         # force/heat flux
         'HOEF1',
         'OEF1', 'OEF1X', 'OEF2',
+        'OEF1XMC',
         'OEFATO1', 'OEFCRM1', 'OEFNO1', 'OEFPSD1', 'OEFRMS1',
         'OEFATO2', 'OEFCRM2', 'OEFNO2', 'OEFPSD2', 'OEFRMS2',
 
@@ -370,6 +371,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         # stress
         'OESNLXD', 'OESNLXR', 'OESNL1X',
         'OES1', 'OES1X', 'OES1X1', 'OES1C', 'OESVM1', 'OESVM1C',
+        'OES1XMC',
         'OSTR1EL',
         'OES1A',
         'OES2', 'OESVM2',
@@ -389,6 +391,7 @@ def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
         'OSTRATO1', 'OSTRCRM1', 'OSTRNO1', 'OSTRPSD1', 'OSTRRMS1',
         'OSTRATO2', 'OSTRCRM2', 'OSTRNO2', 'OSTRPSD2', 'OSTRRMS2',
         'OSTRVM2',
+        'OSTR1XMC',
         # ---------------
         # shock response spectra
         'OUPV1',  # displacment

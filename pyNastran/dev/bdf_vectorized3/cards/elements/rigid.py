@@ -20,7 +20,8 @@ from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_blank
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.dev.bdf_vectorized3.bdf_interface.geom_check import geom_check
 from pyNastran.dev.bdf_vectorized3.cards.write_utils import (
-    array_str, array_default_int, array_default_float,
+    array_str, array_float,
+    array_default_int, array_default_float,
     get_print_card_size)
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -789,8 +790,8 @@ class RBE2(RigidElement):
     def add(self, eid: int,
             gn: int, # independent
             cm: str, Gmi: list[int],  # dependent
-            alpha: float=0.0, tref: float=0.0, comment: str='') -> int:
-        self.cards.append((eid, gn, cm, Gmi, alpha, tref, 0, comment))
+            alpha: float=0.0, tref: float=0.0, ifile: int=0, comment: str='') -> int:
+        self.cards.append((eid, gn, cm, Gmi, alpha, tref, ifile, comment))
         self.n += 1
         return self.n - 1
 
@@ -822,7 +823,7 @@ class RBE2(RigidElement):
         j = 4
         Gmi = []
         for i in range(len(card) - 4 - n):
-            gmi = integer(card, j + i, 'Gm%i' % (i + 1))
+            gmi = integer(card, j + i, 'Gm%d' % (i + 1))
             Gmi.append(gmi)
         self.cards.append((eid, gn, cm, Gmi, alpha, tref, ifile, comment))
         self.n += 1
@@ -936,19 +937,18 @@ class RBE2(RigidElement):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
-
         eid_str = array_default_int(self.element_id, default=0, size=size)
         ind_node_str = array_default_int(self.independent_node, default=0, size=size)
         ind_components_str = array_default_int(self.independent_dof, default=0, size=size)
 
-        dep_node_str = array_str(self.dependent_nodes, size=size)
+        dep_node_str = array_str(self.dependent_nodes, size=size).tolist()
 
         no_alpha = self.alpha.max() == 0. and self.alpha.min() == 0.
         no_tref = self.tref.max() == 0. and self.tref.min() == 0.
         if no_tref and no_alpha:
             for eid, ind_node, ind_component, idim in zip_longest(eid_str, ind_node_str, ind_components_str, self.idim):
                 idim0, idim1 = idim
-                dep_nodes = dep_node_str[idim0:idim1].tolist()  # Gmi
+                dep_nodes = dep_node_str[idim0:idim1]  # Gmi
                 list_fields = ['RBE2', eid, ind_node, ind_component] + dep_nodes
                 bdf_file.write(print_card(list_fields))
         elif no_tref:
@@ -956,7 +956,7 @@ class RBE2(RigidElement):
             for eid, ind_node, ind_component, idim, alpha in zip_longest(eid_str, ind_node_str, ind_components_str,
                                                                          self.idim, alphas):
                 idim0, idim1 = idim
-                dep_nodes = dep_node_str[idim0:idim1].tolist()  # Gmi
+                dep_nodes = dep_node_str[idim0:idim1]  # Gmi
 
                 list_fields = ['RBE2', eid, ind_node, ind_component] + dep_nodes + [alpha]
                 bdf_file.write(print_card(list_fields))
@@ -966,7 +966,7 @@ class RBE2(RigidElement):
             for eid, ind_node, ind_component, idim, alpha, tref in zip_longest(eid_str, ind_node_str, ind_components_str,
                                                                                self.idim, alphas, trefs):
                 idim0, idim1 = idim
-                dep_nodes = dep_node_str[idim0:idim1].tolist()  # Gmi
+                dep_nodes = dep_node_str[idim0:idim1]  # Gmi
 
                 list_fields = ['RBE2', eid, ind_node, ind_component] + dep_nodes + [alpha, tref]
                 bdf_file.write(print_card(list_fields))
@@ -1201,13 +1201,6 @@ class RBE3(RigidElement):
         dependent_nodes = cast_ints(dependent_nodes, dtype='int32')
         dependent_dofs = np.array(dependent_dofs, dtype='int32')
 
-        #self.element_id = np.zeros(ncards, dtype='int32')
-        #self.ref_grid = np.zeros(ncards, dtype='int32')
-        #self.ref_component = np.zeros(ncards, dtype='int32')
-        #self.tref = np.zeros(ncards, dtype='float64')
-        #self.alpha = np.zeros(ncards, dtype='float64')
-        #self.nweight = np.zeros(ncards, dtype='int32')
-        #self.ndependent = np.zeros(ncards, dtype='int32')
         self._save(element_id, ref_grid, ref_component, tref, alpha,
                    nweight, ndependent,
                    weight, independent_nodes, independent_dofs,
@@ -1291,7 +1284,6 @@ class RBE3(RigidElement):
         d = len(self.ref_grid) # nrbe3
         assert nrbe3 == d, (nrbe3, d)
         #dxi position of point i relative to the RBE3 reference point, d
-
 
         #str_independent_dofs = self.independent_dofs.astype(str)
         i_dep_comp = dofs_to_dof_matrix(self.ref_component) # dependent
@@ -1475,7 +1467,6 @@ class RBE3(RigidElement):
         COMP = [123, 123, 123]
         WT = [1.0, 1.0, 1.0]
 
-
         WT6 = np.zeros(6, dtype='float64')
 
         # Get coords of the reference grid (AGRID_D) in basic coord system
@@ -1570,6 +1561,7 @@ class RBE3(RigidElement):
         iweight0_for_grids = 0
         #iGij0 = 0
         igrid0 = 0
+        weight = array_float(self.weight, size=size, is_double=False).tolist()
         for eid, ref_grid, refc, \
                 nweight, iweight, \
                 idependent, \
@@ -1582,7 +1574,7 @@ class RBE3(RigidElement):
 
             # independent
             iweight0, iweight1 = iweight
-            weights = self.weight[iweight0:iweight1]
+            weights = weight[iweight0:iweight1]
             comps = self.independent_dofs[iweight0:iweight1]
             Gijs = []
             for i in range(nweight):

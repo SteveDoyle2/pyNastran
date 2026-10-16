@@ -114,6 +114,9 @@ EXTSEOUT = [
 ]
 
 
+PARAM_TABLES = {b'PVT', b'PVT0', b'PVTS'}
+
+
 class OP2Reader:
     """Stores methods that aren't useful to an end user"""
     def __init__(self, op2: OP2):
@@ -3902,7 +3905,9 @@ class OP2Reader:
         oes_nl = [b'OESNLXD', b'OESNL1X', b'OESNLXR']  # 'OESCP'?
         factor = self.factor
         #print('record_len =', record_len)
-        if record_len == 584 * factor:  # table3 has a length of 584
+        # table3 has a length of 584, but a PARAM (PVT/PVT0/PVTS) data record can
+        # also be 584 bytes long and must go to the table4 parser
+        if record_len == 584 * factor and table_name not in PARAM_TABLES:
             if table_name in oes_nl and hasattr(op2, 'num_wide') and op2.num_wide == 146:
                 data_code_old = deepcopy(op2.data_code)
 

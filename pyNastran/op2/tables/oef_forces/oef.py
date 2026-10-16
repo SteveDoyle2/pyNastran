@@ -1119,10 +1119,11 @@ def get_oef_prefix_postfix(op2: OP2) -> tuple[str, str]:
     postfix = ''
     table_name_bytes = op2.table_name
     assert isinstance(table_name_bytes, bytes), table_name_bytes
+
     is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
     assert table_name_bytes in TABLES_BYTES, table_name_bytes
 
-    if table_name_bytes in [b'OEF1X', b'OEF1', b'OEF2']:
+    if table_name_bytes in [b'OEF1X', b'OEF1', b'OEF2', b'OEF1XMC']:
         if op2.thermal == 0:
             prefix = 'force.'
         elif op2.thermal == 1:

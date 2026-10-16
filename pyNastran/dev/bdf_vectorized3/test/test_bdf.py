@@ -44,8 +44,12 @@ from pyNastran.bdf.subcase import Subcase
 from pyNastran.bdf.test.compare import compare_card_count
 from pyNastran.bdf.bdf import BDF as BDF_old #, read_bdf as read_bdf_old
 from pyNastran.dev.bdf_vectorized3.bdf import BDF as BDFv, read_bdf as read_bdfv, map_version
+from pyNastran.dev.bdf_vectorized3.cards.elements.shell_coords import (
+    get_shell_element_coordinate_system, get_shell_material_coordinate_system)
+
 from pyNastran.dev.bdf_vectorized3.mesh_utils.convert import convert
 from pyNastran.dev.bdf_vectorized3.mesh_utils.bdf_equivalence import bdf_equivalence_nodes
+
 try:
     import tables
     IS_PYTABLES = True
@@ -710,7 +714,12 @@ def _get_vectorized_quantity(elements: list[Any],
 def _get_nominal_quantity(elements: list[Any],
                           result_name: str,
                           log: SimpleLogger,
-                          cards_to_skip: Optional[list[str]]=None) -> dict[int, float]:
+                          cards_to_skip: Optional[list[str]]=None,
+                          ) -> dict[int, float]:
+    """
+    gets a generalized function, so:
+     - mass, density, area, volume, etc.
+    """
     if cards_to_skip is None:
         cards_to_skip = []
     eid_to_mass = {}
@@ -718,10 +727,12 @@ def _get_nominal_quantity(elements: list[Any],
     for eid, element in elements.items():
         if element.type in {'CBEND', 'CBEAM3', 'PBEND'}: # 'PBEAM3'
             continue
+
         try:
             mass_func = getattr(element, result_name)
         except AttributeError:
             if element.type not in cards_to_skip:
+                #raise
                 failed_types.add(element.type)
             continue
         mass = mass_func()
@@ -744,14 +755,10 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
         assert isinstance(fem1.pbarl.ndim, np.ndarray), fem1.pbarl.ndim
 
     log = fem1.log
-    nnodes = (
-        fem1.card_count.get('GRID', 0) +
-        fem1.card_count.get('GRIDB', 0) +
-        fem1.card_count.get('GRIDG', 0) +
-        fem1.card_count.get('EGRID', 0) +
-        fem1.card_count.get('SPOINT', 0) +
-        fem1.card_count.get('EPOINT', 0)
-    )
+    nnodes = sum([
+        fem1.card_count.get(card_name, 0) for card_name in
+        ['GRID', 'GRIDB', 'GRIDG', 'EGRID', 'SPOINT', 'EPOINT']
+    ])
     if check_nodes and nnodes > 0:
         xyz_cid0 = fem1.grid.xyz_cid0()
         nids = fem1.grid.node_id
@@ -767,20 +774,25 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                                    f'xyz_vectorized={xyz_vectorized}\n'
                                    f'diff={xyz_nominal-xyz_vectorized}\n{cp_ref}')
 
-    solid = ['CHEXA', 'CPENTA', 'CTETRA', 'CPYRAM', 'PSOLID', 'PLSOLID']
-    shell = ['CQUAD4', 'CTRIA3', 'CQUAD8', 'CTRIA6', 'PSHELL', 'PCOMP', 'PCOMPG',
-             'PSHEAR', 'CSHEAR',
-             'CQUADX4', 'CQUADX8', 'CQUADX', 'CTRIAX', 'CTRIAX6']
-    bar = ['CBAR',  'PBAR', 'PBARL',
-           'CBEAM', 'PBEAM', 'PBEAML', 'PBCOMP']
-    spring = ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'PELAS']
+    spring = ['CELAS1', 'CELAS2', 'CELAS3', 'CELAS4', 'PELAS', 'PELAST']
     damper = ['CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'PDAMP']
+    visc = ['CVISC', 'PVISC']
+
     bush = ['CBUSH', 'CBUSH1D', 'CBUSH2D',
             'PBUSH', 'PBUSH1D', 'PBUSH2D']
-    visc = ['CVISC', 'PVISC']
-    thermal = ['CHBDYG', 'CHBDYP', 'CONV', 'PCONV']
     rod = ['CROD', 'PROD', 'CONROD', 'CTUBE', 'PTUBE']
+    bar = ['CBAR',  'PBAR', 'PBARL',
+           'CBEAM', 'PBEAM', 'PBEAML', 'PBCOMP']
+    shell = ['CTRIA3', 'CTRIAR', 'CTRIA6',
+             'CQUAD4', 'CQUAD8', 'CQUADR',
+             'PSHELL', 'PCOMP', 'PCOMPG',
+             'PSHEAR', 'CSHEAR',
+             'CQUADX4', 'CQUADX8', 'CQUADX', 'CTRIAX', 'CTRIAX6']
+    solid = ['CHEXA', 'CPENTA', 'CTETRA', 'CPYRAM', 'PSOLID', 'PLSOLID']
+    thermal = ['CHBDYG', 'CHBDYP', 'CONV', 'PCONV']
     mass = ['CMASS1', 'CMASS2', 'CMASS3', 'CMASS4', 'CONM1', 'CONM2']
+    all = (spring + damper + visc + bush +
+           rod + bar + shell + shell + mass + thermal)
 
     no_length          = spring + damper +       visc              + shell + solid + mass
     no_area            = spring + damper +       visc + bush               + solid + mass
@@ -900,8 +912,6 @@ def compare_old_vs_new(fem1: BDFv, fem1_nominal: BDF_old,
                     raise RuntimeError(msg)
 
     if compare_shell_vectors:
-        from pyNastran.dev.bdf_vectorized3.cards.elements.shell_coords import (
-            get_shell_element_coordinate_system, get_shell_material_coordinate_system)
         element_id, length, centroid, ielem, jelem = get_shell_element_coordinate_system(fem1)
         element_id, length, centroid, imat, jmat = get_shell_material_coordinate_system(fem1)
 
@@ -2725,7 +2735,9 @@ def check_mass(fem1: BDFs, quiet: bool=False):
 
 def compare(fem1: BDFs, fem2: BDFs, xref=True, check=True, print_stats=True, quiet=False):
     """compares two fem objects"""
-    diff_cards = compare_card_count(fem1, fem2, print_stats=print_stats, quiet=quiet)
+    diff_cards = compare_card_count(
+        fem1, fem2, skip_cards=[],
+        print_stats=print_stats, quiet=quiet)
     return
     if xref and check:
         get_element_stats(fem1, fem2, quiet=quiet)

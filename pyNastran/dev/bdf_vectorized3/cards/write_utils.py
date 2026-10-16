@@ -2,6 +2,7 @@ import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8, print_float_8, array_float_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_float_16, array_float_16
 from pyNastran.bdf.field_writer_double import print_scientific_double
+from pyNastran.bdf.bdf_interface.assign_type import nastran_str_to_float
 from typing import Callable
 
 MAX_8_CHAR_INT = 99_999_999
@@ -150,6 +151,18 @@ def array_float_nan(ndarray: np.ndarray, size: int=8, is_double: bool=False) -> 
     str_array[inan] = ''
     return str_array
 
+def func_to_floate(svalue: str) -> float:
+    svalue = svalue.lstrip()
+    if svalue.lstrip('+-').isdigit():
+        return float(svalue)
+    return nastran_str_to_float(svalue)
+
+def func_to_floatd(svalue: str) -> float:
+    svalue = svalue.lstrip()
+    if svalue.lstrip('+-').isdigit():
+        return float(svalue)
+    return nastran_str_to_float(svalue.replace('E', 'D'))
+
 def array_default_float(ndarray: np.ndarray, default: float=0.,
                         size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
@@ -157,8 +170,7 @@ def array_default_float(ndarray: np.ndarray, default: float=0.,
     if np.any(np.isnan(ndarray)):
         raise RuntimeError('nans found')
 
-    idefault = (ndarray == default)
-    ivalue = ~idefault
+    to_float = func_to_floate
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
@@ -167,7 +179,12 @@ def array_default_float(ndarray: np.ndarray, default: float=0.,
         print_float = print_float_16
         if is_double:
             print_float = print_scientific_double
+            to_float = func_to_floatd
 
+    default_str = print_float(default)
+    default_float = to_float(default_str)
+    idefault = (ndarray == default_float)
+    ivalue = ~idefault
     if ndarray.ndim == 1:
         i = np.where(ivalue)[0]
         for ii in i:
@@ -186,8 +203,7 @@ def array_default_float_nan(ndarray: np.ndarray, default=0.,
                             size: int=8, is_double: bool=False) -> np.ndarray:
     """setup the nan values and fill in the holes"""
     assert ndarray.dtype.name in {'float32', 'float64'}, ndarray.dtype.name
-    idefault = (np.isnan(ndarray) | (ndarray == default))
-    ivalue = ~idefault
+    to_float = func_to_floate
     if size == 8:
         str_array = np.zeros(ndarray.shape, dtype='|U8')
         print_float = print_float_8
@@ -196,7 +212,12 @@ def array_default_float_nan(ndarray: np.ndarray, default=0.,
         print_float = print_float_16
         if is_double:
             print_float = print_scientific_double
+            to_float = func_to_floatd
 
+    default_str = print_float(default)
+    default_float = to_float(default_str)
+    idefault = (np.isnan(ndarray) | (ndarray == default_float))
+    ivalue = ~idefault
     if ndarray.ndim == 1:
         i = np.where(ivalue)[0]
         for ii in i:

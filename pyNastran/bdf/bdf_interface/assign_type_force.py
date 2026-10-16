@@ -1,6 +1,6 @@
 import warnings
 from typing import Optional
-from .assign_type import double, _get_dtype, _nastran_str_to_float
+from .assign_type import double, _get_dtype, nastran_str_to_float
 from .bdf_card import BDFCard
 from pyNastran.utils.numpy_utils import (
     integer_types, float_types)
@@ -64,7 +64,7 @@ def force_double(card: BDFCard, ifield: int, fieldname: str,
                           'card=%s%s' % (fieldname, svalue, ifield, dtype, card, end))
 
     try:
-        return _nastran_str_to_float(svalue)
+        return nastran_str_to_float(svalue)
     except (ValueError, TypeError):
         dtype = _get_dtype(svalue)
         raise SyntaxError('%s = %r (field #%s) on card must be a float (not %s).\n'
@@ -130,7 +130,7 @@ def force_double_or_blank(card: BDFCard, ifield: int, fieldname: str,
             if svalue_stripped == '.':
                 return 0.
             try:
-                return _nastran_str_to_float(svalue_stripped)
+                return nastran_str_to_float(svalue_stripped)
             except (ValueError, TypeError):
                 dtype = _get_dtype(svalue)
                 raise SyntaxError('%s = %r (field #%s) on card must be a float or blank (not %s).\n'

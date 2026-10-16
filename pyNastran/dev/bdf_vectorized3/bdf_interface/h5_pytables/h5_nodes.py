@@ -45,7 +45,7 @@ def load_h5_node(model: BDF, input_group: Group):
             spoint.domain_id = data['DOMAIN_ID']
             spoint.n = len(spoint.domain_id)
             spoint.write()
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(name)
         x = 1
     x = 2

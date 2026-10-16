@@ -58,6 +58,10 @@ def assert_fields(card1: BaseCard, card2: BaseCard) -> None:
                         'value2=%r\n%r\n%r\n' % (fields1[0], fields1[1], i,
                                                  field1, field2, value1, value2,
                                                  fields1, fields2))
+                print('card1')
+                print(card1.get_stats())
+                print('card2')
+                print(card2.get_stats())
                 raise RuntimeError(msg + msg_end)
 
 
@@ -83,7 +87,8 @@ def compare_nodes(fem1: BDF, fem2: BDF) -> None:
         assert_fields(card1, card2)
 
 
-def compare_elements(fem1: BDF, fem2: BDF) -> None:
+def compare_elements(fem1: BDF, fem2: BDF,
+                     skip_cards: list[str]) -> None:
     for key in fem1.elements:
         card1 = fem1.elements[key]
         card2 = fem2.elements[key]
@@ -92,6 +97,9 @@ def compare_elements(fem1: BDF, fem2: BDF) -> None:
     for key in fem1.rigid_elements:
         card1 = fem1.rigid_elements[key]
         card2 = fem2.rigid_elements[key]
+        if card1.type in skip_cards:
+            assert card1.type == card2.type, (card1, card2)
+            continue
         assert_fields(card1, card2)
 
     for key in fem1.masses:
@@ -100,10 +108,14 @@ def compare_elements(fem1: BDF, fem2: BDF) -> None:
         assert_fields(card1, card2)
 
 
-def compare_properties(fem1: BDF, fem2: BDF) -> None:
+def compare_properties(fem1: BDF, fem2: BDF,
+                       skip_cards: list[str]) -> None:
     for key in fem1.properties:
         card1 = fem1.properties[key]
         card2 = fem2.properties[key]
+        if card1.type in skip_cards:
+            assert card1.type == card2.type, (card1, card2)
+            continue
         assert_fields(card1, card2)
 
     for key in fem1.properties_mass:
@@ -124,7 +136,8 @@ def compare_materials(fem1: BDF, fem2: BDF) -> None:
         assert_fields(card1, card2)
 
 
-def compare_card_content(fem1: BDF, fem2: BDF) -> None:
+def compare_card_content(fem1: BDF, fem2: BDF,
+                         skip_cards: list[str]) -> None:
     fem1.log.debug('compare_card_content')
     check_obj_names = [
         'params', 'nodes', 'spoints', 'epoints', 'points',
@@ -145,8 +158,8 @@ def compare_card_content(fem1: BDF, fem2: BDF) -> None:
 
     compare_params(fem1, fem2)
     compare_nodes(fem1, fem2)
-    compare_elements(fem1, fem2)
-    compare_properties(fem1, fem2)
+    compare_elements(fem1, fem2, skip_cards)
+    compare_properties(fem1, fem2, skip_cards)
     compare_materials(fem1, fem2)
 
     nid_map = fem2.nid_map

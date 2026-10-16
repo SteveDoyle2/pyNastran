@@ -1195,15 +1195,15 @@ class OES:
 
         table_name_bytes = op2.table_name
         assert isinstance(table_name_bytes, bytes), table_name_bytes
-        is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
 
+        is_sort1 = table_name_bytes in SORT1_TABLES_BYTES
         if table_name_bytes in [b'OES1X1', b'OES1X',
-                                b'OES1C', b'OES1']:
+                                b'OES1C', b'OES1', b'OES1XMC',]:
             prefix = 'stress.'
             self._set_as_sort1()
         elif table_name_bytes == b'OES1A':
             prefix = 'stressa.'
-        elif table_name_bytes in [b'OSTR1X', b'OSTR1', b'OSTR1C']:
+        elif table_name_bytes in [b'OSTR1X', b'OSTR1', b'OSTR1C', b'OSTR1XMC']:
             prefix = 'strain.'
             self._set_as_sort1()
         elif table_name_bytes in [b'OES2', b'OSTR2', b'OES2C', b'OSTR2C']:

@@ -61,11 +61,12 @@ jobs:
     strategy:
       matrix:
          # '3.14', '3.15-dev'
-         python-version: ['3.11', '3.12', '3.13', '3.14']
+         python-version: ['3.11', '3.12', '3.13', '3.14', '3.15']
          os: [ubuntu-latest]
          # , macos-latest, windows-latest
-         mode: ['latest', 'latest_basic', 'old', 'no_scipy', 'latest_pyqt5_gui','latest_pyside2_gui']
-                # 'old_basic', 'old_pyside2_gui', 'old_pyqt5_gui', 'latest_pyqt6_gui', 'latest_pyside6_gui'
+         mode: ['latest', 'latest_basic', 'old', 'no_scipy', 'latest_pyqt5_gui','latest_pyside2_gui', 'latest_pyqt6_gui','latest_pyside6_gui',]
+         # 'old_basic', 'old_pyside2_gui', 'old_pyqt5_gui',
+
          experimental: [false]
          #include:
          # - python: '3.11-dev'
@@ -75,34 +76,79 @@ jobs:
          #  os: ubuntu-18.04
          #  experimental: true
          exclude:
-          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}
+          # remove most versions to limit jobs
 
-          - {python-version: '3.11', mode: 'old'}               # redundant
+          #---------------------------------------------------------
+          # never tested...
+          - {python-version: '3.11', mode: 'old'}
+          - {python-version: '3.12', mode: 'old'}
+          - {python-version: '3.13', mode: 'old'}
+          - {python-version: '3.14', mode: 'old'}
+          - {python-version: '3.15', mode: 'old'}
+
+          #---------------------------------------------------------
+          # first/mid/last
+          #- {python-version: '3.11', mode: 'latest_basic'}
+          - {python-version: '3.12', mode: 'latest_basic'}
+          #- {python-version: '3.13', mode: 'latest_basic'}
+          - {python-version: '3.14', mode: 'latest_basic'}
+          #- {python-version: '3.15', mode: 'latest_basic'}
+
+          #---------------------------------------------------------
+          # only test this twice; min/max version
           #- {python-version: '3.11', mode: 'no_scipy'}
-          #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.11', mode: 'latest_pyqt6_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
-          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}  # DLL error
-
-          - {python-version: '3.12', mode: 'old'}               # redundant
           - {python-version: '3.12', mode: 'no_scipy'}
-          - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.12', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.12', mode: 'latest_pyside2_gui'}
-          - {python-version: '3.11', mode: 'latest_pyside6_gui'}
-
-          - {python-version: '3.13', mode: 'old'}               # redundant
           - {python-version: '3.13', mode: 'no_scipy'}
+          - {python-version: '3.14', mode: 'no_scipy'}
+          #- {python-version: '3.15', mode: 'no_scipy'}
+
+          #---------------------------------------------------------
+          # cut testing in the middle?
+          #   keep 3.13 because there is no gui testing for it
+          #
+          # keep all testing b/c gui testing fails a lot
+          #
+          #- {python-version: '3.11', mode: 'latest'}
+          #- {python-version: '3.12', mode: 'latest'}
+          #- {python-version: '3.13', mode: 'latest'}
+          #- {python-version: '3.14', mode: 'latest'}
+          #- {python-version: '3.15', mode: 'latest'}
+
+          #---------------------------------------------------------
+          # remove most versions to limit jobs
+
+          # all for now; lowest version
+          # old pyqt/pyside only
+          #- {python-version: '3.11', mode: 'latest_pyqt5_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyqt6_gui'}   # doen't exist?
+          #- {python-version: '3.11', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.11', mode: 'latest_pyside6_gui'}   # doen't exist?
+
+          # v6 testing
+          - {python-version: '3.12', mode: 'latest_pyqt5_gui'}
+          #- {python-version: '3.12', mode: 'latest_pyqt6_gui'}
+          - {python-version: '3.12', mode: 'latest_pyside2_gui'}
+          #- {python-version: '3.12', mode: 'latest_pyside6_gui'}
+
+          # skipping because all is next
+          # pyside only...later
           - {python-version: '3.13', mode: 'latest_pyqt5_gui'}
           - {python-version: '3.13', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.13', mode: 'latest_pyside2_gui'}
+          - {python-version: '3.13', mode: 'latest_pyside2_gui'}  # doesnt support numpy 2
+          - {python-version: '3.13', mode: 'latest_pyside6_gui'}
 
-          - {python-version: '3.14', mode: 'old'}               # redundant
-          - {python-version: '3.14', mode: 'latest_pyqt5_gui'}
-          - {python-version: '3.14', mode: 'latest_pyqt6_gui'}
-          - {python-version: '3.14', mode: 'latest_pyside2_gui'}
+          # latest gui - all
+          # pyqt only...later
+          #- {python-version: '3.14', mode: 'latest_pyqt5_gui'}
+          #- {python-version: '3.14', mode: 'latest_pyqt6_gui'}
+          - {python-version: '3.14', mode: 'latest_pyside2_gui'}   # doesn't exist
+          #- {python-version: '3.14', mode: 'latest_pyside6_gui'}
 
+          # gui not supported
+          - {python-version: '3.15', mode: 'latest_pyqt5_gui'}
+          - {python-version: '3.15', mode: 'latest_pyqt6_gui'}
+          - {python-version: '3.15', mode: 'latest_pyside2_gui'}
+          - {python-version: '3.15', mode: 'latest_pyside6_gui'}
           #- {python-version: '3.15-dev', mode: 'old'}
       fail-fast: false
      #- continue-on-error: ${{ matrix.experimental }}
@@ -137,7 +183,10 @@ jobs:
     #env: ${{ matrix.env }}
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      #- uses: actions/checkout@v3  # works
+      #
+      # version per google claude on 2026/10
+      - uses: actions/checkout@v7   # testing
 
       - name: Print environment variables exposed by GitHub
         run: |
@@ -184,16 +233,16 @@ jobs:
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui' }}
         name: Install latest packages (pandas, matplotlib)
         run: |
-          pip install 'pandas>=1.0' matplotlib
+          pip install pandas matplotlib
 
-      - if: ${{  matrix.python-version != '3.14' && (matrix.mode == 'latest' ||
+      - if: ${{  matrix.python-version != '3.15' && (matrix.mode == 'latest' ||
                  matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         name: Install latest packages (h5py)
         run: |
           pip install h5py tables
 
-      - if: ${{ matrix.python-version != '3.14-dev' && (
+      - if: ${{ matrix.python-version != '3.15' && (
                 matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                 matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         name: Install latest packages (imageio, pillow)
@@ -203,7 +252,7 @@ jobs:
         run: |
           pip install imageio pillow>=10.1.0
 
-      - if: ${{ matrix.python-version != '3.14-dev' && (
+      - if: ${{ matrix.python-version != '3.15' && (
                matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                matrix.mode == 'latest_pyqt5_gui'   || matrix.mode == 'latest_pyqt6_gui') }}
         name: Install latest packages (vtk)
@@ -212,24 +261,28 @@ jobs:
         run: |
           pip install vtk qtpy
 
-      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.15-dev' }}
+      - if: ${{ matrix.mode == 'latest_pyside2_gui' && matrix.python-version != '3.15' }}
         name: Install PySide2
         run: |
+          sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
           pip install PySide2
 
-      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.15-dev' }}
+      - if: ${{ matrix.mode == 'latest_pyside6_gui' && matrix.python-version != '3.15' }}
         name: Install PySide6
         run: |
+          sudo apt-get install -y libegl1 libgl1 libxcb-cursor0
           pip install PySide6
 
-      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.15-dev' }}
+        #sudo apt-get install -y xvfb libegl1 libgl1 libxcb-cursor0
+      - if: ${{ matrix.mode == 'latest_pyqt5_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt5
         run: |
           pip install PyQt5
 
-      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.15-dev' }}
+      - if: ${{ matrix.mode == 'latest_pyqt6_gui' && matrix.python-version != '3.15' }}
         name: Install PyQt6
         run: |
+          sudo apt-get install -y libegl1 libgl1 libxcb-cursor0
           pip install PyQt6
 
 #-----------------------------------------------------------------------------------
@@ -249,13 +302,12 @@ jobs:
         # python 3.9 gets everything
         # any python 3.8 test that can't be run in the previous block
       - if: ${{ matrix.mode != 'no_scipy' }}
-        name: Install dependencies (bdist_wheel & develop)
+        name: Install dependencies (pip)
          #pip install dist/pyNastran*.whl
          #python setup.py bdist_wheel
         #if: ${{  (matrix.python-version == '3.9') || (matrix.python-version == '3.10') }}
         run: |
           pip install -e .
-          #python setup.py develop
 
       - if: ${{ matrix.mode == 'no_scipy' }}
         name: Remove Scipy
@@ -272,34 +324,88 @@ jobs:
       - if: ${{ matrix.mode == 'no_scipy' }}
         name: Run No Scipy
         run: |
-         python pyNastran/all_tests_no_scipy.py
+         coverage run pyNastran/all_tests_no_scipy.py
 
       - if: ${{ (matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if: ${{ matrix.python-version == '3.12' || (
         #          matrix.mode == 'latest' || matrix.mode == 'latest_basic' || matrix.mode == 'old') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         name: Run No GUI 3.12
+        #run: |
+        # python pyNastran/all_tests_no_gui.py
+        # coverage run pyNastran/all_tests_no_gui.py
         run: |
-         python pyNastran/all_tests_no_gui.py
          coverage run pyNastran/all_tests_no_gui.py
 
         # 3.11 - No matching distribution found for vtk
       - if: ${{ (matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
                  matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         name: Run GUI
+        #env:
+        #  # run headless
+        #  # don't use this with xvfb
+        #  QT_QPA_PLATFORM: offscreen
+        env:
+          # used with xvfb
+          # Force software rendering for VTK/OpenGL (instead of GPU)
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          GALLIUM_DRIVER: "llvmpipe"
+
+          # Explicitly block any accidental Wayland bypass
+          QT_QPA_PLATFORM: "xcb"
+
         #if: ${{ matrix.python-version != '3.12' && (
         #         matrix.mode == 'latest_pyside2_gui' || matrix.mode == 'latest_pyside6_gui' ||
         #         matrix.mode == 'latest_pyqt5_gui'  || matrix.mode == 'latest_pyqt6_gui') }}
         #if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+        # includes all tests, but core dumps on CI
+        # is that due to taking too long?
+        #run: |
+        # python pyNastran/all_tests.py
+        # coverage run pyNastran/all_tests.py
+
+        # double runs
+        # gui only - xvfb only on first run
+        #run: |
+        # xvfb-run python pyNastran/all_tests_gui.py
+        # coverage run pyNastran/all_tests_gui.py
+        #
+        # xvfb-run: fakes a display
+        #   --auto-servernum: makes xvfb find the right display port
+
+        # core dump
+        #run: |
+        # xvfb-run --auto-servernum coverage run pyNastran/all_tests_gui.py
+
+        # core dump
+        #run: |
+        # xvfb-run --auto-servernum python pyNastran/all_tests_gui.py
+
+        # latest AI hallucination
+        # env:   COVERAGE_CORE: sys
+        #run: |
+        #  xvfb-run --server-args="-screen 0 1024x768x24" python pyNastran/all_tests_gui.py
+
+        # identified vtk core dump issue
+        #run: |
+        #  sudo apt-get update && sudo apt-get install -y gdb
+        #  xvfb-run --server-args="-screen 0 1024x768x24" gdb -ex "run" -ex "bt" -ex "quit" --args python pyNastran/all_tests_gui.py
+
+        # final version
+        #run: |
+        # coverage run pyNastran/all_tests_gui.py
+        # coverage run --append pyNastran/all_tests_no_gui.py
         run: |
-         python pyNastran/all_tests.py
          coverage run pyNastran/all_tests.py
 
       #- name: Upload coverage
       #  run: |
       #   codecov
+      #
+      # version per https://github.com/codecov/codecov-action on 2026/10
       - name: Upload coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v7
         env:
          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 

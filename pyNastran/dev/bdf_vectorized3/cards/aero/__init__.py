@@ -6,6 +6,7 @@ import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types # , cast_ints
 from pyNastran.bdf.field_writer_8 import print_card_8, set_blank_if_default # print_float_8,
+from pyNastran.bdf.field_writer_16 import print_float_16
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, integer_or_string,
     double, double_or_blank,
@@ -3885,13 +3886,14 @@ class AELINK(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
 
         aelink_ids = array_str(self.aelink_id, size=size)
+        linking_coefficients = array_float(self.linking_coefficients, size=size).tolist()
         for aelink_id, label, (icoeff0, icoeff1) in zip(aelink_ids, self.label, self.icoeff):
 
             independent_labels = self.independent_labels[icoeff0:icoeff1]
-            linking_coefficients = self.linking_coefficients[icoeff0:icoeff1]
+            linking_coeffs = linking_coefficients[icoeff0:icoeff1]
 
             list_fields = ['AELINK', aelink_id, label]
-            for (ivar, ival) in zip(independent_labels, linking_coefficients):
+            for (ivar, ival) in zip(independent_labels, linking_coeffs):
                 list_fields += [ivar, ival]
             bdf_file.write(print_card(list_fields))
         return
@@ -4034,8 +4036,9 @@ class AEFACT(VectorizedBaseCard):
                    write_card_header: bool=False) -> None:
         print_card, size = get_print_card_size(size, self.max_id)
 
+        fractions = array_float(self.fractions, size=size).tolist()
         for sid, (ifraction0, ifraction1) in zip(self.aefact_id, self.ifraction):
-            factors = self.fractions[ifraction0:ifraction1].tolist()
+            factors = fractions[ifraction0:ifraction1]
             list_fields = ['AEFACT', sid] + factors
             bdf_file.write(print_card(list_fields))
         return
@@ -4097,7 +4100,6 @@ class AESTAT(VectorizedBaseCard):
         aestat_id = integer(card, 1, 'ID')
         label = string(card, 2, 'label')
         assert len(card) <= 3, f'len(AESTAT card) = {len(card):d}\ncard={card}'
-        #return AESTAT(aestat_id, label, comment=comment)
         self.cards.append((aestat_id, label, ifile, comment))
         self.n += 1
         return self.n - 1
@@ -4373,7 +4375,8 @@ class AESURF(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int=0,
+                 comment: str='') -> int:
         """
         Adds an AESURF card from ``BDF.add_card(...)``
 
@@ -4407,9 +4410,6 @@ class AESURF(VectorizedBaseCard):
         tqllim = integer_or_blank(card, 15, 'tqllim')
         tqulim = integer_or_blank(card, 16, 'tqulim')
         assert len(card) <= 17, f'len(AESURF card) = {len(card):d}\ncard={card}'
-        #return AESURF(aesurf_id, label, cid1, alid1, cid2, alid2, eff, ldw,
-                      #crefc, crefs, pllim, pulim, hmllim, hmulim,
-                      #tqllim, tqulim, comment=comment)
         card = (aesurf_id, label, cid1, alid1, cid2, alid2, eff, ldw,
                 crefc, crefs, pllim, pulim, hmllim, hmulim,
                 tqllim, tqulim, ifile, comment)
@@ -4430,11 +4430,15 @@ class AESURF(VectorizedBaseCard):
         refc = np.zeros(ncards, dtype='float64')
         refs = np.zeros(ncards, dtype='float64')
 
+        # control surface limits
         pllim = np.zeros(ncards, dtype='float64')
         pulim = np.zeros(ncards, dtype='float64')
-        hmllim = np.zeros(ncards, dtype='float64')
 
+        # hinge moment limits
+        hmllim = np.zeros(ncards, dtype='float64')
         hmulim = np.zeros(ncards, dtype='float64')
+
+        # TABLED1 deflection limits
         tqllim = np.zeros(ncards, dtype='int32')
         tqulim = np.zeros(ncards, dtype='int32')
         comment = {}
@@ -4540,7 +4544,7 @@ class AESURF(VectorizedBaseCard):
             self,
             missing,
             coord=(model.coord.coord_id, ucoords),
-            #aelist=(model.aelist.aelist_id, aelist_ids),
+            #aelist=(model.aelist.aelist_id, uaelist),  # TODO: add me
             #caero=(model.caero1.caero_id, caero_ids),
         )
 
@@ -4558,45 +4562,39 @@ class AESURF(VectorizedBaseCard):
         aesurf_id_ = array_str(self.aesurf_id, size=size)
         cid1_ = array_str(self.coord_id[:, 0], size=size)
         cid2_ = array_str(self.coord_id[:, 1], size=size)
-
-        #elem.label = self.label[i]
-        #elem.eff = self.eff[i]
-        #elem.ldw = self.ldw[i]
-        #elem.refc = self.refc[i]
-        #elem.refs = self.refs[i]
-
-        #elem.pllim = self.pllim[i]
-        #elem.pulim = self.pulim[i]
-        #elem.hmllim = self.hmllim[i]
-        #elem.hmulim = self.hmulim[i]
-        #elem.tqllim = self.tqllim[i]
-        #elem.tqulim = self.tqulim[i]
+        cids2 = self.coord_id[:, 1]
 
         aelist_id1_ = array_str(self.aelist_id[:, 0], size=size)
         aelist_id2_ = array_str(self.aelist_id[:, 1], size=size)
+        # get rid of aelist=0 cid=0
+        aelist_id2s = self.aelist_id[:, 1]
+        i0 = (aelist_id2s == 0)
+        assert np.all(cids2[i0] == 0), cids2[i0]
+        aelist_id2_[i0] = ''
+        cid2_[i0] = ''
 
+        # hinge moment limits
         hmllims = array_float_nan(self.hmllim, size=size, is_double=False)
         hmulims = array_float_nan(self.hmulim, size=size, is_double=False)
 
         tqllims = array_str(self.tqllim, size=size)
         tqulims = array_str(self.tqulim, size=size)
 
-        effs = array_default_float(self.eff, default=0., size=size, is_double=False)
+        # control surface limits
+        pulims = array_default_float(self.pulim, default=np.pi/2, size=size, is_double=False)
+        pllims = array_default_float(self.pllim, default=-np.pi/2, size=size, is_double=False)
+
+        effs = array_default_float(self.eff, default=1.0, size=size, is_double=False)
         ldws = array_default_str(self.ldw, default='LDW', size=size)
+        crefs = array_default_float(self.refc, default=1.0, size=size, is_double=False)
+        srefs = array_default_float(self.refs, default=1.0, size=size, is_double=False)
         for aesurf_id, label, cid1, aelist_id1, \
             cid2, aelist_id2, eff, ldw, crefc, crefs, \
             pllim, pulim, hmllim, hmulim, \
             tqllim, tqulim in zip_longest(
                 aesurf_id_, self.label, cid1_, aelist_id1_, cid2_, aelist_id2_,
-                effs, ldws, self.refc, self.refs,
-                self.pllim, self.pulim, hmllims, hmulims, tqllims, tqulims):
-            #eff = set_blank_if_default(eff, 1.0)
-            #ldw = set_blank_if_default(ldw, 'LDW')
-            crefc = set_blank_if_default(crefc, 1.0)
-            crefs = set_blank_if_default(crefs, 1.0)
-
-            pllim = set_blank_if_default(pllim, -np.pi / 2.)
-            pulim = set_blank_if_default(pulim, np.pi / 2.)
+                effs, ldws, crefs, srefs,
+                pllims, pulims, hmllims, hmulims, tqllims, tqulims):
 
             list_fields = ['AESURF', aesurf_id, label, cid1, aelist_id1,
                            cid2, aelist_id2, eff, ldw, crefc, crefs,
@@ -4753,7 +4751,6 @@ class AESURFS(VectorizedBaseCard):
         print_card, size = get_print_card_size(size, self.max_id)
 
         aesurfs_id_ = array_str(self.aesurfs_id, size=size)
-
         list1_id = array_str(self.list1_id, size=size)
         list2_id = array_str(self.list2_id, size=size)
 

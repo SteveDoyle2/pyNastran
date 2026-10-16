@@ -20,12 +20,67 @@ if TYPE_CHECKING:  # pragma: no cover
     from tables import Group
 
 
+def load_h5_table(model: BDF, input_group: Group):
+    name = '???'
+    log = model.log
+    for h5_element in input_group._f_iter_nodes():
+        if h5_element._c_classid == 'GROUP':
+            table_name = get_group_name(h5_element)
+            
+            #assert len(h5_element) == 2, h5_element
+            #print(table_name, h5_element)
+            if table_name == 'TABLED1':
+                # [(  42, 0, 0,  0, 4, 1)
+                #  (8003, 0, 0,  4, 9, 1)
+                #  (8004, 0, 0, 13, 9, 1)]
+                #print(identity)
+                # /NASTRAN/INPUT//TABLE/TABLED1/IDENTITY
+                # /NASTRAN/INPUT//TABLE/TABLED1/XY
+                #asdf
+                pass
+            if table_name in {'TABLED1', 'TABLED2', 'TABLED3'}:
+                xy = h5_element['XY'].read()
+                identity = h5_element['IDENTITY'].read()
+            elif table_name in {'TABLED4', 'TABLEM4'}:
+                coef = h5_element['COEF'].read()
+                identity = h5_element['IDENTITY'].read()
+            elif table_name in {'TABLEM1', 'TABLEM2', 'TABLEM3'}:
+                xy = h5_element['XY'].read()
+                identity = h5_element['IDENTITY'].read()
+                #for h5_elementi in h5_element._f_iter_nodes():
+                #    print(h5_elementi)
+                #pass
+            else:
+                log.warning(f'skipping {table_name} in _load_h5_table header')
+            continue
+        table_name = h5_element.name
+        print(f'checking {table_name}')
+        data = h5_table.read()
+
+        skip_elements = {
+            #'CAERO2', 'CAERO3', 'CAERO4', 'CAERO5',
+        }
+        if element_name in skip_elements:
+            if hasattr(model, element_name.lower()):
+                raise NotImplementedError(element_name)
+            log.warning(f'skipping {element_name} in _load_h5_element')
+            continue
+        else:
+            log.warning(f'skipping {table_name} in _load_h5_table')
+            continue
+        data['DOMAIN_ID']
+        #elem.domain_id = data['DOMAIN_ID']
+        #elem.n = nelements
+        #elem.write()
+    return
+
 def load_h5_element(model: BDF, input_group: Group):
     name = '???'
+    log = model.log
     for h5_element in input_group._f_iter_nodes():
         if h5_element._c_classid == 'GROUP':
             class_name = get_group_name(h5_element)
-            print(f'skipping {class_name} in _load_h5_element')
+            log.warning(f'skipping {class_name} in _load_h5_element')
             continue
 
         element_name = h5_element.name
@@ -44,7 +99,7 @@ def load_h5_element(model: BDF, input_group: Group):
         if element_name in skip_elements:
             if hasattr(model, element_name.lower()):
                 raise NotImplementedError(element_name)
-            model.log.warning(f'skipping {element_name} in _load_h5_element')
+            log.warning(f'skipping {element_name} in _load_h5_element')
             continue
 
         elif element_name in {'CQUAD4', 'CQUAD8', 'CQUADR',
@@ -109,11 +164,11 @@ def load_h5_element(model: BDF, input_group: Group):
         elif element_name == 'CDAMP4':
             elem = model.cdamp4
             _read_cdamp4(name, data, elem)
-        elif element_name == 'CDAMP4':
+        elif element_name == 'CVISC':
             elem = model.cvisc
             _read_cvisc(name, data, elem)
         else:
-            model.log.warning(f'skipping {element_name} in _load_h5_element')
+            log.warning(f'skipping {element_name} in _load_h5_element')
             #print(f'skipping {element_name} in _load_h5_element')
             continue
         elem.domain_id = data['DOMAIN_ID']
@@ -144,11 +199,14 @@ def _load_h5_conm2(model: BDF, data, element_id) -> CONM2:
     elem.coord_id = data['CID']
     elem._mass = data['M']
     elem.xyz_offset = np.stack([data['X1'], data['X2'], data['X3']], axis=1)
-    elem.inertia = np.hstack([
+    elem.inertia = np.column_stack([
+        data['I1'], data['I2'], data['I3']])
+    inertia2 = np.hstack([
         data['I1'].reshape(nelements, 1),
         data['I2'].reshape(nelements, 2),
         data['I3'].reshape(nelements, 3),
     ])
+    assert np.allclose(elem.inertia, inertia2)
     return elem
 
 def _load_h5_crod_ctube_cshear(elem: CROD | CTUBE | CSHEAR, data, element_id):
@@ -454,17 +512,24 @@ def _read_cdamp4(name: str, group: h5py._hl.dataset.Dataset,
 def _read_cvisc(name: str, group: h5py._hl.dataset.Dataset, elem: CVISC) -> None:
     """
     ('EID', 'PID', 'G1', 'G2', 'C1', 'C2', 'DOMAIN_ID')
+    ('EID', 'PID', 'G', 'DOMAIN_ID')
     """
-    assert len(group.dtype) == 7, (group.dtype, len(group.dtype))
     element_id = group['EID']
     property_id = group['PID']
-    G1 = group['G1']
-    G2 = group['G2']
-    C1 = group['C1']
-    C2 = group['C2']
-    nodes = np.column_stack([G1, G2])
-    components = np.column_stack([C1, C2])
-    #assert NIDS.shape[1] == 2, NIDS.shape
+    if len(group.dtype) == 4:
+        neid = len(element_id)
+        components = np.full((neid, 2), -1, dtype=element_id.dtype)
+        nodes = group['G']
+        elem.model.log.warning('faking CVISC components because they are missing from hdf5')
+    else:
+        assert len(group.dtype) == 7, (group.dtype, len(group.dtype))
+        G1 = group['G1']
+        G2 = group['G2']
+        C1 = group['C1']
+        C2 = group['C2']
+        nodes = np.column_stack([G1, G2])
+        components = np.column_stack([C1, C2])
+
     DOMAIN_ID = group['DOMAIN_ID']
     #for eid, pid, nids, c1, c2 in zip(EID, PID, NIDS, C1, C2):
         #obj = geom_model.add_celas1(eid, pid, nids, c1=c1, c2=c2, comment='')

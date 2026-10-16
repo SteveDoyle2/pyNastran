@@ -1,16 +1,22 @@
 import unittest
 import pathlib
 
+from cpylog import SimpleLogger
 import pyNastran
 import numpy as np
+from pyNastran.bdf.bdf import read_bdf
 from pyNastran.dev.bdf_vectorized3.test.test_bdf import (
     read_bdfv, main as test_bdf, IS_PYTABLES)
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.op2_vectorized3.test.test_op2 import main as test_op2
+from pyNastran.dev.bdf_vectorized3.to_bdf import (
+    bdf_to_bdf_vectorized, bdf_vectorized_to_bdf)
+from pyNastran.bdf.test.compare import compare
 
 PKG_PATH = pathlib.Path(pyNastran.__path__[0])
 TEST_PATH = PKG_PATH / 'bdf' / 'test'
 MODEL_PATH = PKG_PATH / '..' / 'models'
+BWB_PATH = MODEL_PATH / 'bwb'
 
 #from cpylog import SimpleLogger
 
@@ -23,6 +29,38 @@ class TestModelsLax(unittest.TestCase):
 
 
 class TestModels(unittest.TestCase):
+
+    def test_to_bdf_bwb(self):
+        """tests ``model conversion``"""
+        log = SimpleLogger(level='warning')
+        bdf_filename = BWB_PATH / 'bwb_saero.bdf'
+
+        # read from scratch
+        model1 = read_bdf(bdf_filename, log=log, xref=False)
+
+        model = read_bdf(bdf_filename, log=log)
+        modelv = bdf_to_bdf_vectorized(model, clean_parent=True)
+        assert len(modelv.params), modelv.params
+
+        model2 = bdf_vectorized_to_bdf(modelv, clean_parent=True)
+        #model2.cross_reference()
+        assert len(model2.params) == len(model1.params), model2.params
+        assert len(model2.nodes) == len(model1.nodes), model2.nodes
+        assert len(model2.properties) == len(model1.properties), model2.properties
+        assert len(model2.materials) == len(model1.materials), model2.materials
+        assert len(model2.coords) == len(model1.coords), model2.coords
+
+        cards1 = sorted(model1.card_count)
+        cards2 = sorted(model2.card_count)
+        assert len(model2.card_count) == len(model1.card_count), model2.card_count
+
+        skip_cards = []
+        diff_cards = compare(model1, model2, xref=False,
+                             run_mass=False, check=True,
+                             print_stats=False, quiet=True,
+                             skip_cards=skip_cards)
+        assert len(diff_cards) == 0, diff_cards
+
     def test_h5_freq(self):
         h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         args = ['test_bdf', str(h5_filename), '--skip_nominal', '--quiet']

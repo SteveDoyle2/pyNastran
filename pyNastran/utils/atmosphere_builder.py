@@ -17,140 +17,20 @@ from pyNastran.utils.atmosphere import (
 )
 
 
-def build_envelope():
-    alt_units = 'ft'
-    eas_units = 'knots'
-    cas_units = 'knots'
-
-    xaxis = 'mach'
-    #xaxis = 'cas'
-    #xaxis = 'eas'
-    #yaxis = 'alt'
-    #yaxis = 'eas'
-    yaxis = 'cas'
-    data = [
-        # const_type, (var_start, val_start), (var_end, val_end, name)),
-        {
-            'label': 'low_const_mach1',
-            'tag': 'low_const_mach1',
-            'const_type': 'eas',
-            'start': {'alt': 0, 'mach': 0.2},
-            'start_name': '0',
-
-            'end':   {'alt': 40000,}, #[('alt', 40000), ('eas', '0')],
-            'npoints': 50,
-            'end_name': 'minQ_maxAlt',
-        },
-        {
-            'label': 'const_alt2',
-            'tag': 'const_alt2',
-            'const_type': 'alt',
-            'start': 'minQ_maxAlt',
-            'end': {'alt': 40000, 'mach': 0.8},
-            'npoints': 5,
-            'end_name': 'maxQ_maxAlt',
-        },
-        #{
-        #    'label': 'max_q1',
-        #    'tag': 'max_q1',
-        #    'const_type': 'eas',
-        #    'start': {'alt': 0, 'eas': 225},
-        #    'start_name': 'max_q0',
-        #    'end': {'mach': 0.8,},
-        #    'npoints': 10,
-        #    'end_name': 'maxQ_maxMach',
-        #},
-        {
-            'label': 'max_q2',
-            'tag': 'max_q2',
-            'const_type': 'eas',
-            'start': {'alt': 0, 'eas': 250},
-            'start_name': 'max_q0',
-            #'end': {'alt': 40000,},
-            'end': {'mach': 0.8,},
-            'npoints': 10,
-            'end_name': 'maxQ_minAlt',
-        },
-        {
-            'label': 'min_alt',
-            'tag': 'min_alt',
-            'const_type': 'alt',
-            'start': '0',
-            'end': 'max_q0',
-            'npoints': 10,
-        },
-        {
-            'label': 'max_mach',
-            'tag': 'max_mach',
-            'const_type': 'mach',
-            'start': 'maxQ_maxAlt',
-            'end': 'maxQ_minAlt',
-            'npoints': 10,
-            'end_name': 'maxQ_maxAlt',
-        },
-        {
-            'tag': 'max_cas_alt',
-            'const_type': 'cas',
-            'start': {'alt': 40000, 'mach': 0.8},
-            'end': {'alt': 10000,},
-            'npoints': 10,
-        },
-       #{
-       #    'tag': 'max_cas_mach',
-       #    'const_type': 'cas',
-       #    'start': {'alt': 40000, 'mach': 0.8},
-       #    'end': {'mach': 0.},
-       #    'npoints': 10,
-       #},
-       #{
-       #    'tag': 'cas_alt',
-       #    'const_type': 'mach',
-       #    'start': {'alt': 40000, 'cas': 200},
-       #    'end': {'alt': 0.},
-       #    'npoints': 10,
-       #},
-       #{
-       #    'tag': 'cas_mach',
-       #    'const_type': 'mach',
-       #    'start': {'mach': 0.5, 'cas': 200},
-       #    'end': {'alt': 0.},
-       #    'npoints': 10,
-       #},
-    ]
-    start = {}
-    end = {}
+def build_envelope(data,
+                   xaxis: str, yaxis: str,
+                   alt_units='ft', eas_units='knots',
+                   cas_units: str='knots'):
     stored_data = {}
-    mylines = []
 
     fig = plt.figure(1)
     ax = fig.gca()
-    icolor = 0
-    for idata, datai in enumerate(data):
-        data_outi = _build_line(idata, datai,
-                                stored_data,
-                                alt_units, eas_units, cas_units)
-        xdata = data_outi[xaxis]
-        ydata = data_outi[yaxis]
-        linestyle = datai.get('linestyle', '-')
-        color = datai.get('color', f'C{idata}')
-        label = datai.get('label', None)
+    data_out, start, end = run_data(
+        ax, data,
+        alt_units, eas_units, cas_units)
+    plot_data(xaxis, yaxis, data, data_out, ax)
 
-        tag = datai['tag']
-        alt = data_outi['alt']
-        mach = data_outi['mach']
-        eas = data_outi['eas']
-        starti = {'alt': alt[0], 'mach': mach[0], 'eas': eas[0]}
-        endi = {'alt': alt[-1], 'mach': mach[-1], 'eas': eas[-1]}
-
-        assert tag not in start, tag
-        start[tag] = starti
-        end[tag] = endi
-        ax.plot(xdata, ydata,
-                linestyle=linestyle, label=label, color=color)
-        mylines.append(data_outi)
-        #print('-----------------')
-
-    fend(ax, xaxis, yaxis)
+    #fend(ax, xaxis, yaxis)
     #-------------------------------------------------
     #print('---------------------------------------')
     scale = 1.1
@@ -165,7 +45,7 @@ def build_envelope():
             'start_name': '0',
 
             'end':   {'mach': end['low_const_mach1']['mach'],},
-            'npoints': 50,
+            'npoints': 20,
             'end_name': 'minQ_maxAlt-B',
         },
         {
@@ -188,33 +68,59 @@ def build_envelope():
             'end_name': 'maxQ_maxMach-B',
         },
     ]
-    linestyle = '--'
-    for idata, datai in enumerate(data2):
-        data_outi = _build_line(idata, datai,
-                                stored_data,
-                                alt_units, eas_units, cas_units)
-        xdata = data_outi[xaxis]
-        ydata = data_outi[yaxis]
-        #linestyle = datai.get('linestyle', '-')
-        color = datai.get('color', f'C{idata}')
-        label = datai.get('label', None)
+    data_out2, start, end = run_data(
+        ax, data2,
+        alt_units, eas_units, cas_units)
+    plot_data(xaxis, yaxis, data2, data_out2, ax,
+              linestyle='--')
 
-        #print(color)
+    fend(ax, xaxis, yaxis)
+    return data_out
+
+def run_data(ax, data,
+             alt_units: str, eas_units: str,
+             cas_units: str):
+    start = {}
+    end = {}
+    data_out = {}
+    stored_data = {}
+    for idata, datai in enumerate(data):
+        data_outi = _build_line(
+            idata, datai,
+            stored_data,
+            alt_units, eas_units, cas_units)
+
+        tag = datai['tag']
         alt = data_outi['alt']
         mach = data_outi['mach']
         eas = data_outi['eas']
-        #print(f'**alt={alt}')
-        #print(f'**eas={eas}')
-        #starti = {'alt': alt[0], 'mach': mach[0], 'eas': eas[0]}
-        #endi = {'alt': alt[-1], 'mach': mach[-1], 'eas': eas[-1]}
-        #starts.append(starti)
-        #ends.append(endi)
-        ax.plot(xdata, ydata,
-                linestyle=linestyle, label=label, color=color)
-        mylines.append(data_outi)
+        cas = data_outi['cas']
+        starti = {'alt': alt[0], 'mach': mach[0], 'eas': eas[0], 'cas': cas[0]}
+        endi = {'alt': alt[-1], 'mach': mach[-1], 'eas': eas[-1], 'cas': cas[-1]}
 
-    fend(ax, xaxis, yaxis)
-    return mylines
+        assert tag not in start, tag
+        start[tag] = starti
+        end[tag] = endi
+        data_out[tag] = data_outi
+    return data_out, start, end
+
+
+def plot_data(xaxis: str, yaxis: str,
+              data, data_out, ax,
+              linestyle: str='-'):
+    idata = 0
+    assert linestyle in ['', '-', '--'], linestyle
+    for tag, data_outi in data_out.items():
+        datai = data[idata]
+        xdata = data_outi[xaxis]
+        ydata = data_outi[yaxis]
+        linestylei = datai.get('linestyle', linestyle)
+        color = datai.get('color', f'C{idata}')
+        label = datai.get('label', None)
+
+        ax.plot(xdata, ydata,
+                linestyle=linestylei, label=label, color=color)
+        idata += 1
 
 def fend(ax, xaxis, yaxis):
     ax.set_xlabel(xaxis)
@@ -478,7 +384,110 @@ def _point_to_data(tag: str,
     }
     return out # alt, mach
     
+def main():
+    alt_units = 'ft'
+    eas_units = 'knots'
+    cas_units = 'knots'
+
+    xaxis = 'mach'
+    #xaxis = 'cas'
+    #xaxis = 'eas'
+    #yaxis = 'alt'
+    yaxis = 'eas'
+    #yaxis = 'cas'
+
+    data = [
+        # const_type, (var_start, val_start), (var_end, val_end, name)),
+        {
+            'label': 'low_const_mach1',
+            'tag': 'low_const_mach1',
+            'const_type': 'eas',
+            'start': {'alt': 0, 'mach': 0.2},
+            'start_name': '0',
+
+            'end':   {'alt': 40000,}, #[('alt', 40000), ('eas', '0')],
+            'npoints': 50,
+            'end_name': 'minQ_maxAlt',
+        },
+        {
+            'label': 'const_alt2',
+            'tag': 'const_alt2',
+            'const_type': 'alt',
+            'start': 'minQ_maxAlt',
+            'end': {'alt': 40000, 'mach': 0.8},
+            'npoints': 5,
+            'end_name': 'maxQ_maxAlt',
+        },
+        #{
+        #    'label': 'max_q1',
+        #    'tag': 'max_q1',
+        #    'const_type': 'eas',
+        #    'start': {'alt': 0, 'eas': 225},
+        #    'start_name': 'max_q0',
+        #    'end': {'mach': 0.8,},
+        #    'npoints': 10,
+        #    'end_name': 'maxQ_maxMach',
+        #},
+        {
+            'label': 'max_q2',
+            'tag': 'max_q2',
+            'const_type': 'eas',
+            'start': {'alt': 0, 'eas': 250},
+            'start_name': 'max_q0',
+            #'end': {'alt': 40000,},
+            'end': {'mach': 0.8,},
+            'npoints': 10,
+            'end_name': 'maxQ_minAlt',
+        },
+        {
+            'label': 'min_alt',
+            'tag': 'min_alt',
+            'const_type': 'alt',
+            'start': '0',
+            'end': 'max_q0',
+            'npoints': 10,
+        },
+        {
+            'label': 'max_mach',
+            'tag': 'max_mach',
+            'const_type': 'mach',
+            'start': 'maxQ_maxAlt',
+            'end': 'maxQ_minAlt',
+            'npoints': 10,
+            'end_name': 'maxQ_maxAlt',
+        },
+        {
+            'tag': 'max_cas_alt',
+            'const_type': 'cas',
+            'start': {'alt': 40000, 'mach': 0.8},
+            'end': {'alt': 10000,},
+            'npoints': 10,
+        },
+       #{
+       #    'tag': 'max_cas_mach',
+       #    'const_type': 'cas',
+       #    'start': {'alt': 40000, 'mach': 0.8},
+       #    'end': {'mach': 0.},
+       #    'npoints': 10,
+       #},
+       #{
+       #    'tag': 'cas_alt',
+       #    'const_type': 'mach',
+       #    'start': {'alt': 40000, 'cas': 200},
+       #    'end': {'alt': 0.},
+       #    'npoints': 10,
+       #},
+       #{
+       #    'tag': 'cas_mach',
+       #    'const_type': 'mach',
+       #    'start': {'mach': 0.5, 'cas': 200},
+       #    'end': {'alt': 0.},
+       #    'npoints': 10,
+       #},
+    ]
+    build_envelope(data, xaxis, yaxis,
+                   alt_units='ft', eas_units='knots')
 
 
 if __name__ == '__main__':
-    build_envelope()
+    main()

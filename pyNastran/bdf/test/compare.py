@@ -14,16 +14,18 @@ def compare(fem1: BDF,
             run_mass: bool=True,
             check: bool=True,
             print_stats: bool=True,
+            skip_cards: list[str] | None=None,
             quiet: bool=False) -> list[str]:
     """compares two fem objects"""
     fem1.log.debug('compare')
+    skip_cards = skip_cards if skip_cards is not None else []
     diff_cards = compare_card_count(
-        fem1, fem2,
+        fem1, fem2, skip_cards,
         print_stats=print_stats, quiet=quiet)
     if xref and check:
         get_element_stats(fem1, fem2, run_mass=run_mass, quiet=quiet)
         get_matrix_stats(fem1, fem2)
-    compare_card_content(fem1, fem2)
+    compare_card_content(fem1, fem2, skip_cards)
     #compare_params(fem1, fem2)
     #print_points(fem1, fem2)
     return diff_cards
@@ -35,6 +37,7 @@ def compare(fem1: BDF,
 
 def compare_card_count(fem1: BDF,
                        fem2: BDF,
+                       skip_cards: list[str],
                        print_stats: bool=False,
                        quiet: bool=False) -> list[str]:
     """Checks that no cards from fem1 are lost when we write fem2"""

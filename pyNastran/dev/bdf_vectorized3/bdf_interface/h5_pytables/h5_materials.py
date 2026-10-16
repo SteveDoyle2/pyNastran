@@ -48,11 +48,14 @@ def load_h5_material(model: BDF, input_group: Group):
             G23 = data['G23']
             G33 = data['G33']
             rho = data['RHO']
-            alpha = np.hstack([
+            alpha = np.column_stack([
+                data['A1'], data['A2'], data['A12']])
+            alpha2 = np.hstack([
                 data['A1'].reshape(nmaterials, 1),
                 data['A2'].reshape(nmaterials, 1),
                 data['A12'].reshape(nmaterials, 1),
             ])
+            assert np.allclose(alpha, alpha2)
             tref = data['TREF']
             St = data['ST']
             Sc = data['SC']
@@ -91,10 +94,12 @@ def load_h5_material(model: BDF, input_group: Group):
             G1z = data['G1Z']
             G2z = data['G2Z']
             rho = data['RHO']
-            alpha = np.hstack([
+            alpha = np.column_stack([data['A1'], data['A2'], ])
+            alpha2 = np.hstack([
                 data['A1'].reshape(nmaterials, 1),
                 data['A2'].reshape(nmaterials, 1),
             ])
+            assert np.allclose(alpha, alpha2)
             tref = data['TREF']
             Xt = data['XT']
             Xc = data['XC']
@@ -104,10 +109,9 @@ def load_h5_material(model: BDF, input_group: Group):
             ge = data['GE']
             f12 = data['F12']
             strn = data['STRN']
-
             mat._save(material_id, E1, E2, G12, G1z, G2z, nu12,
                       rho, alpha, tref, ge, Xt, Xc, Yt, Yc, S, f12, strn)
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(name)
         material_id = material_id
         mat.n = nmaterials

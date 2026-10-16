@@ -1,7 +1,9 @@
 """various OP2 tests"""
 import os
 import copy
+import struct
 import unittest
+from unittest import mock
 from io import StringIO
 from pathlib import Path
 
@@ -512,6 +514,48 @@ class TestOP2Unit(Tester):
         _read_spcadd_mpcadd(model, 'MPCADD', datai)
         assert len(model.spcadds) == 2, model.spcadds
         assert len(model.mpcadds) == 2, model.mpcadds
+
+
+class TestOP2Params(unittest.TestCase):
+    """PARAM (PVT/PVT0) reading"""
+    def _get_op2(self) -> OP2:
+        op2 = OP2(debug=None)
+        op2._endian = b'<'
+        op2._uendian = '<'
+        op2._set_structs(4)
+        return op2
+
+    def test_pvt0_rvmass(self):
+        """PARAM,RVMASS,YES is an NX string PARAM"""
+        op2 = self._get_op2()
+        data = (
+            b'AUTOSPC ' + struct.pack('<i', 3) + b'YES     ' +
+            b'RVMASS  ' + struct.pack('<i', 3) + b'YES     '
+        )
+        op2._read_pvto_4_helper(data, len(data))
+        assert op2.params['RVMASS'].values == ['YES'], op2.params['RVMASS']
+        assert op2.params['AUTOSPC'].values == ['YES'], op2.params['AUTOSPC']
+
+    def test_pvt0_record_of_length_584(self):
+        """a 584-byte PVT0 record is PARAM data, not a table3 header"""
+        op2 = self._get_op2()
+        op2.table_name = b'PVT0'
+        reader = op2.op2_reader
+        data = b'\x00' * 584
+        calls = []
+
+        def table3_parser(data, ndata):  # pragma: no cover
+            calls.append('table3')
+            raise RuntimeError('PVT0 data was sent to the table3 parser')
+
+        def table4_parser(data, ndata):
+            calls.append('table4')
+            return ndata
+
+        with mock.patch.object(reader, '_get_record_length', return_value=584), \
+             mock.patch.object(reader, '_read_record_ndata', return_value=(data, 584)):
+            reader._read_subtable_3_4(table3_parser, table4_parser, passer=False)
+        assert calls == ['table4'], calls
 
 
 class TestOP2Functions(unittest.TestCase):

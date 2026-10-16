@@ -4,7 +4,7 @@ from itertools import count, zip_longest
 from typing import Optional, Any, TYPE_CHECKING
 
 import numpy as np
-#from pyNastran.bdf.field_writer_8 import print_field_8, print_card_8
+from pyNastran.bdf.field_writer_8 import print_field_8  #, print_card_8
 #from pyNastran.bdf.field_writer_16 import print_field_16, print_card_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
 from pyNastran.bdf.bdf_interface.assign_type import (
@@ -436,15 +436,15 @@ class PSHELL(Property):
             return
 
         pids = np.char.rjust(array_str(self.property_id, size=8), 8).tolist()
-        ts = np.char.rjust(array_float(t, size=8, is_double=False), 8).tolist()
+        t_str = np.char.rjust(array_float(t, size=8, is_double=False), 8).tolist()
 
         # mid1/mid2: -1 means blank
         mid1_str = np.char.rjust(array_default_int(mid1, default=-1, size=8), 8).tolist()
         mid2_str = np.char.rjust(array_default_int(mid2, default=-1, size=8), 8).tolist()
         lines = [f'PSHELL  {pid}{m1}{th}{m2}'.rstrip() + '\n'
                  for pid, m1, th, m2
-                 in zip(pids, mid1_str, ts, mid2_str)]
-        bdf_file.write(''.join(lines))
+                 in zip(pids, mid1_str, t_str, mid2_str)]
+        bdf_file.writelines(lines)
 
     @property
     def allowed_materials(self) -> list[Any]:
@@ -1708,15 +1708,19 @@ class PCOMP(CompositeProperty):
         print_card, size = get_print_card_size(size, self.max_id)
 
         assert self.failure_theory.dtype.name == 'str256', self.failure_theory.dtype.name
+        nsms = array_default_float(self.nsm, default=0., size=size, is_double=False)
+        trefs = array_default_float(self.tref, default=0.0)
+        ges = array_default_float(self.ge, default=0.0)
+        print_float = print_field_8
         for pid, nsm, shear_bonding, failure_theory, ge, tref, lam, z0, \
-            nlayer, ilayer in zip_longest(self.property_id, self.nsm, self.shear_bonding,
-                                          self.failure_theory, self.tref, self.ge, self.lam, self.z0,
+            nlayer, ilayer in zip_longest(self.property_id, nsms, self.shear_bonding,
+                                          self.failure_theory, trefs, ges, self.lam, self.z0,
                                           self.nlayer, self.ilayer):
 
             nsm2 = set_blank_if_default(nsm, 0.0)
             sb2 = set_blank_if_default(shear_bonding, 0.0)
-            tref2 = set_blank_if_default(tref, 0.0)
-            ge2 = set_blank_if_default(ge, 0.0)
+            #tref2 = set_blank_if_default(tref, 0.0)
+            #ge2 = set_blank_if_default(ge, 0.0)
 
             ilayer0, ilayer1 = ilayer
             material_ids = self.material_id[ilayer0 : ilayer1].tolist()
@@ -1725,11 +1729,14 @@ class PCOMP(CompositeProperty):
             souts = self.sout[ilayer0 : ilayer1].tolist()
 
             _total_thickness = sum(thicknesses)
-            z02 = set_blank_if_default(z0, -0.5 * _total_thickness)
+            z0_str = print_float(z0)
+            z0_def = print_float(-0.5 * _total_thickness)
+            if z0_str == z0_def:
+                z0_str = ''
 
             #ndim = self.valid_types[beam_type]
             #assert len(dim) == ndim, 'PCOMP ndim=%s len(dims)=%s' % (ndim, len(dim))
-            list_fields = ['PCOMP', pid, z02, nsm2, sb2, failure_theory, tref2, ge2, lam]
+            list_fields = ['PCOMP', pid, z0_str, nsm2, sb2, failure_theory, tref, ge, lam]
             for (mid, t, theta, sout) in zip(material_ids, thicknesses,
                                              thetas, souts):
                 #assert sout not in ['0', 0.0, 0]
@@ -2186,15 +2193,11 @@ class PCOMPG(CompositeProperty):
         shear_bondings = array_default_float(self.shear_bonding, default=0., size=size, is_double=False)
         trefs = array_default_float(self.tref, default=0., size=size, is_double=False)
         ges = array_default_float(self.ge, default=0., size=size, is_double=False)
+        print_float = print_field_8
         for pid, nsm, sb, failure_theory, ge, tref, lam, z0, \
             ilayer in zip_longest(property_id, nsms, shear_bondings,
                                   self.failure_theory, trefs, ges, self.lam, self.z0,
                                   self.ilayer):
-            #nsm = set_blank_if_default(nsm, 0.0)
-            #sb = set_blank_if_default(sb, 0.0)
-            #tref = set_blank_if_default(tref, 0.0)
-            #ge = set_blank_if_default(ge, 0.0)
-
             ilayer0, ilayer1 = ilayer
             global_ids = self.global_ply_id[ilayer0 : ilayer1].tolist()
             material_ids = self.material_id[ilayer0 : ilayer1].tolist()
@@ -2203,11 +2206,14 @@ class PCOMPG(CompositeProperty):
             souts = self.sout[ilayer0 : ilayer1].tolist()
 
             _total_thickness = sum(thicknesses)
-            z02 = set_blank_if_default(z0, -0.5 * _total_thickness)
+            z0_str = print_float(z0)
+            z0_def = print_float(-0.5 * _total_thickness)
+            if z0_str == z0_def:
+                z0_str = ''
 
             #ndim = self.valid_types[beam_type]
             #assert len(dim) == ndim, 'PCOMP ndim=%s len(dims)=%s' % (ndim, len(dim))
-            list_fields = ['PCOMPG', pid, z02, nsm, sb, failure_theory, tref, ge, lam]
+            list_fields = ['PCOMPG', pid, z0_str, nsm, sb, failure_theory, tref, ge, lam]
             for (global_id, mid, t, theta, sout) in zip(global_ids, material_ids, thicknesses,
                                                         thetas, souts):
                 #theta = set_blank_if_default(theta, 0.0)

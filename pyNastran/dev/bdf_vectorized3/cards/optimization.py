@@ -2078,7 +2078,8 @@ class DVPREL1(VectorizedBaseCard):
         self.n += 1
         return self.n - 1
 
-    def add_card(self, card: BDFCard, ifile: int, comment: str='') -> int:
+    def add_card(self, card: BDFCard, ifile: int=0,
+                 comment: str='') -> int:
         """
         Adds a DVPREL1 card from ``BDF.add_card(...)``
 
@@ -2219,6 +2220,11 @@ class DVPREL1(VectorizedBaseCard):
         self.field_num = field_num
         self.p_min = p_min
         self.p_max = p_max
+        ifinite = np.isfinite(p_min)
+        if len(ifinite):
+            ibad = np.where(p_min > p_max)[0]
+            if len(ibad):
+                raise RuntimeError(f'dvprel_id={dvprel_id[ibad]} p_min={p_min[ibad]} > p_max={p_max[ibad]}')
         self.c0 = c0
 
         self.ndesvar = ndesvar
@@ -2293,15 +2299,19 @@ class DVPREL1(VectorizedBaseCard):
             prop_name, field_num, \
             p_min, p_max, c0, idesvar in zip_longest(dvprel_ids, property_ids, self.property_type,
                                                   self.property_name, self.field_num,
-                                                  self.p_max, self.p_min, c0s, self.idesvar):
+                                                  self.p_min, self.p_max, c0s, self.idesvar):
             idesvar0, idesvar1 = idesvar
             desvars = desvar_ids[idesvar0:idesvar1]
             coeffs = self.coefficients[idesvar0:idesvar1]
             pname_fid = prop_name if prop_name else field_num
-            p_max = set_blank_if_default(p_max, 1e20)
+            p_min2 = '' if not np.isfinite(p_min) else p_min
+            p_max2 = set_blank_if_default(p_max, 1e20)
             #c0 = set_blank_if_default(c0, 0.)
+
+        #p_min = double_or_blank(card, 5, 'p_min', default=np.nan)
+        #p_max = double_or_blank(card, 6, 'p_max', default=1e20)
             list_fields = ['DVPREL1', dvprel_id, prop_type, pid,
-                           pname_fid, p_min, p_max, c0, None]
+                           pname_fid, p_min2, p_max2, c0, None]
             for (dvid, coeff) in zip_longest(desvars, coeffs):
                 list_fields.append(dvid)
                 list_fields.append(coeff)
