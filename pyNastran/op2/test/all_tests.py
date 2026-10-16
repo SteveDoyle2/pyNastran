@@ -2,7 +2,7 @@ from pyNastran.op2.test.test_op2_unit_tests import (
     TestOP2Main, TestOP2Unit,
     TestNX, TestMSC,
     TestAutodeskOP2, TestOptistructOP2,
-    TestSATKOP2, TestOP2Functions)
+    TestSATKOP2, TestOP2Functions, TestOP2Params)
 from pyNastran.op2.test.test_op2_no_scipy import TestOp2NoScipy
 from pyNastran.op2.test.matrices.test_matrices import TestOP2Matrix
 from pyNastran.op2.test.examples.test_op2_in_material_coord import TestMaterialCoordReal
