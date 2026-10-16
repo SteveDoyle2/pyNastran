@@ -52,6 +52,34 @@ class GridPointForces(BaseElement):
         self.ntotal = 0
         self.itotal = 0
 
+    def slice_by_node_id(self, nids: np.ndarray,
+                         assume_exists: bool=False, inplace: bool=False):
+        """keeps all the rows (elements, loads, totals) for the given nodes"""
+        if self.node_element.ndim == 3:
+            # (ntimes, ntotal, 2); the rows must be the same at every time
+            node_element = self.node_element[0, :, :]
+            assert all(np.array_equal(node_element, self.node_element[itime, :, :])
+                       for itime in range(1, self.node_element.shape[0])), \
+                'node_element changes with time; cannot slice'
+        else:
+            node_element = self.node_element
+        nodes = node_element[:, 0]
+        nids = np.unique(nids)
+        if not assume_exists:
+            nids = np.intersect1d(nodes, nids)
+        irow = np.where(np.isin(nodes, nids))[0]
+        assert len(irow) > 0, irow
+        obj = self if inplace else deepcopy(self)
+        if self.node_element.ndim == 3:
+            obj.node_element = obj.node_element[:, irow, :]
+            obj.element_names = obj.element_names[:, irow]
+        else:
+            obj.node_element = obj.node_element[irow, :]
+            obj.element_names = obj.element_names[irow]
+        obj.data = obj.data[:, irow, :]
+        obj.ntotal = len(irow)
+        return obj
+
     def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)

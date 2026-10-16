@@ -1826,9 +1826,15 @@ def _check_result_slice(result, log: SimpleLogger,
         if obj.nelements != nelements:
             log.warning(f'{class_name} lost/gained elements old={nelements} -> new={obj.nelements}')
     elif hasattr(result, 'slice_by_node_id'):
-        ids = result.node_gridtype[:, 0]
-        obj = result.slice_by_node_id(ids)
-        assert len(result.node_gridtype) == len(ids), result
+        if hasattr(result, 'node_gridtype'):
+            ids = result.node_gridtype[:, 0]
+            obj = result.slice_by_node_id(ids)
+            assert len(result.node_gridtype) == len(ids), result
+        else:
+            # grid point forces; node_element is (ntimes, ntotal, 2) or (ntotal, 2)
+            ids = np.unique(result.node_element[..., 0])
+            obj = result.slice_by_node_id(ids)
+            assert obj.data.shape == result.data.shape, (obj.data.shape, result.data.shape)
     elif any([hasattr(result, word) for word in skip_words]):
         return
     elif class_name in skip_classes:
@@ -1860,9 +1866,11 @@ def _get_eids(result) -> np.ndarray:
             eids0 = eids[0, :]
             #print(f'eids(itime=0) = {eids0}')
             if isinstance(eids0[0], integer_types):
-                itotal = np.where(eids0 == 100000000)[0][0]
-                eids = eids0[:itotal] # drop the last id
-                assert 100000000 not in eids, (itotal, eids0, eids)
+                # real strain energy ends with a total (eid=100000000);
+                # complex strain energy doesn't
+                itotals = np.where(eids0 == 100000000)[0]
+                eids = eids0[:itotals[0]] if len(itotals) else eids0  # drop the total
+                assert 100000000 not in eids, (itotals, eids0, eids)
             else:
                 # string; buggy
                 itotal = np.where(eids0 == '')[0][0]

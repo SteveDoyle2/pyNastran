@@ -962,6 +962,19 @@ class ComplexStrainEnergyArray(BaseElement):
         if not is_sort1:
             raise NotImplementedError('SORT2')
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        # element is (ntimes, nelements); the ids are the same at every time
+        element = self.element[0, :]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        # keep the total row (eid=100000000) if there is one
+        icol = np.where(np.isin(element, eids) | (element == 100000000))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[:, icol]
+        obj.data = obj.data[:, icol, :]
+        obj.nelements = neid2
+        return obj
+
     @property
     def is_real(self) -> bool:
         return False

@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from numpy import zeros
 
@@ -5,7 +6,8 @@ from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
-    StressObject, StrainObject, OES_Object)
+    StressObject, StrainObject, OES_Object,
+    slice_eids_by_index)
 from pyNastran.f06.f06_formatting import write_float_13e, write_float_10e, _eigenvalue_header
 
 BASIC_TABLES = {
@@ -33,6 +35,18 @@ class RandomPlateVMArray(OES_Object):
             #pass
         #else:
             #raise NotImplementedError('SORT2')
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.fiber_distance = obj.fiber_distance[irow]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     @property
     def is_real(self) -> bool:
