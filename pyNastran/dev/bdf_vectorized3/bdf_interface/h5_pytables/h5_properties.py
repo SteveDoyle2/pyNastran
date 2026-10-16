@@ -5,7 +5,10 @@ import numpy as np
 from .utils import cast_encoding_strip, get_group_name
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
-        PELAS, PROD, PTUBE, PVISC, PBUSH1D, PBAR, PSHEAR, PSHELL)
+        PELAS, PELAST, PDAMP, PVISC,
+        PROD, PTUBE,
+        PBUSH1D, PBAR,
+        PSHEAR, PSHELL, PCOMP)
     from pyNastran.dev.bdf_vectorized3.cards.elements.beam import PBEAM
     from pyNastran.dev.bdf_vectorized3.cards.elements.solid import PSOLID
     from pyNastran.dev.bdf_vectorized3.cards.elements.bar import PBARL
@@ -24,7 +27,7 @@ def load_h5_property(model: BDF, input_group: Group):
             elif class_name == 'PCOMP':
                 _load_h5_pcomp(model, h5_element)
             else:
-                print(f'skipping {class_name}')
+                model.log.warning(f'skipping {class_name}')
                 #print(class_name)
                 continue
             #print(f'loading {class_name}')
@@ -60,9 +63,7 @@ def load_h5_property(model: BDF, input_group: Group):
             _load_h5_pelas(prop, property_id, data, domain_id)
         elif name == 'PDAMP':
             prop = model.pdamp
-            b = data['B']
-            prop._save(property_id, b)
-            prop.domain_id = domain_id
+            _load_h5_pdamp(prop, property_id, data, domain_id)
 
         elif name == 'PROD':
             prop = model.prod
@@ -74,12 +75,8 @@ def load_h5_property(model: BDF, input_group: Group):
             prop = model.pbush1d
             _load_h5_pbush1d(prop, property_id, data, domain_id)
         elif name == 'PELAST':
-            #('PID', 'TKID', 'TGEID', 'TKNID', 'DOMAIN_ID')
             prop = model.pelast
-            table_k = data['TKID']
-            table_ge = data['TGEID']
-            table_k_nonlinear = data['TKNID']
-            prop._save(property_id, table_k, table_ge, table_k_nonlinear)
+            _load_h5_pelast(prop, property_id, data, domain_id)
         elif name == 'PCONV':
             prop = model.pconv
             _load_h5_pconv(prop, property_id, data, domain_id)
@@ -90,7 +87,7 @@ def load_h5_property(model: BDF, input_group: Group):
             #print(f'skipping {name}')
             model.log.warning(f'skipping {name}')
             continue
-        else:
+        else:  # pragma: no cover
             raise NotImplementedError(name)
         #print(f'loading {name}')
         assert prop is not None, name
@@ -101,11 +98,24 @@ def load_h5_property(model: BDF, input_group: Group):
     model.pshell._filter_pcomp_pshells()
     x = 2
 
+def _load_h5_pdamp(prop: PDAMP, property_id, data, domain_id):
+    b = data['B']
+    prop._save(property_id, b)
+    prop.domain_id = domain_id
+
 def _load_h5_pelas(prop: PELAS, property_id, data, domain_id):
     k = data['K']
     ge = data['GE']
     s = data['S']
     prop._save(property_id, k, ge, s)
+    prop.domain_id = domain_id
+
+def _load_h5_pelast(prop: PELAST, property_id, data, domain_id) -> None:
+    #('PID', 'TKID', 'TGEID', 'TKNID', 'DOMAIN_ID')
+    table_k = data['TKID']
+    table_ge = data['TGEID']
+    table_k_nonlinear = data['TKNID']
+    prop._save(property_id, table_k, table_ge, table_k_nonlinear)
     prop.domain_id = domain_id
 
 def _load_h5_prod(prop: PROD, property_id, data, domain_id):
@@ -163,10 +173,17 @@ def _load_h5_pshell(prop: PSHELL,
     #dtype([('PID', '<i8'), ('MID1', '<i8'), ('T', '<f8'), ('MID2', '<i8'),
            #('BK', '<f8'), ('MID3', '<i8'), ('TS', '<f8'), ('NSM', '<f8'),
            #('Z1', '<f8'), ('Z2', '<f8'), ('MID4', '<i8'), ('DOMAIN_ID', '<i8')])
-    material_id = np.stack([
+    material_id2 = np.stack([
         data['MID1'], data['MID2'],
         data['MID3'], data['MID4']], axis=1)
-    z = np.stack([data['Z1'], data['Z2']], axis=1)
+    z2 = np.stack([data['Z1'], data['Z2']], axis=1)
+
+    material_id = np.column_stack([
+        data['MID1'], data['MID2'],
+        data['MID3'], data['MID4']])
+    z = np.column_stack([data['Z1'], data['Z2']])
+    assert np.allclose(material_id, material_id2)
+    assert np.allclose(z, z2)
     nsm = data['NSM']
     twelveIt3 = data['BK']
     t = data['T']
@@ -215,12 +232,25 @@ def _load_h5_pbar(prop: PBAR,
     #        ('I12', '<f8'), ('DOMAIN_ID', '<i8')])
     FE = data['FE']
     material_id = data['MID']
-    c = np.stack([data['C1'], data['C2']], axis=1)
-    d = np.stack([data['D1'], data['D2']], axis=1)
-    e = np.stack([data['E1'], data['E2']], axis=1)
-    f = np.stack([data['F1'], data['F2']], axis=1)
-    k = np.stack([data['K1'], data['K2']], axis=1)
-    I = np.stack([data['I1'], data['I2'], data['I12']], axis=1)
+    c2 = np.stack([data['C1'], data['C2']], axis=1)
+    d2 = np.stack([data['D1'], data['D2']], axis=1)
+    e2 = np.stack([data['E1'], data['E2']], axis=1)
+    f2 = np.stack([data['F1'], data['F2']], axis=1)
+    k2 = np.stack([data['K1'], data['K2']], axis=1)
+    I2 = np.stack([data['I1'], data['I2'], data['I12']], axis=1)
+    c = np.column_stack([data['C1'], data['C2']])
+    d = np.column_stack([data['D1'], data['D2']])
+    e = np.column_stack([data['E1'], data['E2']])
+    f = np.column_stack([data['F1'], data['F2']])
+    k = np.column_stack([data['K1'], data['K2']])
+    I = np.column_stack([data['I1'], data['I2'], data['I12']])
+    assert np.array_equal(c, c2)
+    assert np.array_equal(d, d2)
+    assert np.array_equal(e, e2)
+    assert np.array_equal(f, f2)
+    assert np.array_equal(k, k2)
+    assert np.array_equal(I, I2)
+
     A = data['A']
     J = data['J']
     nsm = data['NSM']
@@ -579,8 +609,6 @@ def _load_h5_pbeaml(model: BDF, group: Group):
     }
     so = np.array([int_to_str_map_sout[souti] for souti in section['SO']], dtype='|U8')
 
-    model.log.warning(f'skipping PBEAML')
-
     #idim = dims_pos - 1
     idim = np.hstack([
         dims_pos.reshape(ndim_, 1),
@@ -593,8 +621,10 @@ def _load_h5_pbeaml(model: BDF, group: Group):
         (section_pos + section_len).reshape(nsection_, 1)
     ])
     nstation = section_len
+    model.log.warning(f'skipping PBEAML')
     return
-    prop._save(property_id, material_id, idim, ndim, istation, nstation, Type, group_,
+    prop._save(property_id, material_id, idim, ndim,
+               istation, nstation, Type, group_,
                xxb, dims, so, nsm)
     prop.write()
     x = 1
@@ -608,12 +638,11 @@ def _load_h5_pcomp(model: BDF, group: Group):
     ply = group['PLY'].read()
     #dtype([('MID', '<i8'), ('T', '<f8'), ('THETA', '<f8'), ('SOUT', '<i8')])
 
-    prop = model.pcomp
+    prop: PCOMP = model.pcomp
     property_id = identity['PID']
     domain_id = identity['DOMAIN_ID']
     nproperties = len(property_id)
 
-    property_id = property_id
     nlayer = identity['NPLIES']
     z0 = identity['Z0']
     nsm = identity['NSM']

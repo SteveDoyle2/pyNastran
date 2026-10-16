@@ -35,7 +35,8 @@ from pyNastran.bdf.cards.base_card import BaseCard
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_blank, double, string, string_or_blank,
     double_or_string, double_or_blank, integer_or_string)
-from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_string
+from pyNastran.bdf.bdf_interface.assign_type_force import (
+    force_double_or_string, force_double_or_blank)
 from pyNastran.bdf.field_writer_8 import array_float_8
 from pyNastran.utils.numpy_utils import float_types
 
@@ -248,17 +249,17 @@ class TABLED1(Table):
     Defines a tabular function for use in generating frequency-dependent and
     time-dependent dynamic loads.
 
-    +---------+------+-------+-------+--------+-----+-----+------+------+
-    |    1    |   2  |   3   |   4   |    5   |  6  |  7  |  8   |   9  |
-    +=========+======+=======+=======+========+=====+=====+======+======+
-    | TABLED1 |  TID | XAXIS | YAXIS | EXTRAP |     |     |      |      |
-    +---------+------+-------+-------+--------+-----+-----+------+------+
-    |         |  x1  |  y1   |   x2  |   y2   | x3  | y3  | etc. | ENDT |
-    +---------+------+-------+-------+--------+-----+-----+------+------+
-    | TABLED1 |  32  |       |       |        |     |     |      |      |
-    +---------+------+-------+-------+--------+-----+-----+------+------+
-    |         | -3.0 |  6.9  |  2.0  |   5.6  | 3.0 | 5.6 | ENDT |      |
-    +---------+------+-------+-------+--------+-----+-----+------+------+
+    +---------+------+-------+-------+--------+-----+------+------+------+
+    |    1    |   2  |   3   |   4   |    5   |  6  |   7  |  8   |   9  |
+    +=========+======+=======+=======+========+=====+======+======+======+
+    | TABLED1 |  TID | XAXIS | YAXIS | EXTRAP | LOW | HIGH |      |      |
+    +---------+------+-------+-------+--------+-----+------+------+------+
+    |         |  x1  |  y1   |   x2  |   y2   | x3  |  y3  | etc. | ENDT |
+    +---------+------+-------+-------+--------+-----+------+------+------+
+    | TABLED1 |  32  |       |       |        |     |      |      |      |
+    +---------+------+-------+-------+--------+-----+------+------+------+
+    |         | -3.0 |  6.9  |  2.0  |   5.6  | 3.0 |  5.6 | ENDT |      |
+    +---------+------+-------+-------+--------+-----+------+------+------+
 
     ..note:: EXTRAP is NX specific
 
