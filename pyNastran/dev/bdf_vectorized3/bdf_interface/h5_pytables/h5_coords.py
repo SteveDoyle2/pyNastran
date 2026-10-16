@@ -35,7 +35,7 @@ def load_h5_coord(model: BDF, group: Group):
             continue
         elif class_id == 'TABLE':
             pass
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(class_id)
         name = h5_element.name
         #print(f'loading {name}')
@@ -68,7 +68,7 @@ def load_h5_coord(model: BDF, group: Group):
             c2.append(data['C2'])
             c3.append(data['C3'])
             domain_id.append(data['DOMAIN_ID'])
-        else:
+        else:  # pragma: no cover
             raise RuntimeError(name)
 
     if coord_ids:
@@ -102,23 +102,37 @@ def load_h5_coord(model: BDF, group: Group):
         #  np.full((1, 3), -1, dtype='int32')
 
         ref_coord_id = np.hstack(reference_ids)
-        e1 = np.hstack([
+        e1b = np.hstack([
             np.hstack(a1).reshape(ncoord, 1),
             np.hstack(a2).reshape(ncoord, 1),
             np.hstack(a3).reshape(ncoord, 1),
         ])
-        e2 = np.hstack([
+
+        e2b = np.hstack([
             np.hstack(b1).reshape(ncoord, 1),
             np.hstack(b2).reshape(ncoord, 1),
             np.hstack(b3).reshape(ncoord, 1),
         ])
-        e3 = np.hstack([
+        e3b = np.hstack([
             np.hstack(c1).reshape(ncoord, 1),
             np.hstack(c2).reshape(ncoord, 1),
             np.hstack(c3).reshape(ncoord, 1),
         ])
+        e1 = np.column_stack([np.hstack(a1), np.hstack(a2), np.hstack(a3)])
+        e2 = np.column_stack([np.hstack(b1), np.hstack(b2), np.hstack(b3)])
+        e3 = np.column_stack([np.hstack(c1), np.hstack(c2), np.hstack(c3)])
+
+        #e1 = np.column_stack([a1, a2, a3])
+        #e2 = np.column_stack([b1, b2, b3])
+        #e3 = np.column_stack([c1, c2, c3])
+
+        assert np.array_equal(e1, e1b)
+        assert np.array_equal(e2, e2b)
+        assert np.array_equal(e3, e3b)
         coord_save(coord, coord_id, coord_type, icoord, ref_coord_id, nodes, e1, e2, e3)
         coord.write()
+    else:  # pragma: no cover
+        raise RuntimeError(name)
     #x = 1
 
 def coord_save(self: COORD, coord_id, coord_type, icoord,

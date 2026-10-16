@@ -37,6 +37,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     double_or_string, double_or_blank, integer_or_string)
 from pyNastran.bdf.bdf_interface.assign_type_force import force_double_or_string
 from pyNastran.bdf.field_writer_8 import array_float_8
+from pyNastran.utils.numpy_utils import float_types
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
@@ -273,7 +274,8 @@ class TABLED1(Table):
 
     def __init__(self, tid: int, x: np.ndarray, y: np.ndarray,
                  xaxis: str='LINEAR', yaxis: str='LINEAR',
-                 extrap: int=0, comment: str=''):
+                 extrap: int=0, low_extrap: float=0.0,
+                       high_extrap: float=0.0, comment: str=''):
         """
         Creates a TABLED1, which is a dynamic load card that is applied
         by the DAREA card
@@ -292,9 +294,14 @@ class TABLED1(Table):
             LINEAR, LOG
         extrap : int; default=0
             Extrapolation method:
-                0 : linear
+                0 : linear extrapolation
                 1 : constant
+                2 : NX 2019
             .. note:: this is NX specific
+        low_extrap: float; default=0.0
+            only applies for extrap=2
+        high_extrap: float; default=0.0
+            only applies for extrap=2
         comment : str; default=''
             a comment for the card
 
@@ -303,11 +310,13 @@ class TABLED1(Table):
         if comment:
             self.comment = comment
         self.tid = tid
-        self.extrap = extrap
         self.x = np.asarray(x, dtype='float64')
         self.y = np.asarray(y, dtype='float64')
         self.xaxis = xaxis
         self.yaxis = yaxis
+        self.extrap = extrap
+        self.low_extrap = low_extrap
+        self.high_extrap = high_extrap
         assert self.xaxis in ['LINEAR', 'LOG'], f'xaxis={self.xaxis!r}'
         assert self.yaxis in ['LINEAR', 'LOG'], f'yaxis={self.yaxis!r}'
 
@@ -327,10 +336,16 @@ class TABLED1(Table):
         table_id = integer(card, 1, 'tid')
         xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
+
+        # NX 2019
         extrap = integer_or_blank(card, 4, 'extrap', default=0)
+        low_extrap = double_or_blank(card, 5, 'low_extrap', default=0.0)
+        high_extrap = double_or_blank(card, 6, 'high_extrap', default=0.0)
 
         x, y = read_table(card, table_id, 'TABLED1')
-        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
+                       extrap=extrap, low_extrap=low_extrap,
+                       high_extrap=high_extrap, comment=comment)
 
     @classmethod
     def add_card_lax(cls, card: BDFCard, comment: str=''):
@@ -349,9 +364,13 @@ class TABLED1(Table):
         xaxis = string_or_blank(card, 2, 'xaxis', default='LINEAR')
         yaxis = string_or_blank(card, 3, 'yaxis', default='LINEAR')
         extrap = integer_or_blank(card, 4, 'yaxis', default=0)
+        low_extrap = force_double_or_blank(card, 5, 'low_extrap', default=0.0)
+        high_extrap = force_double_or_blank(card, 6, 'high_extrap', default=0.0)
 
         x, y = read_table_lax(card, table_id, 'TABLED1')
-        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
+                       extrap=extrap, low_extrap=low_extrap,
+                       high_extrap=high_extrap, comment=comment)
 
     @classmethod
     def add_op2_data(cls, data, comment: str=''):
@@ -360,26 +379,129 @@ class TABLED1(Table):
         yaxis = _map_axis(ycode)
         x = np.array(xs, dtype='float64')
         y = np.array(ys, dtype='float64')
-        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis, extrap=extrap, comment=comment)
+        return TABLED1(table_id, x, y, xaxis=xaxis, yaxis=yaxis,
+                       extrap=extrap, comment=comment)
 
     def raw_fields(self):
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
+
         list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, self.extrap,
-                       None, None, None, None] + xy + ['ENDT']
+                       self.low_extrap, self.high_extrap, None, None] + xy + ['ENDT']
         return list_fields
 
     def repr_fields(self):
         extrap = set_blank_if_default(self.extrap, 0)
+        low_extrap = set_blank_if_default(self.low_extrap, 0.0)
+        high_extrap = set_blank_if_default(self.high_extrap, 0.0)
         xy = []
         for xi, yi in zip(self.x, self.y):
             xy.extend([xi, yi])
         list_fields = ['TABLED1', self.tid, self.xaxis, self.yaxis, extrap,
-                       None, None, None, None] + xy + ['ENDT']
+                       low_extrap, high_extrap, None, None] + xy + ['ENDT']
         return list_fields
 
-    def interpolate(self, x):
+    def atvalue(self, interp_x: np.ndarray) -> np.ndarray:
+        """
+        gets the interpolated value
+        
+        different x values: y value
+        same x value: 1/2
+
+        # y(t)
+        >>> table = TABLED1(42, [0., 1., 1.0, 2.],
+                                [2., 2., 1.0, 0.])
+        >>> time = np.linspace(0., 1., num=3)
+        >>> y = table.atvalue(time)
+        [0., 1.5, 0.]
+        """
+        if isinstance(interp_x, float_types):
+            interp_x = [interp_x]
+        interp_x = np.asarray(interp_x)
+        #print(f'interp_x = {interp_x}')
+
+        # first point = second point
+        iequal = np.where(self.x[:-1] == self.x[1:])
+        ineg = interp_x < self.x[0]
+        ipos = interp_x > self.x[-1]
+        #print('------------------')
+        ix_equal = []
+        if len(iequal):
+            # verify duplicate points only exist as midpoints
+            assert iequal[0] != 0, iequal
+            assert iequal[-1] != len(self.x)-1, iequal
+
+            for ieq in iequal:
+                xi = self.x[ieq]
+                ixy = np.where(interp_x == xi)
+                #print(f'ixy = {ixy}')
+                ix = ixy[0]
+                if len(ix) == 0:
+                    continue
+                assert len(ix) == 1, (interp_x, xi)
+
+                #assert len(ix) == 2, ix
+                ix_equal.append(ixy)
+        #self.x[iequal]
+        #print(f'x1 = {self.x[:-1]}')
+        #print(f'x2 = {self.x[1:]}')
+        #print(f'iequal = {iequal}')
+
+        #print(f'interp_x = {interp_x}')
+        #print(f'xaxis={self.xaxis} yaxis={self.yaxis}')
+        if self.xaxis == 'LINEAR' and self.yaxis == 'LINEAR':
+            yhalf = (self.y[:-1] + self.y[1:]) / 2.
+            #print(f'yhalf = {yhalf}')
+            y = np.interp(interp_x, self.x, self.y)
+            for ix_eq, ieq in zip(ix_equal, iequal):
+                y[ix_eq] = yhalf[ieq]
+
+            _extrap(self.x, self.y, interp_x, y,
+                    ineg, ipos,
+                    self.extrap, self.low_extrap, self.high_extrap)
+
+        elif self.xaxis == 'LOG' and self.yaxis == 'LINEAR':
+            interp_logx = np.log(interp_x)
+            logx = np.log(x)
+            yhalf = (self.y[:-1] + self.y[1:]) / 2.
+            assert np.isifinite(logx), logx
+            y = np.interp(interp_logx, logx, interp_logx, self.y)
+            y[iequal] = yhalf[iequal]
+            _extrap(np.logx, self.y, interp_logx, y,
+                    ineg, ipos,
+                    self.extrap, self.low_extrap, self.high_extrap)
+
+        elif self.xaxis == 'LINEAR' and self.yaxis == 'LOG':
+            logy = np.log(self.y) # ln
+            yhalf_log = (logy[:-1] + logy[1:]) / 2.
+            assert np.isifinite(logx), logx
+            assert np.isifinite(logy), logy
+            interp_logy = np.interp(interp_x, self.x, interp_x, logy)
+            interp_logy[iequal] = yhalf_log[iequal]
+            _extrap(self.x, logy, interp_logx, interp_logy,
+                    ineg, ipos,
+                    self.extrap, self.low_extrap, self.high_extrap)
+            y = np.exp(interp_logy)
+
+        elif self.xaxis == 'LOG' and self.yaxis == 'LOG':
+            interp_logx = np.log(interp_x)
+            logx = np.log(self.x) # ln
+            logy = np.log(self.y) # ln
+            yhalf_log = (logy[:-1] + logy[1:]) / 2.
+            assert np.isifinite(logx), logx
+            assert np.isifinite(logy), logy
+            interp_logy = np.interp(interp_logx, logx, interp_logx, logy)
+            interp_logy[iequal] = yhalf_log[iequal]
+            _extrap(logx, logy, interp_logx, interp_logy,
+                    ineg, ipos,
+                    self.extrap, self.low_extrap, self.high_extrap)
+            y = np.exp(interp_logy)
+        else:  # pragma: no cover
+            raise NotImplementedError(f'xaxis={self.xaxis!r} yaxis={self.yaxis!r}')
+        return y
+
+    def interpolate(self, x: np.ndarray) -> np.ndarray:
         if isinstance(x, float):
             x = [x]
         x = np.asarray(x)
@@ -405,6 +527,7 @@ class TABLED1(Table):
             return yi
 
         # TODO: could probably speed this up with log rules
+        #print(f'xaxis={self.xaxis} yaxis={self.yaxis}')
         if self.xaxis == 'LINEAR' and self.yaxis == 'LINEAR':
             dx = xj - xi
             y = (xj - x) / dx * yi + (x - xi) / dx * yj
@@ -420,8 +543,49 @@ class TABLED1(Table):
             lny = (xj - x) / dx * np.log(yi) + (x - xi) / dx * np.log(yj)
             y = np.exp(lny)
         else:
-            raise NotImplementedError('xaxis=%r yaxis=%r' % (self.xaxis, self.yaxis))
+            raise NotImplementedError(f'xaxis={self.xaxis!r} yaxis={self.yaxis!r}')
         return y
+
+def _extrap(x, y, x_out, y_out,
+            ineg, ipos,
+            extrap: int, low_extrap: float, high_extrap: float):
+    #print(f'extrap={extrap} low={low_extrap} high={high_extrap}')
+    if ineg.sum() or ipos.sum():
+        if extrap == 0:
+            # linear
+            #y2 = y1-y0/(x1-x0)+y0
+            y_out[ineg] = (y[1]-y[0]) / (x[1]-x[0])*(x_out[ineg]-x[0]) + y[0]
+            y_out[ipos] = (y[-1]-y[-2]) / (x[-1]-x[-2])*(x_out[ipos]-x[-2]) + y[-2]
+
+            #if ineg.sum():
+            #    print(f'0: ineg={ineg}')
+            #    print(f'  neg: x={x_out} x0={x[0]}')
+            #    print(f'  y0={y[0]} y1={y[1]}')
+            #    print(f'  x0={x[0]} x1={x[1]}')
+            #    print(f'  -> x-={x_out[ineg]}')
+            #    print(f'  -> y-={y_out[ineg]}')
+            #else:
+            #    print(f'neg: x={x_out} x0={x[0]}')
+            #if ipos.sum():
+            #    print(f'0: ipos={ipos}')
+            #    print(f'  pos: x={x_out} x-1={x[-1]}')
+            #    print(f'  y-2={y[-2]} y-1={y[-1]}')
+            #    print(f'  x-2={x[-2]} x-1={x[-1]}')
+            #    print(f'  -> x+={x_out[ipos]}')
+            #    print(f'  -> y+={y_out[ipos]}')
+            #else:
+            #    print(f'pos: x={x_out} x-1={x[-1]}')
+        elif extrap == 1:  # constant
+            # constant
+            y_out[ineg] = y[0]
+            y_out[ipos] = y[-1]
+        elif extrap == 2:  # set value
+            # hardcode value
+            y_out[ineg] = low_extrap
+            y_out[ipos] = high_extrap
+        else:
+            raise NotImplementedError(self.extrap)
+
 
 
 class TABLED2(Table):

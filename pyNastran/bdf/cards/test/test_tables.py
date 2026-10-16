@@ -10,6 +10,64 @@ from pyNastran.bdf.cards.test.utils import save_load_deck
 
 class TestTables(unittest.TestCase):
 
+    def test_tabled1_interp(self):
+        table_id = 42
+        table = TABLED1(
+            table_id, [0., 1., 1.0, 2.],
+                      [2., 2., 1.0, 0.5])
+        time = np.linspace(0., 2., num=3)
+
+        y_expected = [2., 1.5, 0.5]
+
+        y = table.atvalue(time)
+        assert np.allclose(y, y_expected), f't={time} y={y} y_expected={y_expected}'
+
+        y2 = table.atvalue(time)
+        assert np.allclose(y2, y_expected), f't={time} y2={y2} y_expected={y_expected}'
+
+        #---------------------------------------------------
+        time = [0., 3.]
+        y3_expected = [2., 0.]
+        y3 = table.atvalue(time)
+        #y3 = table.interpolate(time)
+        assert np.allclose(y3, y3_expected), f't={time} y3={y3} y3_expected={y3_expected}'
+
+        y3 = table.atvalue(time)
+        #y3 = table.interpolate(time)
+        assert np.allclose(y3, y3_expected), f't={time} y3={y3} y3_expected={y3_expected}'
+
+    def test_tabled1_extrap(self):
+        # extrap
+        table4 = TABLED1(
+            table_id+1, [0.,  1., 1.0, 2.],
+                        [1.5, 2., 1.0, 0.5])
+        time = [-1., 3., 4.]
+        y4_expected = [1.,  0., -0.5]
+        assert table4.extrap == 0, table.extrap
+        #print(f'time4 = {time}')
+        y4 = table4.atvalue(time)
+        assert np.allclose(y4, y4_expected), f't={time} y4={y4} y4_expected={y4_expected}'
+        
+        # extrap const
+        #print('extrap const')
+        table4.extrap = 1
+        y5_expected = [1.5,  0.5, 0.5]
+        table4.low_extrap = -0.1
+        table4.high_extrap = 0.12
+        #print(f'time4 = {time}')
+        y5 = table4.atvalue(time)
+        assert np.allclose(y5, y5_expected), f't={time} y5={y5} y5_expected={y5_expected}'
+
+        #print('extrap low/high')
+        # extrap low/high
+        table4.extrap = 2
+        y6_expected = [-0.1,  0.12, 0.12]
+        table4.low_extrap = -0.1
+        table4.high_extrap = 0.12
+        #print(f'time4 = {time}')
+        y6 = table4.atvalue(time)
+        assert np.allclose(y6, y6_expected), f't={time} y6={y6} y6_expected={y6_expected}'
+
     def test_tabrndg(self):
         model = BDF(debug=False)
         tid = 101
