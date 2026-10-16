@@ -333,6 +333,71 @@ class ComplexShearArray(OES_Object):
             raise NotImplementedError('ComplexShearArray-sort2')
         return page_num - 1
 
+    def write_op2(self, op2_file, op2_ascii, itable, new_result, date,
+                  is_mag_phase=False, endian: bytes=b'>'):
+        """
+        writes an OP2
+
+        record = [eid_device, max_shear_r, max_shear_i, avg_shear_r, avg_shear_i]
+        (interleaved; see oes_cshear_complex_5)
+        """
+        import inspect
+        from struct import Struct
+        from pyNastran.op2.op2_interface.write_utils import view_idtype_as_fdtype
+        from pyNastran.op2.writer.utils import fdtype_from_data
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
+        if not self.is_sort1:  # pragma: no cover
+            raise NotImplementedError('SORT2')
+
+        if itable == -1:
+            self._write_table_header(op2_file, op2_ascii, date)
+            itable = -3
+
+        nelements = self.data.shape[1]
+        ntotali = self.num_wide
+        assert ntotali == 5, ntotali
+        ntotal = ntotali * nelements
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
+        op2_ascii.write(f'nelements={nelements:d}\n')
+
+        eids_device = self.element * 10 + self.device_code
+        fdtype = fdtype_from_data(self.data.real, self.size)
+        eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
+
+        struct_13i = Struct(endian + b'13i')
+        struct_i = Struct(endian + b'i')
+        for itime in range(self.ntimes):
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2_file.write(struct_13i.pack(*header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+
+            max_shear = self.data[itime, :, 0]
+            avg_shear = self.data[itime, :, 1]
+            datai = np.column_stack([
+                eid_device_floats,
+                max_shear.real, max_shear.imag,
+                avg_shear.real, avg_shear.imag]).astype(fdtype, copy=False)
+            assert ntotal == datai.size
+            op2_file.write(np.ascontiguousarray(datai).tobytes())
+
+            itable -= 1
+            op2_file.write(struct_i.pack(4 * ntotal))
+            op2_ascii.write('footer = %s\n' % [4 * ntotal])
+            new_result = False
+        return itable
+
     @property
     def headers(self) -> list[str]:
         return self._get_headers()

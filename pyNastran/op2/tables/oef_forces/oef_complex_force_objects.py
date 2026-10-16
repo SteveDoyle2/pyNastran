@@ -61,6 +61,65 @@ class ComplexForceObject(ForceObject):
     def nnodes_per_element(self) -> int:
         return 1
 
+    def write_op2(self, op2_file, op2_ascii, itable, new_result,
+                  date, is_mag_phase=False, endian: bytes=b'>'):
+        """
+        Writes a centroidal complex force table whose record is:
+          [eid_device, real_1, ..., real_n, imag_1, ..., imag_n]
+        which is the inverse of apply_mag_phase(floats, ..., [1..n], [n+1..2n]).
+        Used by CSHEAR and CVISC; classes with a different layout override this.
+        """
+        frame = inspect.currentframe()
+        call_frame = inspect.getouterframes(frame, 2)
+        op2_ascii.write(f'{self.__class__.__name__}.write_op2: {call_frame[1][3]}\n')
+        if not self.is_sort1:  # pragma: no cover
+            raise NotImplementedError('SORT2')
+
+        if itable == -1:
+            self._write_table_header(op2_file, op2_ascii, date)
+            itable = -3
+
+        nelements = self.data.shape[1]
+        ncomponents = self.data.shape[2]
+        ntotali = self.num_wide
+        assert ntotali == 1 + 2 * ncomponents, (ntotali, ncomponents)
+        ntotal = ntotali * nelements
+        op2_ascii.write(f'  ntimes = {self.ntimes}\n')
+        op2_ascii.write('%s-nelements=%d\n' % (self.element_name, nelements))
+
+        eids_device = self.element * 10 + self.device_code
+        fdtype = fdtype_from_data(self.data.real, self.size)
+        eid_device_floats = view_idtype_as_fdtype(eids_device, fdtype)
+
+        struct_13i = Struct(endian + b'13i')
+        struct_i = Struct(endian + b'i')
+        for itime in range(self.ntimes):
+            self._write_table_3(op2_file, op2_ascii, new_result, itable, itime)
+
+            # record 4
+            itable -= 1
+            header = [4, itable, 4,
+                      4, 1, 4,
+                      4, 0, 4,
+                      4, ntotal, 4,
+                      4 * ntotal]
+            op2_file.write(struct_13i.pack(*header))
+            op2_ascii.write('r4 [4, 0, 4]\n')
+            op2_ascii.write(f'r4 [4, {itable:d}, 4]\n')
+            op2_ascii.write(f'r4 [4, {4 * ntotal:d}, 4]\n')
+
+            datai = np.column_stack([eid_device_floats,
+                                     self.data[itime, :, :].real,
+                                     self.data[itime, :, :].imag]).astype(fdtype, copy=False)
+            assert ntotal == datai.size
+            op2_file.write(np.ascontiguousarray(datai).tobytes())
+
+            itable -= 1
+            op2_file.write(struct_i.pack(4 * ntotal))
+            op2_ascii.write('footer = %s\n' % [4 * ntotal])
+            new_result = False
+        return itable
+
 
 class ComplexRodForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
@@ -418,11 +477,11 @@ class ComplexRodForceArray(ComplexForceObject):
         return itable
 
 
-class ComplexCShearForceArray(BaseElement):
+class ComplexCShearForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        BaseElement.__init__(self, data_code, isubcase)
+        ComplexForceObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode
@@ -1134,11 +1193,11 @@ class ComplexDamperForceArray(ComplexSpringDamperForceArray):
         ComplexSpringDamperForceArray.__init__(self, data_code, is_sort1, isubcase, dt)
 
 
-class ComplexViscForceArray(BaseElement):
+class ComplexViscForceArray(ComplexForceObject):
     def __init__(self, data_code, is_sort1, isubcase, dt):
         self.element_type = None
         self.element_name = None
-        BaseElement.__init__(self, data_code, isubcase)
+        ComplexForceObject.__init__(self, data_code, isubcase)
         #self.code = [self.format_code, self.sort_code, self.s_code]
 
         #self.ntimes = 0  # or frequency/mode

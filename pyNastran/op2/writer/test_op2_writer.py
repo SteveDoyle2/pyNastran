@@ -433,10 +433,7 @@ class TestOP2Writer(unittest.TestCase):
         op2_filename_out = folder / 'freq_elements_out2.op2'
         op2_filename_debug_out = folder / 'freq_elements_out2.debug.out'
 
-        exclude_results = [
-            'force.ctria6_force', 'force.ctriar_force', 'force.cshear_force',
-            'force.cvisc_force', 'modal_contribution.cshear_stress',
-        ]
+        exclude_results = []
         op2 = read_op2_geom(op2_filename, debug_file=op2_filename_debug,
                             exclude_results=exclude_results, log=log)
         #print(op2.get_op2_stats())

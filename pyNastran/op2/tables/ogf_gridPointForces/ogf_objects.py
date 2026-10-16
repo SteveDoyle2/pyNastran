@@ -55,29 +55,59 @@ class GridPointForces(BaseElement):
     def slice_by_node_id(self, nids: np.ndarray,
                          assume_exists: bool=False, inplace: bool=False):
         """keeps all the rows (elements, loads, totals) for the given nodes"""
-        if self.node_element.ndim == 3:
-            # (ntimes, ntotal, 2); the rows must be the same at every time
-            node_element = self.node_element[0, :, :]
-            assert all(np.array_equal(node_element, self.node_element[itime, :, :])
-                       for itime in range(1, self.node_element.shape[0])), \
-                'node_element changes with time; cannot slice'
-        else:
-            node_element = self.node_element
-        nodes = node_element[:, 0]
         nids = np.unique(nids)
+        if self.node_element.ndim == 3:
+            return self._slice_by_node_id_unique(nids, assume_exists, inplace)
+
+        nodes = self.node_element[:, 0]
         if not assume_exists:
             nids = np.intersect1d(nodes, nids)
         irow = np.where(np.isin(nodes, nids))[0]
         assert len(irow) > 0, irow
         obj = self if inplace else deepcopy(self)
-        if self.node_element.ndim == 3:
-            obj.node_element = obj.node_element[:, irow, :]
-            obj.element_names = obj.element_names[:, irow]
-        else:
-            obj.node_element = obj.node_element[irow, :]
-            obj.element_names = obj.element_names[irow]
+        obj.node_element = obj.node_element[irow, :]
+        obj.element_names = obj.element_names[irow]
         obj.data = obj.data[:, irow, :]
         obj.ntotal = len(irow)
+        return obj
+
+    def _slice_by_node_id_unique(self, nids: np.ndarray,
+                                 assume_exists: bool, inplace: bool):
+        """
+        node_element is (ntimes, ntotal, 2) and the rows can differ by time
+        (e.g., F-OF-SPC rows only exist at frequencies where the SPC force
+        is nonzero).  Shorter time steps are padded at the end with
+        nid=0/eid=0/name=''/data=0, which is how the reader builds them.
+
+        For each time, the matching rows are packed to the front and the
+        result is padded to the longest time step the same way.
+        """
+        node_element = self.node_element
+        nodes = node_element[:, :, 0]  # (ntimes, ntotal)
+        nids = nids[nids > 0]  # nid=0 is padding, not a node
+        if not assume_exists:
+            nids = np.intersect1d(np.unique(nodes), nids)
+        is_kept = np.isin(nodes, nids)  # (ntimes, ntotal)
+        nkept = is_kept.sum(axis=1)
+        ntotal = int(nkept.max())
+        assert ntotal > 0, nkept
+
+        ntimes = node_element.shape[0]
+        node_element2 = np.zeros((ntimes, ntotal, 2), dtype=node_element.dtype)
+        element_names2 = np.full((ntimes, ntotal), '', dtype=self.element_names.dtype)
+        data2 = np.zeros((ntimes, ntotal, self.data.shape[2]), dtype=self.data.dtype)
+        for itime in range(ntimes):
+            irow = np.where(is_kept[itime, :])[0]
+            nrow = len(irow)
+            node_element2[itime, :nrow, :] = node_element[itime, irow, :]
+            element_names2[itime, :nrow] = self.element_names[itime, irow]
+            data2[itime, :nrow, :] = self.data[itime, irow, :]
+
+        obj = self if inplace else deepcopy(self)
+        obj.node_element = node_element2
+        obj.element_names = element_names2
+        obj.data = data2
+        obj.ntotal = ntotal
         return obj
 
     def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):

@@ -593,15 +593,15 @@ def _write_results_for_table(op2_file: BinaryIO, fop2_ascii: TextIO,
             except Exception:
                 print(f' {result.__class__.__name__} - isubcase={isubcase}{element_name}')
                 raise
-        elif hasattr(result, 'element_name'):
-            if result.element_name in ['CBAR', 'CBEND']:
-                log.warning('skipping:\n%s' % result)
-                continue
-            #log.warning('????:\n%s' % result)
+        elif hasattr(result, 'element_name') and result.element_name in ['CBAR', 'CBEND']:
+            log.warning('skipping:\n%s' % result)
+            continue
         else:
-            raise NotImplementedError(f'  *op2 - {result.__class__.__name__} not written')
-            log.warning(f'  *op2 - {result.__class__.__name__} not written')
-            #continue
+            # Don't fall through: writing the record-4 footer without a
+            # table3/table4 pair produces a corrupt op2 (EmptyRecord on re-read).
+            raise NotImplementedError(
+                f'{result.__class__.__name__}.write_op2 is not implemented '
+                f'(table_name={result.table_name!r}{element_name})')
 
         case_count += 1
         header = [
