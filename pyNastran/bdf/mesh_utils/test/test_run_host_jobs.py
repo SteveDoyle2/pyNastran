@@ -70,11 +70,15 @@ class TestRunHostJobs(unittest.TestCase):
         #extensions = ['.dat', '.bdf']
         str_model_path = str(MODEL_PATH)
         # out_filename = str(MODEL_PATH / 'run_files.out')
-        out_filename = 'run_files.out'
+        out_filename = str(MODEL_PATH / 'run_files.out')
 
         args_out = ['bdf', 'run_jobs', str_model_path, '-r', '--outfile', out_filename, '--test']
         args_in = ['bdf', 'run_jobs', str_model_path, '-r', '--infile', out_filename, '--test']
         nfiles = cmd_line_run_jobs(args_out, quiet=True)
+        #with open(out_filename, 'r') as bdf_file:
+        #    lines = bdf_file.readlines()
+        #for line in lines:
+        #    print(line)
         nfiles = cmd_line_run_jobs(args_in, quiet=True)
 
 

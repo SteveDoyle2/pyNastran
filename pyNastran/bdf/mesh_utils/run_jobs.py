@@ -296,6 +296,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     TODO: remove failed jobs from the time estimator
     TODO: add out_filenames to output
     """
+    pwd = os.getcwd()
     if skip_files == '':
         skip_files = []
     if isinstance(skip_files, PathLike):
@@ -305,6 +306,7 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     #print(f'skip_files = {skip_files}')
     #print(f'**keywords= {keywords}')
     log = SimpleLogger(log) if isinstance(log, str) else log
+
     bdf_filenames: list[Path] = get_bdf_filenames_to_run(
         bdf_filename_dirname, extensions, recursive=recursive,
         process_all=process_all)
@@ -351,12 +353,13 @@ def run_jobs(bdf_filename_dirname: PathLike | list[PathLike],
     assert isinstance(nfiles, int), nfiles
 
     if out_filename:
-        _write_outfile(out_filename, all_call_args)
+        _write_outfile(out_filename, all_call_args, pwd)
     return nfiles
 
 
 def _write_outfile(out_filename: PathLike,
-                   all_call_args: list[list[str]]) -> None:
+                   all_call_args: list[list[str]],
+                   pwd: PathLike) -> None:
     # with open(out_filename, 'w') as out_file:
     #     for bdf_filename in bdf_filenames:
     #         out_file.write(f'{str(bdf_filename)}\n')
@@ -365,10 +368,11 @@ def _write_outfile(out_filename: PathLike,
             assert len(call_args) > 0, call_args
 
             # write the output arg
+            # [nastran_cmd_str, bdf_arg] + keywords_list
             out = ''
-            for arg in call_args:
-                if os.path.exists(arg):
-                    arg = os.path.relpath(arg, start='.')
+            for i, arg in enumerate(call_args):
+                if i == 1 and os.path.exists(arg):
+                    arg = os.path.relpath(arg, start=pwd)
                 if isinstance(arg, str) and ' ' in arg:
                     out += f'{arg!r} '
                 else:
@@ -387,6 +391,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
                           cleanup: bool=True,
                           run: bool=True,
                           debug: bool=False) -> tuple[int, list[list[str]]]:
+    pwd = os.getcwd()
     keywords_raw = copy.deepcopy(keywords)
     nfiles = len(bdf_filenames)
     eta = 'N/A'
@@ -414,7 +419,7 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
     allow_op2_skip = not process_all
     for ifile, bdf_filename in enumerate(bdf_filenames):
         keywordsi = keywords[ifile] if is_keywords_list else keywords
-        # print(f'keywords[{ifile}] = {keywordsi}')
+        #print(f'keywords[{ifile}] = {keywordsi}')
 
         if not os.path.exists(bdf_filename):
             log.warning(f'skipping {str(bdf_filename)!r} because {bdf_filename!r} doesnt exist')
@@ -454,6 +459,11 @@ def run_jobs_by_filenames(bdf_filenames: list[PathLike],
         #print(f't_est_next(s)  = {t_run_min*60:.6g}')
         eta = new.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
         eta_next = nexti.strftime("%Y-%m-%d %I:%M %p")  # '2025-01-29 05:30 PM'
+        pth = os.path.relpath(bdf_filename, start=pwd)
+        pth = pth.replace('\\', '/')
+        
+        # [nastran_cmd_str, bdf_arg] + keywords_list
+        call_args[1] = pth
         all_call_args.append(call_args)
     log.info(f'done at {now.strftime("%Y-%m-%d %I:%M %p")}')
     return nfiles, all_call_args
