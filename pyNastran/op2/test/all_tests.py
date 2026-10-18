@@ -1,5 +1,5 @@
 from pyNastran.op2.test.test_op2_unit_tests import (
-    TestOP2Main, TestOP2Unit,
+    TestOP2Main, TestOP2Unit, TestOP2Random,
     TestNX, TestMSC,
     TestAutodeskOP2, TestOptistructOP2,
     TestSATKOP2, TestOP2Functions, TestOP2Params)
