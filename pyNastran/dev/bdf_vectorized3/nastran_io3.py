@@ -1384,9 +1384,9 @@ def _load_stress_strain(element_cards: list,
     }
     for element in element_cards:
         etype = element.type
-        # not added to gui yet
+        # not added to gui yet (see cards_to_drop_silenced)
         if etype in {'CELAS1', 'CELAS2', 'CELAS3', 'CELAS4',
-                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', }:
+                     'CDAMP1', 'CDAMP2', 'CDAMP3', 'CDAMP4', 'CVISC'}:
             continue
 
         if etype not in name_results_dict:

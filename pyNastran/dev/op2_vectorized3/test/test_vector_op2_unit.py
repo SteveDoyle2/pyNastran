@@ -1641,16 +1641,15 @@ class TestOP2(unittest.TestCase):
         #save_load_deck(model, run_save_load=False)
 
         log = get_logger(level='warning')
-        with self.assertRaises(NotImplementedError):
-            run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
-                    write_f06=True, write_op2=False,
-                    is_mag_phase=False,
-                    is_sort2=False, is_nx=None, delete_f06=True,
-                    subcases=None, exclude=None, short_stats=False,
-                    compare=False, debug=False, binary_debug=True,
-                    quiet=True,
-                    stop_on_failure=True, dev=False,
-                    build_pandas=True, log=log)
+        run_op2(op2_filename, make_geom=True, write_bdf=False, read_bdf=True,
+                write_f06=True, write_op2=False,
+                is_mag_phase=False,
+                is_sort2=False, is_nx=None, delete_f06=True,
+                subcases=None, exclude=None, short_stats=False,
+                compare=False, debug=False, binary_debug=True,
+                quiet=True,
+                stop_on_failure=True, dev=False,
+                build_pandas=True, log=log)
 
     def test_msc_2021_cbush_rbe3(self):
         """
@@ -2578,7 +2577,7 @@ class TestOP2(unittest.TestCase):
 
         cquad4_stress = stress.cquad4_stress[isubcase]
         assert cquad4_stress.data.shape == (7, 40, 3), cquad4_stress.data.shape
-        assert cquad4_stress.nelements == 40, cquad4_stress.nelements # TODO: wrong?
+        assert cquad4_stress.nelements == 4, cquad4_stress.nelements
 
         ctria3_stress = stress.ctria3_stress[isubcase]
         assert ctria3_stress.data.shape == (7, 16, 3), ctria3_stress.data.shape
