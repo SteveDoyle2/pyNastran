@@ -188,9 +188,12 @@ from .cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
                                TABRND1, TABRNDG,
                                DTABLE, TABLEDs, TABLEMs)
-from .cards.contact import (
-    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG, BFRIC,
-    BCTPARM, BGADD, BGSET, BCBODY)
+from .cards.contact.contact_common import BCONP, BCPARA
+from .cards.contact.msc import BCBODY
+from .cards.contact.nx_contact import (
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BLSEG, BFRIC,
+    BCTPARM)
+from .cards.contact.nx_glue import BGPARM, BGADD, BGSET
 from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 from .case_control_deck import CaseControlDeck, Subcase
@@ -971,6 +974,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'BCTPARA',  # bctpara
             'BCRPARA',  # bcrpara
             'BCTPARM',  # bctparm
+            'BGPARM', # bgparm
             'BGADD',  # bgadds
             'BGSET',  # bgsets
             'BCTADD',  # bctadds
@@ -2461,6 +2465,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             #  nx contact
             'BCPARA': (BCPARA, add_methods.add_bcpara_object),
             'BCTPARM': (BCTPARM, add_methods.add_bctparam_object),
+            'BGPARM': (BGPARM, add_methods.add_bgparam_object),
             'BGADD': (BGADD, add_methods.add_bgadd_object),
             'BGSET': (BGSET, add_methods.add_bgset_object),
             'BCBODY': (BCBODY, add_methods.add_bcbody_object),

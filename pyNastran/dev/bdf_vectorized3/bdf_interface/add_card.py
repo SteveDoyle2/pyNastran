@@ -27,7 +27,7 @@ from pyNastran.bdf.cards.aero.static_loads import AEROS
 from pyNastran.utils.numpy_utils import integer_types, integer_string_types
 from pyNastran.bdf.cards.params import MDLPRM, PARAM
 from pyNastran.dev.bdf_vectorized3.bdf import DTI_UNITS
-from pyNastran.bdf.cards.contact import BCTPARA, BCTPARM
+from pyNastran.bdf.cards.contact.nx_contact import BCTPARA, BCTPARM
 from pyNastran.bdf.cards.bdf_tables import (
     TABLED1, TABLED2, TABLED3, TABLED4,
     TABLEM1, TABLEM2, TABLEM3, TABLEM4,

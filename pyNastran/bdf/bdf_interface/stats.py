@@ -65,9 +65,11 @@ def get_stats_groups():
         'convection_properties',
 
         # contact
-        'bsurf', 'bsurfs', 'blseg', 'bfric',
-        'bconp', 'bcrparas', 'bctadds', 'bctparas', 'bctsets',
-        'bgadds', 'bgsets', 'bctparms',
+        'bsurf', 'bsurfs',
+        'blseg', 'bfric',
+        'bconp', 'bcrparas',
+        'bctadds', 'bctparas', 'bctparms', 'bctsets',
+        'bgadds', 'bgsets', 'bgparm',
         'bcbodys', 'bcparas',
 
         # sets

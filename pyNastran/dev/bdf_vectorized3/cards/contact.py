@@ -21,7 +21,7 @@ from pyNastran.bdf.bdf_interface.assign_type_force import lax_double_or_blank
 #from pyNastran.bdf.field_writer_8 import print_card_8
 #from pyNastran.bdf.field_writer_16 import print_card_16 # print_float_16
 #from pyNastran.bdf.field_writer_double import print_scientific_double
-from pyNastran.bdf.cards.contact import _get_bcbody_section_values
+from pyNastran.bdf.cards.contact.msc import _get_bcbody_section_values
 
 from pyNastran.dev.bdf_vectorized3.cards.base_card import (
     remove_unused_primary, remove_unused_duplicate)

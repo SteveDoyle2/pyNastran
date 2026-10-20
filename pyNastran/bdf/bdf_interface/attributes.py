@@ -83,8 +83,11 @@ if TYPE_CHECKING:  # pragma: no cover
         DCONADD, DCONSTR, DOPTPRM,
         DMNCON, GROUP,
         # contact
-        BCPARA, BCBODY, BCTPARM, BGSET, BCTADD, BSURF, BSURFS, BCONP, BLSEG, BFRIC,
-        BCTSET, BCTPARA, BGADD, BCTPARA, BCRPARA,
+        BCPARA, BCBODY,
+        BSURF, BSURFS, BCONP, BLSEG, BFRIC,
+        BCRPARA,
+        BCTPARM, BCTSET, BCTADD, BCTPARA,
+        BGPARM, BGSET, BGADD,
         # superelements
         SEBULK, SENQSET, SENQSET1, SEBNDRY, RELEASE, SELOC, SEMPLN, SETREE,
         SELABEL, SECONCT, SEEXCLD, SEELT, SELOAD, CSUPER, CSUPEXT,
@@ -433,6 +436,7 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'bctparas': ['BCTPARA'],
     'bcrparas': ['BCRPARA'],
     'bctparms': ['BCTPARM'],
+    'bgparm': ['BGPARM'],
 
     'bctadds': ['BCTADD'],
     'bctsets': ['BCTSET'],
@@ -1143,6 +1147,7 @@ class BDFAttributes:
         self.bgadds: dict[int, BGADD] = {}
         self.bgsets: dict[int, BGSET] = {}
         self.bctparms: dict[int, BCTPARM] = {}
+        self.bgparm: dict[int, BGPARM] = {}
 
         #--------------------------superelements------------------------------
         self.setree: dict[int, SETREE] = {}

@@ -84,7 +84,8 @@ def write_dict(bdf_file: TextIO, my_dict: dict[int, BaseCard],
 
 
 def write_list(bdf_file: TextIO, my_list: list[BaseCard],
-               size: int, is_double: bool, is_csv: bool, is_long_ids: bool):
+               size: int, is_double: bool, is_csv: bool,
+               is_long_ids: bool) -> None:
     if is_csv:
         if size == 16 or is_long_ids:
             for card in my_list:  # list
@@ -97,7 +98,10 @@ def write_list(bdf_file: TextIO, my_list: list[BaseCard],
             bdf_file.write(card.write_card(size, is_double))
 
 
-def _write_bdf_dict_cards(bdf_file, cards, size, is_double, is_long_ids):
+def _write_bdf_dict_cards(bdf_file: TextIO,
+                          cards,
+                          size: int, is_double: bool,
+                          is_long_ids: bool) -> None:
     """writes a dictionary"""
     if bdf_file is None:
         return
@@ -109,7 +113,7 @@ def _write_bdf_dict_cards(bdf_file, cards, size, is_double, is_long_ids):
             bdf_file.write(card.write_card(size, is_double))
 
 
-def _get_ifiles_dict(cards_dict: dict) -> dict:
+def _get_ifiles_dict(cards_dict: dict[int, list]) -> dict:
     """gets the ids for a dictionary by file number"""
     assert isinstance(cards_dict, dict), cards_dict
     ifiles_dict = defaultdict(list)
@@ -118,7 +122,7 @@ def _get_ifiles_dict(cards_dict: dict) -> dict:
     return ifiles_dict
 
 
-def _get_ifiles_dict_list(cards):
+def _get_ifiles_dict_list(cards: dict[int, list]) -> dict[int, list]:
     """gets the ids for a dictionary of lists by file number"""
     assert isinstance(cards, dict), cards
     ifiles_dict_list = defaultdict(list)
@@ -129,7 +133,8 @@ def _get_ifiles_dict_list(cards):
     return ifiles_dict_list
 
 
-def write_xpoints_file(bdf_files, cardtype: str,
+def write_xpoints_file(bdf_files: dict[int, TextIO],
+                       card_type: str,
                        points: dict[int, Any],
                        comment: str='') -> None:
     """writes SPOINTs/EPOINTs"""
@@ -138,7 +143,9 @@ def write_xpoints_file(bdf_files, cardtype: str,
         bdf_files[point.ifile].write(point.write_card())
 
 
-def write_bdfs_dict(bdf_files, cards, size, is_double, is_long_ids):
+def write_bdfs_dict(bdf_files: dict[int, TextIO],
+                    cards: dict[int, Any],
+                    size: int, is_double: bool, is_long_ids: bool) -> None:
     """writes a dictionary by ifile"""
     assert isinstance(cards, dict), cards
     ifiles_dict = _get_ifiles_dict(cards)
@@ -147,7 +154,9 @@ def write_bdfs_dict(bdf_files, cards, size, is_double, is_long_ids):
         _write_bdf_dict_cards(bdf_file, file_cards, size, is_double, is_long_ids)
 
 
-def write_bdfs_list(bdf_files, cards, size, is_double, is_long_ids):
+def write_bdfs_list(bdf_files: dict[int, TextIO],
+                    cards, size: int, is_double: bool,
+                    is_long_ids: bool) -> None:
     """writes a list by ifile"""
     assert isinstance(cards, list), cards
     if is_long_ids:
@@ -158,13 +167,15 @@ def write_bdfs_list(bdf_files, cards, size, is_double, is_long_ids):
             bdf_files[card.ifile].write(card.write_card(size, is_double))
 
 
-def write_bdfs_dict_list(bdf_files, cards, size, is_double, is_long_ids):
+def write_bdfs_dict_list(bdf_files: dict[int, TextIO],
+                         cards,
+                         size: int, is_double: bool,
+                         is_long_ids: bool) -> None:
     """writes a dictionary of lists by ifile"""
     ifiles_dict_list = _get_ifiles_dict_list(cards)
     for file_id, file_cards in ifiles_dict_list.items():
         bdf_file = bdf_files[file_id]
         _write_bdf_dict_cards(bdf_file, file_cards, size, is_double, is_long_ids)
-
 
 
 def find_aero_location(model: BDF) -> tuple[bool, bool]:

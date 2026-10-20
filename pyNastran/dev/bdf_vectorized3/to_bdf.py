@@ -11,12 +11,12 @@ OBJ_NAME_DICTS = [
     'dmig', 'dmi', 'dmij', 'dmik', 'dmiji', 'dti', 'dmiax',
 
     'caeros', 'paeros', 'trims', 'splines', 'csschds', 'divergs',
-    'flutters', 'flfacts', 'gusts', 
+    'flutters', 'flfacts', 'gusts',
     'aefacts', 'aelists', 'aeparams',
-    'aestats', 'aesurf', 'aesurfs', 
+    'aestats', 'aesurf', 'aesurfs',
     'MATT1', 'MATT2', 'MATT3', 'MATT4', 'MATT5', 'MATT8', 'MATT9', 'MATT11',
     'MATS1', 'MATS3', 'MATS8',
-    'nlparms', 'nlpcis', 'normals', 'plotels', 
+    'nlparms', 'nlpcis', 'normals', 'plotels',
     'aecomps',
     'desvars', 'dvprels', 'dvmrels', 'dvtrels',
     'pbusht', 'pdampt', 'pelast',
@@ -30,7 +30,7 @@ OBJ_NAME_DICT_LISTS = [
     'spcadds', 'mpcadds',
     'dresps', 'dconstrs',
     'bctadds', 'bctparas',
-    'bgadds', 'bgsets', 
+    'bgadds', 'bgsets', 'bgparm',
     'dconadds',
     'aelinks',
     'se_sets', 'se_usets', 'spcoffs',
@@ -41,7 +41,7 @@ OBJ_NAME_LISTS = [
     'se_suport',
     'suport',
     'units',
-    'mkaeros', 
+    'mkaeros',
 ]
 
 COMMON_SINGLETON_CARDS = ['aero', 'aeros', 'dtable',]
@@ -59,7 +59,7 @@ COMMON_KEYS = [
     'system_command_lines',
     'executive_control_lines',
     'case_control_deck',
-    'punch', 'dumplines', 
+    'punch', 'dumplines',
     'reject_cards', 'reject_lines',
     'active_filenames',
     # bool
@@ -69,8 +69,8 @@ COMMON_KEYS = [
 ]
 
 REMOVE_PARAMS = [
-    'card_count', 
-    'active_filename', 
+    'card_count',
+    'active_filename',
     'allow_duplicate_element_rbe_mass',
     'writer', 'xref_obj', 'zaero', #'zona',
     'is_msc', 'is_mystran', 'is_nx', 'is_optistruct',
@@ -88,7 +88,7 @@ SKIP_FINAL = [
     # TODO: remove these
     'aedw', 'aeforce', 'aepress',
     'feedge', 'feface', 'gmcurv', 'gmsurf', 'pset', 'pval',
-    'sol', 'sol_iline', 
+    'sol', 'sol_iline',
 
     # parameters
     'type_slot_str',
@@ -99,7 +99,7 @@ SKIP_FINAL = [
     'element_ids', 'nelements',
     'nastran_format',
     # not in BDFv
-    'bdf_filename', 
+    'bdf_filename',
     'case_control_lines',
     'special_cards',
     'include_filenames',
@@ -252,7 +252,7 @@ def bdf_to_bdf_vectorized(model: BDF,
                         log.warning(f' {key} is a dict')
                     else:
                         raise TypeError(f'{key} is invalid')
- 
+
         assert len(attrs) == 0, attrs
     modelv.setup()
     return modelv
@@ -281,7 +281,7 @@ REMOVE_ATTRSV = [
     # list[str]
     'cards_to_read',
     # list[str]?
-    'include_filenames', 
+    'include_filenames',
     # dict
     'rsolmap_to_str',
     'reject_count',
@@ -294,7 +294,7 @@ REMOVE_ATTRSV = [
 IGNORE_ATTRSV = [
     # non-cards
     'nastran_format', 'active_filename', 'app',
-    
+
     # cards
     'optimization_cards', 'mpc_cards', 'spc_cards',
     'bolt_cards',
@@ -308,14 +308,14 @@ IGNORE_ATTRSV = [
     'bar_property_cards',
     'beam_property_cards',
     'shell_element_cards', 'shell_property_cards',
-    'solid_element_cards', 'solid_property_cards', 
+    'solid_element_cards', 'solid_property_cards',
     'nonlinear_shell_property_cards',
 
     # loads
-    'load_cards', 
+    'load_cards',
     'static_load_cards',
     'dynamic_cards', 'dynamic_load_cards',
-    
+
     # aero
     'aero_element_cards', 'aero_load_cards', 'aero_objects',
     'aero_property_cards',  'aero_spline_cards',
@@ -335,7 +335,7 @@ IGNORE_ATTRSV = [
     'spring_element_ids',
     'damper_element_ids',
     'bar_property_ids',
-    'beam_property_ids', 
+    'beam_property_ids',
     'shell_element_ids', 'shell_property_ids',
     'solid_element_ids', 'solid_property_ids',
     'dresp_ids',
@@ -504,7 +504,7 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
     _copy_common(modelv, model, clean_parent=clean_parent)
 
     remove_attrs = (
-        IGNORE_ATTRSV + OBJ_NAME_DICTSV + 
+        IGNORE_ATTRSV + OBJ_NAME_DICTSV +
         REMOVE_ATTRSV + OBJ_NAME_LISTSV + EXPLICITV)
 
     # short & slow way of writing the cards
@@ -519,7 +519,7 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
             continue
         if obj.n == 0:
             continue
-        
+
         #debug = (attr in {'pcomp'})
         debug = False
         file_obj = CardStorageWriter(debug=debug)
@@ -532,7 +532,7 @@ def bdf_vectorized_to_bdf(modelv: BDFv,
             fields = to_fields(card_lines, card_name)
             model.add_card(fields, card_name)
         converted_attrs.append(attr)
-    
+
     if clean_parent:
         for obj_name in EXPLICITV:
             delattr(modelv, obj_name)

@@ -181,8 +181,10 @@ from pyNastran.bdf.cards.bdf_tables import (
     TABRND1, TABRNDG,
     DTABLE,
 )
-from pyNastran.bdf.cards.contact import (
-    BCRPARA, BCPARA, BCTPARA, BCTPARM) # BLSEG, BCBODY
+from pyNastran.bdf.cards.contact.contact_common import BCPARA, BCONP
+from pyNastran.bdf.cards.contact.msc import BCBODY
+from pyNastran.bdf.cards.contact.nx_contact import (
+    BCRPARA, BCTPARA, BCTPARM) # BLSEG
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 # core vectorized
