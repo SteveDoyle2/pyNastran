@@ -2,9 +2,9 @@
 Defines the following contact cards:
 
 nx contact:
- - BCONP (see contact.py)
+ - BCONP (see contact_common.py)
  - BLSEG
- - BCPARA (see contact.py)
+ - BCPARA (see contact_common.py)
  - BCRPARA
  - BCTPARA
  - BCTADD
@@ -13,13 +13,10 @@ nx contact:
  - BSURFS
  - BFRIC
 
-glue:
- - BGADD
- - BGSET
-
 """
 from __future__ import annotations
 import warnings
+from itertools import zip_longest
 from typing import Optional, Any, TYPE_CHECKING
 
 from pyNastran.bdf.cards.base_card import BaseCard, expand_thru_by, _node_ids
@@ -83,6 +80,11 @@ class BFRIC(BaseCard):
         #
         mu1 = double(card, 4, 'mu1')
         return BFRIC(friction_id, mu1, fstiff=fstiff, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+        # msg = f', which is required for BSURFS={self.sid:d}'
+        # model.log.warning(f'cross-reference not supported for {self.type}')
 
     def raw_fields(self):
         list_fields = [
@@ -307,6 +309,7 @@ class BSURFS(BaseCard):
         self.g1s = g1s
         self.g2s = g2s
         self.g3s = g3s
+        self.grids_ref = []
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -343,9 +346,34 @@ class BSURFS(BaseCard):
             g3s.append(g3)
         return BSURFS(bsurfs_id, eids, g1s, g2s, g3s, comment=comment)
 
+    def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required for BSURFS={self.id:d}'
+        # model.log.warning(f'cross-reference not supported for {self.type}')
+        eids_ref = []
+        grids_ref = []
+        for eid in self.eids:
+            elem = model.Element(eid, msg=msg)
+            eids_ref.append(elem)
+        for g1, g2, g3 in zip_longest(self.g1s, self.g2s, self.g3s):
+            g1_ref = model.Node(g1, msg=msg)
+            g2_ref = model.Node(g2, msg=msg)
+            g3_ref = model.Node(g3, msg=msg)
+            grids_ref.append((g1_ref, g2_ref, g3_ref))
+        self.eids_ref = eids_ref
+        self.grids_ref = grids_ref
+
+    def grids(self) -> list[tuple[int, int, int]]:
+        if len(self.grids_ref) == 0:
+            return zip(self.g1s, self.g2s, self.g3s)
+        nodes_out = []
+        for g1_ref, g2_ref, g3_ref in zip(*self.grids_ref):
+            nodes = (g1_ref.nid, g2_ref.nid, g3_ref.nid)
+            nodes_out.append(nodes)
+        return nodes_out
+
     def raw_fields(self):
         fields = ['BSURFS', self.id, None, None, None]
-        for eid, g1, g2, g3 in zip(self.eids, self.g1s, self.g2s, self.g3s):
+        for eid, (g1, g2, g3) in zip(self.eids,self.grids()):
             fields += [eid, g1, g2, g3]
         return fields
 
@@ -435,6 +463,29 @@ class BCTSET(BaseCard):
         return BCTSET(csid, sids, tids, frictions, min_distances,
                       max_distances, comment=comment,
                       sol=sol)
+
+    def cross_reference(self, model: BDF) -> None:
+        # msg = f', which is required for BSURF={self.csid:d}'
+        model.log.warning(f'cross-reference not supported for {self.type}')
+        #: SIDi Source region (contactor) identification number for contact pair i.
+        #: (Integer > 0)
+
+        sids_ref = []
+        tids_ref = []
+        for sid in self.sids:
+            # BCPROP, BCPROPS, BSURF, or BSURFS
+            sid_ref = contact_surface(model, self, self.csid, msg='target contact surface')
+            if sid_ref is None:
+                continue
+            sids_ref.append(sid_ref)
+
+        #: TIDi Target region identification number for contact pair i. (Integer > 0)
+        for tid in self.tids:
+            # BCPROP, BCPROPS, BSURF, or BSURFS
+            tid_ref = contact_surface(model, self, self.csid, msg='target contact surface')
+            if tid_ref is None:
+                continue
+            tids_ref.append(sid_ref)
 
     def raw_fields(self):
         fields = ['BCTSET', self.csid]
@@ -539,6 +590,9 @@ class BCRPARA(BaseCard):
         return BCRPARA(crid, surf=surf, offset=offset, Type=Type,
                        grid_point=grid_point, comment=comment)
 
+    def cross_reference(self, model: BDF):
+        pass
+
     def raw_fields(self):
         fields = ['BCRPARA', self.crid, self.surf, self.offset, self.Type, self.grid_point]
         return fields
@@ -631,6 +685,9 @@ class BCTPARM(BaseCard):
         csid = integer(card, 1, 'csid')
         params = read_param_dict(card, cls._get_param_value_from_card)
         return BCTPARM(csid, params, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
 
     def _get_param_value_from_card(
             card: BDFCard,
@@ -844,6 +901,9 @@ class BCTPARA(BaseCard):
             assert value is not None, '%s%i must not be None' % (param, j)
         return param, value
 
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
     def raw_fields(self) -> list:
         fields = ['BCTPARA', self.csid]
         fields.extend(params_listify(self.params))
@@ -891,6 +951,7 @@ class BCTADD(BaseCard):
         #: Identification numbers of contact sets defined via BCTSET entries.
         #: (Integer > 0)
         self.contact_sets = contact_sets
+        self.contact_sets_ref = []
 
     @classmethod
     def add_card(cls, card: BDFCard, comment: str=''):
@@ -916,6 +977,21 @@ class BCTADD(BaseCard):
             i += 1
             j += 1
         return BCTADD(csid, contact_sets, comment=comment)
+
+    def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required for {self.type}={self.csid:d}'
+        contact_sets_ref = []
+        bctsets = list(model.bctsets)
+        for contact_set in self.contact_sets:
+            try:
+                contact_set_ref = model.bctsets[contact_set]
+            except KeyError:
+                # print(model.get_bdf_stats(contact_set))
+                model.log.error(f'Invalid cross-reference for {self.type}={self.csid}\n'
+                                f'bctsets={bctsets}\n{self}')
+                continue
+            contact_sets_ref.append(contact_set_ref)
+        self.contact_sets_ref = contact_sets_ref
 
     def raw_fields(self):
         fields = ['BCTADD'] + self.contact_sets
@@ -973,3 +1049,32 @@ def read_param_dict(card: BDFCard,
             ifield += 2
     assert len(params) > 0, card
     return params
+
+
+def contact_surface(model: BDF, card, sid: int, msg: str=''):
+    # 3D: BCPROP, BCPROPS, BSURF, or BSURFS
+    # 2D: BEDGE or BLSEG
+    if sid in model.bsurf:
+        sid_ref = model.bsurf[sid]
+    elif sid in model.bsurfs:
+        sid_ref = model.bsurfs[sid]
+    # elif sid in model.bedge:
+    #     sid_ref = model.bedge[sid]
+    elif sid in model.blseg:
+        sid_ref = model.blseg[sid]
+    # elif sid in model.bcprop:
+    #     sid_ref = model.bcprop[sid]
+    # elif sid in model.bcprops:
+    #     sid_ref = model.bcprops[sid]
+    else:
+        # print(model.get_bdf_stats())
+        bsurf = list(model.bsurf)
+        bsurfs = list(model.bsurfs)
+        bedge = [] # list(model.bedge)
+        blseg = list(model.blseg)
+        model.log.error(f'missing {msg} for {card.type}={sid}\n'
+                        f'bsurf: {bsurf}\nbsurfs: {bsurfs}\n'
+                        f'bedge: {bedge}\nblseg: {blseg}\n{card}')
+        # raise RuntimeError(f'missing source contact surface {sid}\nbsurf: {bsurf}\nbsurfs: {bsurfs}\n{self}')
+        sid_ref = None
+    return sid_ref

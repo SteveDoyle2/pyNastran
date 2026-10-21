@@ -14,12 +14,12 @@ msc contact:
  - BCMOVE  (todo)
  - BCNURB2 (todo)
  - BCONECT (todo)
- - BCONP (see contact.py)
+ - BCONP (see contact_common.py)
  - BCONPRG (todo)
  - BCONPRP (todo)
 
  - BCONUDS (todo)
- - BCPARA (see contact.py)
+ - BCPARA (see contact_common.py)
  - BCPROP (todo)
  - BCRIGID (todo)
  - BCRGSRF (todo)
@@ -30,7 +30,7 @@ msc contact:
  - BCTRIM (todo)
  - BFRlC (todo)
  - BOUTPUT (todo)
- - BSURF (see contact.py)
+ - BSURF (see contact_common.py)
  - BWIDTH (todo)
  - DYPARAM,CONTACT (todo)
 

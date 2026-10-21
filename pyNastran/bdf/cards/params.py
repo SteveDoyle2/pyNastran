@@ -253,6 +253,7 @@ PARAMS = (
     ('SOFTEXIT', 'NO', ['YES', 'NO']),
     ('SPCGEN', 0),
     ('SRCOMPS', 'NO', ['YES', 'NO']),  # controls the printing of ply strength ratios
+    ('STABFEM', 'NO', ['YES', 'NO']),
     # T
     ('TINY', 1.0e-3),
     ('TORSIN', 0, [0, 1, 2, 3]),

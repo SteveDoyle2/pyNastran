@@ -1,18 +1,6 @@
 """
 Defines the following contact cards:
 
-nx contact:
- - BCONP
- - BLSEG
- - BCPARA
- - BCRPARA
- - BCTPARA
- - BCTADD
- - BCTSET
- - BSURF
- - BSURFS
- - BFRIC
-
 glue:
  - BGADD
  - BGSET
@@ -28,7 +16,7 @@ from pyNastran.bdf.bdf_interface.assign_type import (
     integer_double_or_blank, string,)
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
-from pyNastran.bdf.cards.contact.nx_contact import read_param_dict, params_listify
+from pyNastran.bdf.cards.contact.nx_contact import read_param_dict, params_listify, contact_surface
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF
     from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
@@ -87,6 +75,18 @@ class BGADD(BaseCard):
             i += 1
             j += 1
         return BGADD(glue_id, contact_sets, comment=comment)
+
+    def cross_reference(self, model: BDF):
+        contact_sets_ref = []
+        for sid in self.contact_sets:
+            try:
+                contact_set = model.bgsets[sid]
+            except:
+                print(type(model))
+                print(model.get_bdf_stats())
+                raise
+            contact_sets_ref.append(contact_set)
+        self.contact_sets_ref = contact_sets_ref
 
     def raw_fields(self):
         fields = ['BGADD'] + self.contact_sets
@@ -151,6 +151,9 @@ class BGPARM(BaseCard):
         #: contact set CSID defined by a BGPARM entry. (Integer > 0)
         self.csid = csid
         self.params = params
+
+    def cross_reference(self, model: BDF):
+        pass
 
     def _finalize_hdf5(self, encoding: str) -> None:
         keys = self.params[0]
@@ -277,6 +280,26 @@ class BGSET(BaseCard):
             j += 1
         return BGSET(glue_id, sids, tids, sdists, exts,
                      comment=comment, sol=sol)
+
+    def cross_reference(self, model: BDF):
+        sids_ref = []
+        tids_ref = []
+
+        for sid in self.sids:
+            sid_ref = contact_surface(model, self, sid, msg='source contact surface')
+            if sid_ref is None:
+                continue
+            sids_ref.append(sid_ref)
+        del sid
+
+        for tid in self.tids:
+            tid_ref = contact_surface(model, self, tid, msg='target contact surface')
+            if tid_ref is None:
+                continue
+            tids_ref.append(tid_ref)
+
+        self.sids_ref = sids_ref
+        self.tids_ref = tids_ref
 
     def raw_fields(self):
         fields = ['BGSET', self.glue_id]

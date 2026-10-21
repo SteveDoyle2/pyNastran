@@ -300,6 +300,9 @@ class BCPARA(BaseCard):
                     i += 2
         return BCPARA(csid, params, comment=comment)
 
+    def cross_reference(self, model: BDF):
+        pass
+
     def raw_fields(self):
         fields = ['BCPARA', self.csid]
         ivalue = 1

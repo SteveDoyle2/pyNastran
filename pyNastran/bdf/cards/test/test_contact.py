@@ -72,6 +72,19 @@ class TestContact(unittest.TestCase):
         bsurf = model.add_bsurf(sid, eids, comment='bsurf')
         bsurf.raw_fields()
 
+        mid = 100
+        pid_pshell = 101
+        model.add_mat1(mid, 3.0e7, None, 0.3)
+        model.add_pshell(pid_pshell, mid, 0.1)
+        for nid in [10, 11, 12, 20, 21, 22, 30, 31, 32]:
+            model.add_grid(nid, [0., 0., 0.5])
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        for eid in eids:
+            model.add_cquad4(eid, pid_pshell, [1, 2, 3, 4])
+
         sid = 43
         g1s = [10, 11, 12]
         g2s = [20, 21, 22]
