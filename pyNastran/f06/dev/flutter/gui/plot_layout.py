@@ -808,6 +808,13 @@ class PlotLayout(QHBoxLayout):
         if is_passed_tol3 and mag_tol is None:
             mag_tol = -1.0
 
+        if freq_tol is None:
+            freq_tol = -1.0
+        if freq_tol_remove is None:
+            freq_tol_remove = -1.0
+        if mag_tol is None:
+            mag_tol = -1.0
+
         vl, is_passed_vl = get_float_or_none(self.vl_edit)
         vf, is_passed_vf = get_float_or_none(self.vf_edit)
         damping_required, is_passed_damping_required = get_float_or_none(self.damping_required_edit)
@@ -822,6 +829,7 @@ class PlotLayout(QHBoxLayout):
 
         vl = _float_passed_to_default(vl, is_passed_vl)
         vf = _float_passed_to_default(vf, is_passed_vf)
+
         log = self.log
         damping_required = _float_passed_to_default(damping_required, is_passed_damping_required)
         damping = _float_passed_to_default(damping, is_passed_damping)
@@ -847,6 +855,16 @@ class PlotLayout(QHBoxLayout):
         # if not is_passed:
         # self.log.warning(f'is_passed_flags = {is_passed_flags}')
         # print(f'freq_tol = {freq_tol}')
+
+        assert isinstance(freq_tol, float), freq_tol
+        assert isinstance(freq_tol_remove, float), freq_tol_remove
+        assert isinstance(mag_tol, float), mag_tol
+        assert isinstance(vl, float), vl
+        assert isinstance(vf, float), vf
+        assert isinstance(freq_tol, float), freq_tol
+        assert isinstance(damping_required, float), damping_required
+        assert isinstance(damping_required_tol, float), damping_required_tol
+        assert isinstance(damping, float), damping
         out = (
             index_lim, eas_lim, tas_lim, mach_lim, alt_lim, q_lim, rho_lim,
             damp_lim, freq_lim, kfreq_lim, ikfreq_lim,

@@ -1842,6 +1842,7 @@ def _check_result_slice(result, log: SimpleLogger,
     elif any([hasattr(result, word) for word in words]):
         log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
         failed_classes_set.add(class_name)
+        stopping
         return
     else:  # pragma: no cover
         raise NotImplementedError((class_name, result.get_stats()))
@@ -1859,6 +1860,12 @@ def _get_eids(result) -> np.ndarray:
         # TODO: RealPlateBilinearForceArray
         raise NotImplementedError(result.get_stats())
 
+    elif hasattr(result, '_element_masks'):
+        # real strain/kinetic energy; element is (ntimes, ntotal) and the
+        # ids can vary by time, so use all times (not just itime=0) and
+        # drop the total (eid=100000000) and padding
+        element, is_element, unused_is_total = result._element_masks()
+        eids = np.unique(element[is_element])
     elif hasattr(result, 'element') and result.element is not None:
         eids = result.element
         if eids.ndim == 2:

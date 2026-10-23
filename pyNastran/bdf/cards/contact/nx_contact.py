@@ -366,7 +366,7 @@ class BSURFS(BaseCard):
         if len(self.grids_ref) == 0:
             return zip(self.g1s, self.g2s, self.g3s)
         nodes_out = []
-        for g1_ref, g2_ref, g3_ref in zip(*self.grids_ref):
+        for g1_ref, g2_ref, g3_ref in self.grids_ref:
             nodes = (g1_ref.nid, g2_ref.nid, g3_ref.nid)
             nodes_out.append(nodes)
         return nodes_out

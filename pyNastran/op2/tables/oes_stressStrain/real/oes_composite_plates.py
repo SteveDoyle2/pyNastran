@@ -86,8 +86,16 @@ class RealCompositePlateArray(OES_Object):
 
         obj.element_layer = obj.element_layer[ilayer, :]
         obj.data = obj.data[:, ilayer, :]
-        obj.nelements = len(ilayer)
+        # ilayer is the ply (row) index; nelements is the number of elements
+        obj.nelements = len(eids)
         return obj
+
+    def finalize(self):
+        """it's required that the object be in SORT1"""
+        # the number of plies varies per element, so the actual number
+        # of elements is only known once element_layer is filled
+        self.nelements = len(np.unique(self.element_layer[:, 0]))
+        self.set_as_sort1()
 
     @property
     def is_real(self) -> bool:
