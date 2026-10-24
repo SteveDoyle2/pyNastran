@@ -1842,7 +1842,6 @@ def _check_result_slice(result, log: SimpleLogger,
     elif any([hasattr(result, word) for word in words]):
         log.warning(f'{class_name} doesnt support slice_by_element_id/slice_by_node_id')
         failed_classes_set.add(class_name)
-        stopping
         return
     else:  # pragma: no cover
         raise NotImplementedError((class_name, result.get_stats()))
@@ -1851,9 +1850,10 @@ def _check_result_slice(result, log: SimpleLogger,
 
 def _get_eids(result) -> np.ndarray:
     # TODO: what result has element=None?
-    if hasattr(result, 'element_node'):
+    if getattr(result, 'element_node', None) is not None:
         eids = np.unique(result.element_node[:, 0])
     elif hasattr(result, 'element_layer'):
+        # complex composites have element_node=None
         eids = np.unique(result.element_layer[:, 0])
 
     elif hasattr(result, 'element') and result.element is None:

@@ -124,7 +124,13 @@ class RealEnergyArray(BaseElement):
         ntimes, unused_ntotal, nresults = data.shape
 
         uelement = np.unique(element[is_element])
-        eids, unused_ieid, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
+        if len(uelement) == 0:
+            # there are no elements, just the total row
+            # (e.g., every element is below the ESE threshold)
+            eids = uelement
+            neid2 = 0
+        else:
+            eids, unused_ieid, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
 
         # the element ids can vary by time, so we slice each time
         # and left-justify the results:

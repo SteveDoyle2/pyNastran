@@ -6,6 +6,7 @@ defines:
 from math import isnan
 from itertools import count, cycle
 
+import copy
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
@@ -13,7 +14,7 @@ from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import (
     build_dataframe_transient_header,
     build_pandas_transient_elements, build_pandas_transient_element_node)
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object, slice_eids_by_index
 from pyNastran.f06.f06_formatting import _eigenvalue_header, write_float_11e, write_float_13e
 
 
@@ -334,6 +335,20 @@ class RealNonlinearPlateArray(OES_Object):
                 if i > 0:
                     raise ValueError(msg)
         return True
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        # element is 1 id per element; data has nlayers rows per element
+        nelements = len(self.element)
+        nlayers = self.data.shape[1] // nelements
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(self.element), eids, assume_exists)
+        ieid = np.where(np.isin(self.element, eids))[0]
+        irow = (ieid[:, np.newaxis] * nlayers + np.arange(nlayers)).ravel()
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

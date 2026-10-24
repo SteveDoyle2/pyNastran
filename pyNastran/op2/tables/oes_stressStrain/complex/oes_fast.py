@@ -1,9 +1,11 @@
+import copy
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import (
+    slice_eids_by_index,
     StressObject, StrainObject, OES_Object)
 from pyNastran.f06.f06_formatting import write_imag_floats_13e
 
@@ -144,6 +146,16 @@ class ComplexFastArray(OES_Object):
         self.element[self.itotal] = eid
         #self.ielement += 1
         self.itotal += 1
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(self.element), eids, assume_exists)
+        ieid = np.where(np.isin(self.element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

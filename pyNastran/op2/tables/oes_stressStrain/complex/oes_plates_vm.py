@@ -1,3 +1,4 @@
+import copy
 import warnings
 from struct import Struct, pack
 
@@ -7,7 +8,7 @@ from numpy import zeros
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_eids_by_index
 from pyNastran.f06.f06_formatting import write_imag_floats_13e, write_float_13e
 
 #BASIC_TABLES = {
@@ -253,6 +254,25 @@ class ComplexPlateVMArray(OES_Object):
         self.ielement += 1
         #if debug:
             #print(self.element_node)
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_node = obj.element_node[irow, :]
+        obj.fiber_distance = obj.fiber_distance[irow]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
+
+    def finalize(self):
+        """Calls any OP2 objects that need to do any post matrix calcs"""
+        # after build(), nelements is a row count (rows per element and/or
+        # summed over the times); nelements is the *actual* number of elements
+        self.nelements = len(np.unique(self.element_node[:, 0]))
+        self.set_as_sort1()
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

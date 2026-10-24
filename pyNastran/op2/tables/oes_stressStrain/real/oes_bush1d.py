@@ -25,6 +25,7 @@ class RealBush1DStressArray(OES_Object):
         obj = self if inplace else copy.deepcopy(self)
         obj.element = obj.element[ieid]
         obj.data = obj.data[:, ieid, :]
+        obj.is_failed = obj.is_failed[:, ieid, :]
         obj.nelements = len(ieid)
         return obj
 
@@ -96,6 +97,9 @@ class RealBush1DStressArray(OES_Object):
         self.itotal = 0
         #self.ntimes = 0
         #self.nelements = 0
+
+        # 1 row per element; self.nelements was accumulated over all times
+        self.nelements = self.ntotal
 
         #print("***name=%s type=%s nnodes_per_element=%s ntimes=%s nelements=%s ntotal=%s" % (
             #self.element_name, self.element_type, nnodes_per_element, self.ntimes, self.nelements,

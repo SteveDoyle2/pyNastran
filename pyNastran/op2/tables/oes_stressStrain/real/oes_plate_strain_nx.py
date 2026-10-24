@@ -1,13 +1,14 @@
 # coding: utf-8
 #pylint disable=C0103
 from itertools import count
+import copy
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.f06.f06_formatting import (
     write_floats_13e, write_floats_13e_long, _eigenvalue_header)
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_eids_by_index
 
 
 class RealCPLSTRNPlateArray(OES_Object):
@@ -130,6 +131,18 @@ class RealCPLSTRNPlateArray(OES_Object):
                 if i > 0:
                     raise ValueError(msg)
         return True
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_node[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        irow = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[np.isin(obj.element, eids)]
+        obj.element_node = obj.element_node[irow, :]
+        obj.data = obj.data[:, irow, :]
+        obj.nelements = neid2
+        return obj
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

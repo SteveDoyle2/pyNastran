@@ -43,7 +43,8 @@ class RealBendArray(OES_Object):
 
         obj.element_node = obj.element_node[ieid_nid, :]
         obj.data = obj.data[:, ieid_nid, :]
-        obj.nelements = len(ieid_nid)
+        # ieid_nid is the row index (2 rows per element)
+        obj.nelements = neid2
         return obj
 
     @property

@@ -3976,7 +3976,7 @@ class TestOP2Main(Tester):
         assert cbeam_force.data.shape == (1, 2, 8), cbeam_force.data.shape
 
         cbeam_stress = stress.cbeam_stress[isubcase]
-        assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # wrong
+        assert cbeam_stress.nelements == 1, cbeam_stress.nelements  # wrong
         assert cbeam_stress.data.shape == (1, 2, 8), cbeam_stress.data.shape
 
         cquad4_force = force.cquad4_force[isubcase]
@@ -3984,8 +3984,7 @@ class TestOP2Main(Tester):
         assert cquad4_force.data.shape == (1, 20, 8), cquad4_force.data.shape
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        # TODO: should this be 4; yes by actual count...
-        assert cquad4_stress.nelements == 20, cquad4_stress.nelements
+        assert cquad4_stress.nelements == 2, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (1, 20, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
@@ -3995,7 +3994,7 @@ class TestOP2Main(Tester):
         assert ctria3_force.data.shape == (1, 8, 8), ctria3_force.data.shape
 
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.nelements == 4, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises, ctria3_stress
@@ -4059,27 +4058,27 @@ class TestOP2Main(Tester):
         stress = op2.op2_results.stress
         strain = op2.op2_results.strain
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.nelements == 4, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2
+        assert cquad4_stress.nelements == 2, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_strain = strain.ctria3_strain[isubcase]
         sword = get_scode_word(ctria3_strain.s_code, ctria3_strain.stress_bits)
-        assert ctria3_strain.nelements == 8, ctria3_strain.nelements
+        assert ctria3_strain.nelements == 4, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert not ctria3_strain.is_fiber_distance, '%s\n%s' % (ctria3_strain, sword)
         assert ctria3_strain.is_von_mises, '%s\n%s' % (ctria3_strain, sword)
 
         cquad4_strain = strain.cquad4_strain[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2
+        assert cquad4_strain.nelements == 2, cquad4_strain.nelements
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert not cquad4_strain.is_fiber_distance, cquad4_strain
         assert cquad4_strain.is_von_mises, cquad4_strain
@@ -4110,26 +4109,26 @@ class TestOP2Main(Tester):
         stress = op2.op2_results.stress
         strain = op2.op2_results.strain
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.nelements == 4, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2?
+        assert cquad4_stress.nelements == 2, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_strain = strain.ctria3_strain[isubcase]
-        assert ctria3_strain.nelements == 8, ctria3_strain.nelements
+        assert ctria3_strain.nelements == 4, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert ctria3_strain.is_fiber_distance, ctria3_strain
         assert ctria3_strain.is_von_mises, ctria3_strain
 
         cquad4_strain = strain.cquad4_strain[isubcase]
         sword = get_scode_word(cquad4_strain.s_code, cquad4_strain.stress_bits)
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2?
+        assert cquad4_strain.nelements == 2, cquad4_strain.nelements
         assert cquad4_strain.data.shape == (1, 4, 8), '%s\n%s' % (cquad4_strain.data.shape, sword)
         assert cquad4_strain.is_fiber_distance, '%s\n%s' % (cquad4_strain, sword)
         assert cquad4_strain.is_von_mises, '%s\n%s' % (cquad4_strain, sword)
@@ -4160,25 +4159,25 @@ class TestOP2Main(Tester):
         stress = op2.op2_results.stress
         strain = op2.op2_results.strain
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.nelements == 4, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert not ctria3_stress.is_von_mises, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2?
+        assert cquad4_stress.nelements == 2, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert not cquad4_stress.is_von_mises, cquad4_stress
 
         ctria3_strain = strain.ctria3_strain[isubcase]
-        assert ctria3_strain.nelements == 8, ctria3_strain.nelements
+        assert ctria3_strain.nelements == 4, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert not ctria3_strain.is_fiber_distance, ctria3_strain
         assert not ctria3_strain.is_von_mises, ctria3_strain
 
         cquad4_strain = strain.cquad4_strain[isubcase]
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2?
+        assert cquad4_strain.nelements == 2, cquad4_strain.nelements
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert not cquad4_strain.is_fiber_distance, cquad4_strain
         assert not cquad4_strain.is_von_mises, cquad4_strain
@@ -4209,25 +4208,25 @@ class TestOP2Main(Tester):
         stress = op2.op2_results.stress
         strain = op2.op2_results.strain
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.nelements == 4, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (1, 8, 8), ctria3_stress.data.shape
         assert ctria3_stress.is_fiber_distance, ctria3_stress
         assert ctria3_stress.is_von_mises is False, ctria3_stress
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 4, cquad4_stress.nelements  # TODO: this should be 2
+        assert cquad4_stress.nelements == 2, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (1, 4, 8), cquad4_stress.data.shape
         assert cquad4_stress.is_fiber_distance, cquad4_stress
         assert cquad4_stress.is_von_mises is False, cquad4_stress
 
         ctria3_strain = strain.ctria3_strain[isubcase]
-        assert ctria3_strain.nelements == 8, ctria3_strain.nelements
+        assert ctria3_strain.nelements == 4, ctria3_strain.nelements
         assert ctria3_strain.data.shape == (1, 8, 8), ctria3_strain.data.shape
         assert ctria3_strain.is_fiber_distance, ctria3_strain
         assert ctria3_strain.is_von_mises is False, ctria3_strain
 
         cquad4_strain = strain.cquad4_strain[isubcase]
-        assert cquad4_strain.nelements == 4, cquad4_strain.nelements  # TODO: this should be 2
+        assert cquad4_strain.nelements == 2, cquad4_strain.nelements
         assert cquad4_strain.data.shape == (1, 4, 8), cquad4_strain.data.shape
         assert cquad4_strain.is_fiber_distance, cquad4_strain
         assert cquad4_strain.is_von_mises is False, cquad4_strain
@@ -4270,19 +4269,19 @@ class TestOP2Main(Tester):
         assert cbar_force.data.shape == (3, 1, 8), cbar_force.data.shape
 
         cbar_stress = stress.cbar_stress[isubcase]
-        assert cbar_stress.nelements == 3, cbar_stress.nelements  # TODO: wrong
+        assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (3, 1, 15), cbar_stress.data.shape
 
         cbeam_stress = stress.cbeam_stress[isubcase]
-        assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
+        assert cbeam_stress.nelements == 1, cbeam_stress.nelements
         assert cbeam_stress.data.shape == (3, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 20, cquad4_stress.nelements
+        assert cquad4_stress.nelements == 2, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (3, 20, 8), cquad4_stress.data.shape
 
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.nelements == 4, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (3, 8, 8), ctria3_stress.data.shape
 
         ctetra_stress = stress.ctetra_stress[isubcase]
@@ -4535,7 +4534,7 @@ class TestOP2Main(Tester):
         assert cbar_force.data.shape == (21, 1, 8), cbar_force.data.shape
 
         cbar_stress = stress.cbar_stress[isubcase]
-        assert cbar_stress.nelements == 21, cbar_stress.nelements  # 1-wrong
+        assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (21, 1, 15), cbar_stress.data.shape
 
         #print(op2.cbeam_stress.keys())
@@ -4544,12 +4543,12 @@ class TestOP2Main(Tester):
         # assert cbeam_stress.data.shape == (7, 11, 8), cbeam_stress.data.shape
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 40, cquad4_stress.nelements
+        assert cquad4_stress.nelements == 4, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (21, 40, 8), cquad4_stress.data.shape
 
         #print(op2.ctria3_stress.keys())
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 16, ctria3_stress.nelements  # TODO: 8-wrong
+        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (21, 16, 8), ctria3_stress.data.shape
 
         assert len(stress.ctetra_stress) == 1, stress.ctetra_stress

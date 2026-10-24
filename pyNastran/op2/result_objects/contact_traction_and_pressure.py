@@ -2,6 +2,7 @@
 defines:
 
 """
+import copy
 from struct import Struct, pack
 import warnings
 
@@ -119,6 +120,23 @@ class RealContactTractionAndPressureArray(ScalarObject):  # displacement style t
         #self.ntimes = 0  # or frequency/mode
         self.ntotal = 0
         self._nnodes = 0  # result specific
+
+    def slice_by_node_id(self, nids: np.ndarray,
+                         assume_exists: bool=False, inplace: bool=False):
+        # contact nodes aren't necessarily sorted/unique, so use isin
+        # instead of searchsorted
+        nodes = self.node_gridtype[:, 0]
+        nids = np.asarray(nids)
+        if not assume_exists:
+            nids = np.intersect1d(nodes, nids)
+        inid = np.where(np.isin(nodes, nids))[0]
+        assert len(inid) > 0, inid
+        obj = self if inplace else copy.deepcopy(self)
+        obj.node_gridtype = self.node_gridtype[inid, :]
+        obj.gridtype_str = self.gridtype_str[inid]
+        obj.data = self.data[:, inid, :]
+        obj.nnodes = len(np.unique(nodes[inid]))
+        return obj
 
     def __eq__(self, table):  # pragma: no cover
         return self.assert_equal(table)

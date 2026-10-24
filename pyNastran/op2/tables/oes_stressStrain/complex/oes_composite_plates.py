@@ -1,11 +1,12 @@
 # import warnings
 from itertools import zip_longest
+import copy
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.op2.result_objects.op2_objects import get_complex_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_element_node
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import StressObject, StrainObject, OES_Object, slice_eids_by_index
 from pyNastran.f06.f06_formatting import (
     write_float_12e, write_imag_floats_12e,
     # write_float_13e,
@@ -200,6 +201,24 @@ class ComplexLayeredCompositesVMArray(OES_Object):
         self.data[self.itime, self.itotal] = [o1, o2, t12, o1z, o2z, ovm]
         self.element_layer[self.itotal, :] = [eid, ply_id]
         self.itotal += 1
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_layer[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        ilayer = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_layer = obj.element_layer[ilayer, :]
+        obj.data = obj.data[:, ilayer, :]
+        obj.nelements = neid2
+        return obj
+
+    def finalize(self):
+        """Calls any OP2 objects that need to do any post matrix calcs"""
+        # after build(), nelements is a row count (rows per element and/or
+        # summed over the times); nelements is the *actual* number of elements
+        self.nelements = len(np.unique(self.element_layer[:, 0]))
+        self.set_as_sort1()
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
@@ -497,6 +516,24 @@ class ComplexLayeredCompositesArray(OES_Object):
         self.data[self.itime, self.itotal] = [oxx, oyy, t12, t1z, t2z]
         self.element_layer[self.itotal, :] = [eid, ply_id]
         self.itotal += 1
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        element = self.element_layer[:, 0]
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(element), eids, assume_exists)
+        ilayer = np.where(np.isin(element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element_layer = obj.element_layer[ilayer, :]
+        obj.data = obj.data[:, ilayer, :]
+        obj.nelements = neid2
+        return obj
+
+    def finalize(self):
+        """Calls any OP2 objects that need to do any post matrix calcs"""
+        # after build(), nelements is a row count (rows per element and/or
+        # summed over the times); nelements is the *actual* number of elements
+        self.nelements = len(np.unique(self.element_layer[:, 0]))
+        self.set_as_sort1()
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
