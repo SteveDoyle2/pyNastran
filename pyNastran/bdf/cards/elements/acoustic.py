@@ -544,7 +544,7 @@ class PACABS(Element):
             a comment for the card
         """
         pid = integer(card, 1, 'pid')
-        synth = string_or_blank(card, 2, 'synth', 'YES')
+        synth = string_or_blank(card, 2, 'synth', default='YES')
         tid_resistance = integer(card, 3, 'tid_resistance')
         tid_reactance = integer(card, 4, 'tid_reactance')
         tid_weight = integer(card, 5, 'tid_weight')
@@ -556,7 +556,7 @@ class PACABS(Element):
         assert len(card) <= 11, f'len(PACABS card) = {len(card):d}\ncard={card}'
 
         assert synth in ['YES', 'NO'], synth
-        is_synth = synth == 'YES'
+        is_synth = (synth == 'YES')
         return PACABS(pid, cutfr, b, k, m, synth=is_synth,
                       tid_resistance=tid_resistance, tid_reactance=tid_reactance, tid_weight=tid_weight,
                       comment=comment)

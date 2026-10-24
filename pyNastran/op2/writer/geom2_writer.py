@@ -1197,6 +1197,34 @@ def write_micpnt(model, name: str, eids: np.ndarray, nelements: int,
     return nbytes
 
 
+def write_caabsf(model, name: str, eids: np.ndarray, nelements: int,
+                 op2_file: BinaryIO, op2_ascii, endian: bytes,
+                 nastran_format: str='nx') -> int:
+    """2-CAABSF (2708,27,59)
+
+    Word Name Type Description
+    1 EID I Element identification number
+    2 PID I Property identification number
+    3 G1  I Grid point 1 identification number
+    4 G2  I Grid point 2 identification number
+    5 G3  I Grid point 3 identification number
+    6 G4  I Grid point 4 identification number
+    """
+    key = (2708, 27, 59)
+    nfields = 6
+    struc = Struct(endian + b'6i')
+    nbytes = _write_intermediate_block(name, key, nfields, nelements,
+                                       op2_file, op2_ascii)
+    for eid in sorted(eids):
+        elem = model.elements[eid]
+        data = [eid, elem.pid] + elem.nodes
+        op2_ascii.write(f'  eid={eid} pid={elem.pid} nids={elem.nodes}\n')
+        datai = struc.pack(*data)
+        assert len(datai) == nfields*4, len(datai)
+        op2_file.write(struc.pack(*data))
+    return nbytes
+
+
 def write_elem_nodes(model, name: str, eids: np.ndarray, nelements: int,
                      op2_file: BinaryIO, op2_ascii, endian: bytes,
                      nastran_format: str = 'nx') -> int:
@@ -1526,4 +1554,5 @@ GEOM2_MAP = {
     'CHBDYE': write_chbdye,
     'CHBDYP': write_chbdyp,
     'CHBDYG': write_chbdyg,
+    'CAABSF': write_caabsf,
 }

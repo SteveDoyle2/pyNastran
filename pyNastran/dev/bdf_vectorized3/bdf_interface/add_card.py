@@ -5446,7 +5446,7 @@ class AddAcoustic(BDFAttributes):
 
     def add_pacabs(self, pid, cutfr, b, k, m,
                    synth=True, tid_resistance=None, tid_reactance=None,
-                   tid_weight=None, comment: str='') -> PACBAR:
+                   tid_weight=None, comment: str='') -> PACABS:
         """
         Creates a PACABS card
 
