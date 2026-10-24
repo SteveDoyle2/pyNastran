@@ -4346,19 +4346,19 @@ class TestOP2Main(Tester):
         assert cbar_force.data.shape == (4, 1, 8), cbar_force.data.shape
 
         cbar_stress = stress.cbar_stress[isubcase]
-        assert cbar_stress.nelements == 4, cbar_stress.nelements  # TODO: wrong
+        assert cbar_stress.nelements == 1, cbar_stress.nelements
         assert cbar_stress.data.shape == (4, 1, 15), cbar_stress.data.shape
 
         cbeam_stress = stress.cbeam_stress[isubcase]
-        assert cbeam_stress.nelements == 11, cbeam_stress.nelements  # TODO: wrong
+        assert cbeam_stress.nelements == 1, cbeam_stress.nelements
         assert cbeam_stress.data.shape == (4, 2, 8), cbeam_stress.data.shape
 
         cquad4_stress = stress.cquad4_stress[isubcase]
-        assert cquad4_stress.nelements == 20, cquad4_stress.nelements
+        assert cquad4_stress.nelements == 2, cquad4_stress.nelements
         assert cquad4_stress.data.shape == (4, 20, 8), cquad4_stress.data.shape
 
         ctria3_stress = stress.ctria3_stress[isubcase]
-        assert ctria3_stress.nelements == 8, ctria3_stress.nelements
+        assert ctria3_stress.nelements == 4, ctria3_stress.nelements
         assert ctria3_stress.data.shape == (4, 8, 8), ctria3_stress.data.shape
 
         ctetra_stress = stress.ctetra_stress[isubcase]
