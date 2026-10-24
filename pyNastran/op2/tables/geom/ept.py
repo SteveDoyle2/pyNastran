@@ -560,21 +560,28 @@ class EPT:
         """
         key = (8300, 83, 382)
         TODO: not validated
+
+        ndata = 40:
+                     5i                    4f
+          ints    = (11, 1, 101, 102, 103, 1.0, 500.0, 4.757, 7821.16, 0)
+          floats  = (11, 1, 101, 102, 103, 1.0, 500.0, 4.757, 7821.16, 0.0)
+
         """
         op2: OP2Geom = self.op2
-        # op2.show_data(data[n:], types='if')
+        # op2.show_data(data[n:], types='ifs')
         size = self.size
-
-        ntotal = 9 * size  # 9*4
-        struct1 = Struct(mapfmt(op2._endian + b'i 4f 4s 3i', size))
+        ntotal = 10 * size  # 9*4
+        struct1 = Struct(mapfmt(op2._endian + b'5i 4f i', size))
         nentries = (len(data) - n) // ntotal
-        assert (len(data) - n) % ntotal == 0
+        assert (len(data) - n) % ntotal == 0, len(data)-12
         for unused_i in range(nentries):
             edata = data[n:n+ntotal]
             out = struct1.unpack(edata)
-            pid, cutfr, b, k, m, synth, tid_resistance, tid_reactance, tid_weight = out
-            assert synth in [b'YES ', b'NO  '], synth
-            is_synth = (synth == b'YES ')
+            # pid, cutfr, b, k, m, synth, tid_resistance, tid_reactance, tid_weight = out
+            # assert synth in [b'YES ', b'NO  '], synth
+            # ints = (11, 1, 101, 102, 103, 1.0, 500.0, 4.757, 7821.16, 0)
+            pid, synth, tid_resistance, tid_reactance, tid_weight, b, k, m, cutfr, zero = out
+            is_synth = (synth == 1)
             prop = op2.add_pacabs(
                 pid, cutfr, b, k, m,
                 synth=is_synth,

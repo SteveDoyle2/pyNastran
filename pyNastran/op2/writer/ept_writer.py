@@ -1970,10 +1970,11 @@ def write_pacabs(name: str, props: list, itable: int,
                    tid_resistance: int=0,
                    tid_reactance: int=0,
                    tid_weight: int=0, comment: str='') -> PACABS:
+    TODO: wrong...
     """
     key = (8300, 83, 382)
     # ntotal = 8 * size  # 8*4
-    spack = Struct(mapfmt(endian + b'i 4f 4s 3i', size))
+    spack = Struct(mapfmt(endian + b'i 4f 4s 3i', size))  # TODO: should be 10?
 
     nfieldsi = len(props) * 9
     nbytes = _write_table_header(
@@ -1981,9 +1982,6 @@ def write_pacabs(name: str, props: list, itable: int,
 
     for pid in sorted(props):
         prop = model.properties[pid]
-        spack = Struct(mapfmt(endian + b'i 4f 4s 3i', size))
-        # tzreid = prop.tzreid if prop.tzreid is not None else 0
-        # tzimid = prop.tzimid if prop.tzimid is not None else 0
         # def add_pacabs(self, pid: int, cutfr: float,
         #                b: float, k: float, m: float,
         #                synth: bool = True,
@@ -1991,10 +1989,14 @@ def write_pacabs(name: str, props: list, itable: int,
         #                tid_reactance: int = 0,
         #                tid_weight: int = 0, comment: str = '') -> PACABS:
         synth = b'YES ' if prop.synth else b'NO '
+        b = prop.b if prop.b is not None else 0.0
+        k = prop.k if prop.k is not None else 0.0
+        m = prop.k if prop.m is not None else 0.0
         data = [pid, prop.cutfr,
-                prop.b, prop.k, prop.m,
+                b, k, m,
                 synth, prop.tid_resistance,
                 prop.tid_reactance, prop.tid_weight]
+        model.log.warning(str(data))
         assert None not in data, (data, data.index(None))
         op2_file.write(spack.pack(*data))
         op2_ascii.write(str(data) + '\n')
@@ -2062,6 +2064,6 @@ EPT_MAP = {
     'PCONVM': write_pconvm,
     'PAABSF': write_paabsf,
     'PACBAR': write_pacbar,
-    'PACABS': write_pacabs,
+    # 'PACABS': write_pacabs,
     'PMIC': write_pmic,
 }
