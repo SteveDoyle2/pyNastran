@@ -1002,44 +1002,20 @@ class Writer:
                       is_long_ids: Optional[bool]=None) -> None:
         """Writes the contact cards sorted by ID"""
         model = self.model
-        is_contact = (model.bcrparas or model.bctadds or model.bctparas
-                      or model.bctsets or model.bsurf or model.bsurfs
-                      or model.bconp or model.blseg or model.bfric
-                      or model.bgadds or model.bgsets or model.bctparms
-                      or model.bcbodys or model.bcparas)
+        contact_dicts = [
+            model.bcrparas, model.bctadds, model.bctparas,
+            model.bctsets, model.bsurf, model.bsurfs,
+            model.bconp, model.blseg, model.bfric,
+            model.bgadds, model.bgsets, model.bctparms,
+            model.bcbodys, model.bcparas, model.bgparm,]
+
+        is_contact = any(len(dicti) for dicti in contact_dicts)
         if not is_contact:
             return
         bdf_file.write('$CONTACT\n')
-        for (unused_id, bcbody) in sorteddict(model.bcbodys, sort_cards):
-            bdf_file.write(bcbody.write_card(size, is_double))
-        for (unused_id, bcpara) in sorteddict(model.bcparas, sort_cards):
-            bdf_file.write(bcpara.write_card(size, is_double))
-
-        for (unused_id, bcrpara) in sorteddict(model.bcrparas, sort_cards):
-            bdf_file.write(bcrpara.write_card(size, is_double))
-        for (unused_id, bctparam) in sorteddict(model.bctparms, sort_cards):
-            bdf_file.write(bctparam.write_card(size, is_double))
-        for (unused_id, bctadds) in sorteddict(model.bctadds, sort_cards):
-            bdf_file.write(bctadds.write_card(size, is_double))
-        for (unused_id, bctpara) in sorteddict(model.bctparas, sort_cards):
-            bdf_file.write(bctpara.write_card(size, is_double))
-
-        for (unused_id, bctset) in sorteddict(model.bctsets, sort_cards):
-            bdf_file.write(bctset.write_card(size, is_double))
-        for (unused_id, bsurfi) in sorteddict(model.bsurf, sort_cards):
-            bdf_file.write(bsurfi.write_card(size, is_double))
-        for (unused_id, bsurfsi) in sorteddict(model.bsurfs, sort_cards):
-            bdf_file.write(bsurfsi.write_card(size, is_double))
-        for (unused_id, bconp) in sorteddict(model.bconp, sort_cards):
-            bdf_file.write(bconp.write_card(size, is_double))
-        for (unused_id, blseg) in sorteddict(model.blseg, sort_cards):
-            bdf_file.write(blseg.write_card(size, is_double))
-        for (unused_id, bfric) in sorteddict(model.bfric, sort_cards):
-            bdf_file.write(bfric.write_card(size, is_double))
-        for (unused_id, bgadd) in sorteddict(model.bgadds, sort_cards):
-            bdf_file.write(bgadd.write_card(size, is_double))
-        for (unused_id, bgset) in sorteddict(model.bgsets, sort_cards):
-            bdf_file.write(bgset.write_card(size, is_double))
+        for contact_dict in contact_dicts:
+            for key, value in sorteddict(contact_dict, sort_cards):
+                bdf_file.write(value.write_card(size, is_double))
 
     def write_superelements(self, bdf_file: TextFile,
                             size: int=8, is_double: bool=False,
@@ -1559,25 +1535,35 @@ class Writer:
                            is_long_ids: Optional[bool]=None) -> None:
         """Writes the contact cards sorted by ID"""
         model = self.model
-        is_contact = (model.bcrparas or model.bctadds or model.bctparas or model.bctparms
-                      or model.bctsets or model.bsurf or model.bsurfs
-                      or model.bconp or model.blseg or model.bfric
-                      or model.bgsets or model.bgadds)
-        if is_contact:
-            return
-        write_bdfs_dict(bdf_files, model.bcrparas, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bctadds, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bctparas, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bctparms, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bctsets, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bsurf, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bsurfs, size, is_double, is_long_ids)
+        contact_dicts = [
+            model.bcrparas, model.bctadds, model.bctparas,
+            model.bctsets, model.bsurf, model.bsurfs,
+            model.bconp, model.blseg, model.bfric,
+            model.bgadds, model.bgsets, model.bctparms,
+            model.bcbodys, model.bcparas, model.bgparm,]
 
-        write_bdfs_dict(bdf_files, model.bconp, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.blseg, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bfric, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bgadds, size, is_double, is_long_ids)
-        write_bdfs_dict(bdf_files, model.bgsets, size, is_double, is_long_ids)
+        is_contact = any(len(dicti) for dicti in contact_dicts)
+        if not is_contact:
+            return
+        # bdf_file.write('$CONTACT\n')
+
+        sort_cards = False
+        for contact_dict in contact_dicts:
+            write_bdfs_dict(bdf_files, contact_dict, size, is_double, is_long_ids)
+
+        # write_bdfs_dict(bdf_files, model.bcrparas, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bctadds, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bctparas, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bctparms, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bctsets, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bsurf, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bsurfs, size, is_double, is_long_ids)
+        #
+        # write_bdfs_dict(bdf_files, model.bconp, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.blseg, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bfric, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bgadds, size, is_double, is_long_ids)
+        # write_bdfs_dict(bdf_files, model.bgsets, size, is_double, is_long_ids)
 
     def write_coords_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                           is_long_ids: Optional[bool]=None) -> None:

@@ -899,6 +899,17 @@ class CrossReference:
     def cross_reference_contact(self) -> None:
         """cross references the contact objects"""
         model = self.model
+        contact_dicts = [
+            model.bcrparas, model.bctadds, model.bctparas,
+            model.bctsets, model.bsurf, model.bsurfs,
+            model.bconp, model.blseg, model.bfric,
+            model.bgadds, model.bgsets, model.bctparms,
+            model.bcbodys, model.bcparas, model.bgparm,]
+
+        for contact_dict in contact_dicts:
+            for contact in contact_dict.values():
+                contact.cross_reference(model)
+
         for blseg in model.blseg.values():
             blseg.cross_reference(model)
         for bconp in model.bconp.values():

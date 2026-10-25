@@ -1,7 +1,8 @@
+import copy
 import numpy as np
 
 from pyNastran.utils.numpy_utils import integer_types
-from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object
+from pyNastran.op2.tables.oes_stressStrain.real.oes_objects import OES_Object, slice_eids_by_index
 from pyNastran.op2.result_objects.op2_objects import get_times_dtype
 from pyNastran.op2.result_objects.utils_pandas import build_dataframe_transient_header, build_pandas_transient_elements
 from pyNastran.f06.f06_formatting import write_floats_12e, _eigenvalue_header  # write_floats_13e,
@@ -148,6 +149,16 @@ class RealNonlinearBushArray(OES_Object):  # 226-CBUSHNL
             mx, my, mz, orx, ory, orz, erx, ery, erz
         ]
         self.ielement += 1
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(self.element), eids, assume_exists)
+        ieid = np.where(np.isin(self.element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
 
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:

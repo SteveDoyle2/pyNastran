@@ -405,7 +405,6 @@ def write_prod(name: str, pids: np.ndarray, itable: int,
     return itable
 
 
-
 def write_ptube(name: str, pids: np.ndarray, itable: int,
                 op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
                 nastran_format: str='nx') -> int:
@@ -434,6 +433,30 @@ def write_ptube(name: str, pids: np.ndarray, itable: int,
     itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
     return itable
 
+def write_pmic(name: str, pids: np.ndarray, itable: int,
+               op2_file: BinaryIO, op2_ascii, model: BDF, endian: bytes=b'<',
+               nastran_format: str='nx') -> int:
+    """writes the PMIC"""
+    size = 4
+    key = (7001, 70, 632)
+    nfields = 1
+    spack = Struct(endian + b'i')
+
+    nproperties = len(pids)
+    nvalues = nfields * nproperties
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nvalues, size)
+
+    for pid in sorted(pids):
+        prop = model.properties[pid]
+        # op2.add_pmic(val)
+        # print(prop.get_stats())
+        data = [pid]
+        op2_ascii.write('  pid=%s\n' % pid)
+        op2_file.write(spack.pack(*data))
+
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
 
 
 def write_pshear(name: str, pids: np.ndarray, itable: int,
@@ -1846,6 +1869,140 @@ def write_pdamp(name: str, props: list, itable: int,
     return itable
 
 
+def write_paabsf(name: str, props: list, itable: int,
+                 op2_file: BinaryIO, op2_ascii,
+                 model: BDF, endian: bytes=b'<',
+                 nastran_format: str='nx', size: int=4) -> int:
+    """
+    PAABSF(1502,15,36)
+    Defines the properties of a frequency-dependent acoustic absorber
+    Word Name Type Description
+    1 PID     I Property identification number
+    2 TZREID  I TABLEDi entry identification number for resistance
+    3 TZMID   I TABLEDi entry identification number for reactance
+    4 S      RS Impedance scale factor
+    5 A      RS Area factor when only 1 or 2 grid points are specified
+    6 B      RS Equivalent structural damping
+    7 K      RS Equivalent stiffness
+    8 RHOC   RS Constant used for absorption coefficient
+    """
+    key = (1502, 15, 36)
+    # ntotal = 8 * size  # 8*4
+    spack = Struct(mapfmt(endian + b'3i 5f', size))
+
+    nfieldsi = len(props) * 8
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nfieldsi, size)
+
+    for pid in sorted(props):
+        prop = model.properties[pid]
+        tzreid = prop.tzreid if prop.tzreid is not None else 0
+        tzimid = prop.tzimid if prop.tzimid is not None else 0
+        data = [pid, tzreid, tzimid, prop.s, prop.a, prop.b, prop.k, prop.rhoc]
+        assert None not in data, (data, data.index(None))
+        op2_file.write(spack.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
+def write_pacbar(name: str, props: list, itable: int,
+                 op2_file: BinaryIO, op2_ascii,
+                 model: BDF, endian: bytes = b'<',
+                 nastran_format: str = 'nx', size: int = 4) -> int:
+    """
+    prop = model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='pacbar')
+    """
+    key = (8500, 85, 384)
+    # ntotal = 8 * size  # 8*4
+    spack = Struct(mapfmt(endian + b'i 4f', size))
+
+    nfieldsi = len(props) * 5
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nfieldsi, size)
+
+    for pid in sorted(props):
+        prop = model.properties[pid]
+        # tzreid = prop.tzreid if prop.tzreid is not None else 0
+        # tzimid = prop.tzimid if prop.tzimid is not None else 0
+        # prop = model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='pacbar')
+        data = [pid, prop.mback, prop.mseptm, prop.freson, prop.kreson]
+        assert None not in data, (data, data.index(None))
+        op2_file.write(spack.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
+def write_pacbar(name: str, props: list, itable: int,
+                 op2_file: BinaryIO, op2_ascii,
+                 model: BDF, endian: bytes = b'<',
+                 nastran_format: str = 'nx', size: int = 4) -> int:
+    """
+    prop = model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='pacbar')
+    """
+    key = (8500, 85, 384)
+    # ntotal = 8 * size  # 8*4
+    spack = Struct(mapfmt(endian + b'i 4f', size))
+
+    nfieldsi = len(props) * 5
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nfieldsi, size)
+
+    for pid in sorted(props):
+        prop = model.properties[pid]
+        # tzreid = prop.tzreid if prop.tzreid is not None else 0
+        # tzimid = prop.tzimid if prop.tzimid is not None else 0
+        # prop = model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='pacbar')
+        data = [pid, prop.mback, prop.mseptm, prop.freson, prop.kreson]
+        assert None not in data, (data, data.index(None))
+        op2_file.write(spack.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
+def write_pacabs(name: str, props: list, itable: int,
+                 op2_file: BinaryIO, op2_ascii,
+                 model: BDF, endian: bytes = b'<',
+                 nastran_format: str = 'nx', size: int = 4) -> int:
+    """
+    def add_pacabs(self, pid: int, cutfr: float,
+                   b: float, k: float, m: float,
+                   synth: bool=True,
+                   tid_resistance: int=0,
+                   tid_reactance: int=0,
+                   tid_weight: int=0, comment: str='') -> PACABS:
+    TODO: wrong...
+    """
+    key = (8300, 83, 382)
+    # ntotal = 8 * size  # 8*4
+    spack = Struct(mapfmt(endian + b'i 4f 4s 3i', size))  # TODO: should be 10?
+
+    nfieldsi = len(props) * 9
+    nbytes = _write_table_header(
+        op2_file, op2_ascii, name, key, nfieldsi, size)
+
+    for pid in sorted(props):
+        prop = model.properties[pid]
+        # def add_pacabs(self, pid: int, cutfr: float,
+        #                b: float, k: float, m: float,
+        #                synth: bool = True,
+        #                tid_resistance: int = 0,
+        #                tid_reactance: int = 0,
+        #                tid_weight: int = 0, comment: str = '') -> PACABS:
+        synth = b'YES ' if prop.synth else b'NO '
+        b = prop.b if prop.b is not None else 0.0
+        k = prop.k if prop.k is not None else 0.0
+        m = prop.k if prop.m is not None else 0.0
+        data = [pid, prop.cutfr,
+                b, k, m,
+                synth, prop.tid_resistance,
+                prop.tid_reactance, prop.tid_weight]
+        model.log.warning(str(data))
+        assert None not in data, (data, data.index(None))
+        op2_file.write(spack.pack(*data))
+        op2_ascii.write(str(data) + '\n')
+    itable = _write_table_footer(op2_file, op2_ascii, nbytes, itable)
+    return itable
+
 def _write_table_header(op2_file: BinaryIO, op2_ascii,
                         name: str, key: tuple[int, int, int],
                         nfields: int, size: int) -> int:
@@ -1905,4 +2062,8 @@ EPT_MAP = {
     'PHBDY': write_phbdy,
     'PGPLSN': write_pgplsn,
     'PCONVM': write_pconvm,
+    'PAABSF': write_paabsf,
+    'PACBAR': write_pacbar,
+    # 'PACABS': write_pacabs,
+    'PMIC': write_pmic,
 }

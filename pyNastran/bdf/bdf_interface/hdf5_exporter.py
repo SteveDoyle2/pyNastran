@@ -64,7 +64,7 @@ dict_int_obj_attrs: list[str] = [
     # contact
     'bconp', 'bcrparas', 'bctadds',
     'bctparas', 'bctsets', 'blseg', 'bsurf', 'bsurfs',
-    'bgadds', 'bgsets', 'bctparms',
+    'bgadds', 'bgsets', 'bctparms', 'bgparm',
     'bfric', 'bcbodys',
 
     # other

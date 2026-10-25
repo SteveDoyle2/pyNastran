@@ -14,6 +14,7 @@ PKG_PATH = Path(pyNastran.__path__[0])
 MODEL_PATH = PKG_PATH / '..' / 'models'
 assert os.path.exists(MODEL_PATH), MODEL_PATH
 
+
 class TestAcoustic(unittest.TestCase):
     """
     The cards are:
@@ -207,8 +208,8 @@ class TestAcoustic(unittest.TestCase):
         mseptm = 2.0
         freson = 3.0
         kreson = 4.0
-        elem = model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='pacbar')
-        str(elem)
+        prop = model.add_pacbar(pid, mback, mseptm, freson, kreson, comment='pacbar')
+        str(prop)
         model.pop_parse_errors()
         model.cross_reference()
         model.pop_xref_errors()

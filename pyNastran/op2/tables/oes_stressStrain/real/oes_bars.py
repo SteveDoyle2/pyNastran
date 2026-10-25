@@ -229,6 +229,9 @@ class RealBarArray(OES_Object):
             ntimes = self.ntotal
             #ss
 
+        # 1 row per element; self.nelements was accumulated over all times
+        self.nelements = ntotal
+
         _times = np.zeros(ntimes, dtype=self.analysis_fmt)
         element = np.zeros(ntotal, dtype=idtype)
 

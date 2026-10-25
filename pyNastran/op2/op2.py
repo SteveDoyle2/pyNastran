@@ -1850,15 +1850,22 @@ def _check_result_slice(result, log: SimpleLogger,
 
 def _get_eids(result) -> np.ndarray:
     # TODO: what result has element=None?
-    if hasattr(result, 'element_node'):
+    if getattr(result, 'element_node', None) is not None:
         eids = np.unique(result.element_node[:, 0])
     elif hasattr(result, 'element_layer'):
+        # complex composites have element_node=None
         eids = np.unique(result.element_layer[:, 0])
 
     elif hasattr(result, 'element') and result.element is None:
         # TODO: RealPlateBilinearForceArray
         raise NotImplementedError(result.get_stats())
 
+    elif hasattr(result, '_element_masks'):
+        # real strain/kinetic energy; element is (ntimes, ntotal) and the
+        # ids can vary by time, so use all times (not just itime=0) and
+        # drop the total (eid=100000000) and padding
+        element, is_element, unused_is_total = result._element_masks()
+        eids = np.unique(element[is_element])
     elif hasattr(result, 'element') and result.element is not None:
         eids = result.element
         if eids.ndim == 2:

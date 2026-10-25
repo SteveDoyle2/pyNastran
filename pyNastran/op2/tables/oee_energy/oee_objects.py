@@ -78,67 +78,86 @@ class RealEnergyArray(BaseElement):
         #else:
             #raise NotImplementedError('SORT2')
 
-   #def slice_by_element_id(self, eids: np.ndarray,
-   #                        assume_exists: bool=False, inplace: bool=False):
-   #    ntime, nelement, nresult = self.data.shape
-   #
-   #    #-------------------------
-   #
-   #    # throw most of the results in the trash
-   #    neids_max = 0
-   #    obj = self if inplace else copy.deepcopy(self)
-   #    is2d = (self.element.ndim == 2)
-   #    for itime in range(ntime):
-   #        if is2d:
-   #            element = self.element[itime, :]
-   #        else:  # pragma: no cover
-   #            raise NotImplementedError('not 2d element')
-   #
-   #        #print('oee element=', element.tolist())
-   #        #print('oee eids=', eids.tolist())
-   #        neid2 = 0  # total only
-   #        if len(eids):
-   #            # verify eids exist
-   #            # filter out duplicate 0s and sort
-   #            uelement = np.unique(element)
-   #            try:
-   #                eids, _, _ = slice_eids_by_index(
-   #                    uelement, eids, assume_exists)
-   #                #print('new_eids', eids)
-   #            except AssertionError:
-   #                pass
-   #        itotal = np.where(element == 100000000)[0]
-   #
-   #        ieid = np.where(np.isin(element, eids))[0]
-   #        assert itotal not in ieid, itotal
-   #        neid2 = len(ieid)
-   #        itotal2 = neid2 #+ 1
-   #        neid_max = max(neids_max, neid2)
-   #        #print('itotal', itotal, itotal2)
-   #
-   #        ieid2 = np.arange(neid2)
-   #        assert len(ieid) == len(ieid2)
-   #        #iend = np.arange(neid2, nelement)
-   #        #print(element)
-   #        assert 100000000 not in element[ieid], element[ieid]
-   #
-   #        obj.element[itime, itotal2:] = 0
-   #        obj.element[itime, itotal2] = 100000000
-   #        obj.element[itime, ieid2] = self.element[itime, ieid]
-   #        #print('obj.element', obj.element[itime, :])
-   #
-   #        obj.data[itime, ieid2, :] = self.data[itime, ieid, :]
-   #        obj.data[itime, itotal2:, :] = np.nan
-   #        obj.data[itime, itotal2, :] = self.data[itime, itotal, :]
-   #        #print('-----------')
-   #
-   #    #downslice - breaks the shape?
-   #    #obj.element = obj.element[:, neid_max+1]
-   #    #obj.data = obj.data[:, neid_max+1, :]
-   #    obj.nelements = neid2 + 1
-   #    #print('obj.element', obj.element)
-   #    #print('===============')
-   #    return obj
+    def _element_masks(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Gets the masks for the element array, which is (ntimes, ntotal).
+
+        Each row (time) is:
+            [eid1, eid2, ..., eidn, 100000000 (total), pad, pad, ...]
+        The element ids may change from time to time (e.g., an ESE
+        threshold), so rows are padded out to max(ntotal) with 0
+        ('' for DMIG, which has string ids and no total row).
+
+        Returns
+        -------
+        element : (ntimes, ntotal) array
+        is_element : (ntimes, ntotal) bool array
+            True for actual elements (not the total or padding)
+        is_total : (ntimes, ntotal) bool array
+            True for the total row (eid=100000000)
+        """
+        element = np.asarray(self.element)
+        if element.dtype.kind in 'US':
+            # DMIG
+            is_total = np.zeros(element.shape, dtype='bool')
+            is_element = (element != '')
+        else:
+            is_total = (element == 100000000)
+            is_element = (element != 0) & ~is_total
+        return element, is_element, is_total
+
+    def _get_nelements(self) -> int:
+        """the actual number of elements (no total/padding) over all times"""
+        element, is_element, unused_is_total = self._element_masks()
+        return len(np.unique(element[is_element]))
+
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        """
+        Slices the result by element id.  The total row (eid=100000000)
+        is kept for each time; its values are not updated (they're still
+        the total of all the elements), so 'percent' is still relative
+        to the original total.
+        """
+        element, is_element, is_total = self._element_masks()
+        data = np.asarray(self.data)
+        ntimes, unused_ntotal, nresults = data.shape
+
+        uelement = np.unique(element[is_element])
+        if len(uelement) == 0:
+            # there are no elements, just the total row
+            # (e.g., every element is below the ESE threshold)
+            eids = uelement
+            neid2 = 0
+        else:
+            eids, unused_ieid, neid2 = slice_eids_by_index(uelement, eids, assume_exists)
+
+        # the element ids can vary by time, so we slice each time
+        # and left-justify the results:
+        #    [eid1, ..., eidn, 100000000 (total), pad, pad, ...]
+        is_kept = is_element & np.isin(element, eids)
+        has_total = is_total.any(axis=1)
+        nkept = is_kept.sum(axis=1)
+        ncolumns = int((nkept + has_total).max())
+
+        pad = '' if element.dtype.kind in 'US' else 0
+        element2 = np.full((ntimes, ncolumns), pad, dtype=element.dtype)
+        data2 = np.zeros((ntimes, ncolumns, nresults), dtype=data.dtype)
+        for itime in range(ntimes):
+            icolumn = np.where(is_kept[itime, :])[0]
+            ncolumn = len(icolumn)
+            element2[itime, :ncolumn] = element[itime, icolumn]
+            data2[itime, :ncolumn, :] = data[itime, icolumn, :]
+            if has_total[itime]:
+                itotal = np.where(is_total[itime, :])[0][0]
+                element2[itime, ncolumn] = element[itime, itotal]
+                data2[itime, ncolumn, :] = data[itime, itotal, :]
+
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = element2
+        obj.data = data2
+        obj.nelements = neid2
+        return obj
 
     @property
     def is_real(self) -> bool:
@@ -446,6 +465,10 @@ class RealEnergyArray(BaseElement):
         self.itotal += 1
 
     def finalize(self):
+        # build() sizes the arrays with nelements=max(ntotal), which
+        # includes the total row (eid=100000000); nelements is the
+        # *actual* number of elements
+        self.nelements = self._get_nelements()
         self.set_as_sort1()
 
     def set_as_sort1(self):

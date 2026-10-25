@@ -293,6 +293,13 @@ class RealPlateArray(OES_Object):
         #                       f'sort_method={self.sort_method} nlayers_per_element={nlayers_per_element} nlayers={nlayers}')
 
         assert nlayers >= 2, self.code_information()
+
+        # nlayers is the number of rows (nelements * nnodes_per_element * 2 layers);
+        # nelements is the *actual* number of elements
+        #   CTRIA3:      1 centroid  * 2 layers = 2 rows/element
+        #   CQUAD4-144: (4+1) nodes * 2 layers = 10 rows/element
+        assert nlayers % nlayers_per_element == 0, (nlayers, nlayers_per_element)
+        self.nelements = nlayers // nlayers_per_element
         _times = np.zeros(ntimes, dtype=self.analysis_fmt)
         element_node = np.zeros((nlayers, 2), dtype=idtype)
 

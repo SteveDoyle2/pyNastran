@@ -9,7 +9,6 @@ from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.utils import object_attributes, object_methods, PathLike
-#from pyNastran.bdf.cards.collpase_card import collapse_thru_by
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.write_path import write_include, _split_path
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties

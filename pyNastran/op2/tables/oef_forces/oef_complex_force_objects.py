@@ -3729,6 +3729,16 @@ class ComplexSolidPressureForceArray(ComplexForceObject):
         self.data[self.itime, self.ielement, :] = [ax, ay, az, vx, vy, vz, pressure]
         self.ielement += 1
 
+    def slice_by_element_id(self, eids: np.ndarray,
+                            assume_exists: bool=False, inplace: bool=False):
+        eids, ieid, neid2 = slice_eids_by_index(np.unique(self.element), eids, assume_exists)
+        ieid = np.where(np.isin(self.element, eids))[0]
+        obj = self if inplace else copy.deepcopy(self)
+        obj.element = obj.element[ieid]
+        obj.data = obj.data[:, ieid, :]
+        obj.nelements = neid2
+        return obj
+
     def get_stats(self, short: bool=False) -> list[str]:
         if not self.is_built:
             return [

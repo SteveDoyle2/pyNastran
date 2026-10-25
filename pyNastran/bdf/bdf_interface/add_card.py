@@ -160,10 +160,12 @@ from pyNastran.bdf.cards.bdf_tables import (TABLED1, TABLED2, TABLED3, TABLED4,
                                             TABLEHT, TABLEH1,
                                             TABDMP1, TABRND1, TABRNDG,
                                             DTABLE)
-from pyNastran.bdf.cards.contact import (
-    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BCONP, BLSEG, BFRIC,
-    BGADD, BGSET, BCTPARM, BCPARA, BCBODY,
-)
+from pyNastran.bdf.cards.contact.msc import BCBODY
+from pyNastran.bdf.cards.contact.contact_common import BCONP, BCPARA
+from pyNastran.bdf.cards.contact.nx_contact import (
+    BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BLSEG, BFRIC,
+    BCTPARM, )
+from pyNastran.bdf.cards.contact.nx_glue import BGPARM, BGADD, BGSET
 from pyNastran.bdf.cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 CARD_MAP = {
@@ -762,6 +764,8 @@ CARD_MAP = {
     'DPHASE': DPHASE,
     'DELAY': DELAY,
     'ZAERO': ZAERO,
+
+    'BGPARM': BGPARM,
 }
 
 
@@ -4117,6 +4121,13 @@ class AddContact:
         bctparm = BCTPARM(csid, params, comment=comment)
         self._add_methods.add_bctparam_object(bctparm)
         return bctparm
+
+    def add_bgparm(self, csid: int,
+                    params: dict[str, Any], comment: str='') -> BGPARM:
+        """Creates a BGPARM card"""
+        bgparm = BGPARM(csid, params, comment=comment)
+        self._add_methods.add_bgparam_object(bgparm)
+        return bgparm
 
     def add_blseg(self, line_id: int, nodes: list[int],
                   comment: str='') -> BLSEG:

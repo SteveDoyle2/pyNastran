@@ -148,9 +148,12 @@ if TYPE_CHECKING:  # pragma: no cover
                                                 TABLES1, TABDMP1, TABLEST, TABLEHT, TABLEH1,
                                                 TABRND1, TABRNDG,
                                                 DTABLE)
-    from pyNastran.bdf.cards.contact import (
-        BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCPARA, BCTPARA, BCONP, BLSEG,
-        BFRIC, BCTPARM, BGADD, BGSET, BCBODY)
+    from pyNastran.bdf.cards.contact.msc import BCBODY
+    from pyNastran.bdf.cards.contact.contact_common import BCPARA, BCONP
+    from pyNastran.bdf.cards.contact.nx_contact import (
+        BCRPARA, BCTADD, BCTSET, BSURF, BSURFS, BCTPARA, BLSEG,
+        BFRIC, BCTPARM)
+    from pyNastran.bdf.cards.contact.nx_glue import BGPARM, BGADD, BGSET
     from pyNastran.bdf.cards.parametric.geometry import (
         PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF)
     from pyNastran.bdf.cards.elements.acoustic import (
@@ -666,6 +669,12 @@ class AddMethods:
         """adds an BCTPARM object"""
         key = card.csid
         self.model.bctparms[key] = card
+        self.model._type_to_id_map[card.type].append(key)
+
+    def add_bgparam_object(self, card: BGPARM, allow_overwrites: bool=False) -> None:
+        """adds an BCTPARM object"""
+        key = card.csid
+        self.model.bgparm[key] = card
         self.model._type_to_id_map[card.type].append(key)
 
     def add_bctset_object(self, card: BCTSET, allow_overwrites: bool=False) -> None:

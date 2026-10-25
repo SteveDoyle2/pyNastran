@@ -119,7 +119,8 @@ class RealBeamArray(OES_Object):
         obj.element_node = obj.element_node[ieid, :]
         obj.xxb = obj.xxb[ieid]
         obj.data = obj.data[:, ieid, :]
-        obj.nelements = len(ieid)
+        # ieid is now the row index (multiple stations per element)
+        obj.nelements = neid2
         return obj
 
     @property
@@ -233,6 +234,11 @@ class RealBeamArray(OES_Object):
         self.element_node = self.element_node[i, :]
         self.data = self.data[:, i, :]
         self.xxb = self.xxb[i]
+
+        # build() sizes the arrays with 11 stations/element, so nelements is
+        # the number of rows at that point; nelements is the *actual* number
+        # of elements
+        self.nelements = len(np.unique(self.element_node[:, 0]))
         self.set_as_sort1()
 
     def set_as_sort1(self):

@@ -341,6 +341,7 @@ cards_to_read = [
     'BCTPARA',  ## bctpara
     'BCRPARA',  ## bcrpara
     'BCTPARM', ## bctparm
+    'BGPARM', ## bgparm
     'BGADD',  ## bgadds
     'BGSET',  ## bgsets
     'BCTADD',  ## bctadds
