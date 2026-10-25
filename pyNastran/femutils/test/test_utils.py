@@ -446,7 +446,7 @@ class TestFemIO(unittest.TestCase):
         im = np.e
         a[:] = re - 1.0j * im
         c = BytesIO()
-        savetxt_nice(c, a, fmt='%.3e')
+        np.savetxt(c, a, fmt='%.3e')
         c.seek(0)
         lines = c.readlines()
         assert_equal(

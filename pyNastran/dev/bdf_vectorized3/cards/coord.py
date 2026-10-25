@@ -919,6 +919,10 @@ class COORD(VectorizedBaseCard):
         return max(self.coord_id.max(), self.nodes.max(), self.ref_coord_id.max())
 
     def write_h5(self, h5file, coord_group):
+        ncoord = len(self.coord_id) - 1
+        if ncoord == 0:
+            return
+
         transform_group = h5file.create_group(coord_group, 'TRANSFORMATION')
         from tables import Int64Col, Float64Col
         xform_data_dict = {'DATA': Float64Col()}
@@ -938,7 +942,6 @@ class COORD(VectorizedBaseCard):
         }
         coords_by_type = defaultdict(list)
         rdata_list = []
-        ncoord = len(self.coord_id) - 1
         for i, icoord, coord_type, cid, e1 in zip(count(), self.icoord, self.coord_type,
                                                   self.coord_id, self.e1):
             if cid == 0:

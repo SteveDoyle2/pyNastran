@@ -38,6 +38,10 @@ class TestBdfVectorized3(unittest.TestCase):
             bdf_filename, validate=True, xref=True, punch=False,
             save_file_structure=False, skip_cards=None, read_cards=None,
             encoding=None, log=None, debug=None, mode='msc')
+        h5_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        model.write_h5(h5_filename)
+        modelv2 = read_bdf_vectorized(h5_filename)
+        os.remove(h5_filename)
 
         area, mass = get_compare_model_vectorized(model, modelv)
         modelv.cquad4.mass_breakdown()
@@ -50,7 +54,6 @@ class TestBdfVectorized3(unittest.TestCase):
 
         assert np.allclose(mass['CTRIA3'], 318.61913895889063), mass['CTRIA3']
         assert np.allclose(mass['CQUAD4'], 98307.632265389750), mass['CQUAD4']
-
 
         assert np.allclose(area_ctria3, 7842.639526013481), area_ctria3
         assert np.allclose(area_cquad4, 2248660.627265879), area_cquad4

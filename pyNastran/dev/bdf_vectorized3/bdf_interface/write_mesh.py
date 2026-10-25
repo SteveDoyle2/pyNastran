@@ -176,52 +176,8 @@ class Writer:
         self.write_h5_properties(h5file, input_group)
 
     def write_h5_parameters(self, h5file: File, input_group):
-        model = self.model
-        if len(model.params) == 0:
-            return
-        parameter_group = h5file.create_group(input_group, 'PARAMETER')
-        pvt_group = h5file.create_group(parameter_group, 'PVT')
-
-        ints = []
-        floats = []
-        strings = []
-        domain_id = 1
-        for key, param in model.params.items():
-            if len(param.values) == 1:
-                value = param.values[0]
-                if isinstance(value, str):
-                    strings.append([key, value, domain_id])
-                elif isinstance(value, integer_types):
-                    ints.append([key, value, domain_id])
-                elif isinstance(value, float_types):
-                    floats.append([key, value, domain_id])
-                else:  # pragma: no cover
-                    raise NotImplementedError(param)
-            else:  # pragma: no cover
-                raise NotImplementedError(param)
-        from tables import Int64Col, Float64Col, StringCol
-        import numpy as np
-
-        data_types = [
-            ('CHAR', strings, StringCol(8, pos=1)),
-            ('INT', ints, Int64Col(pos=1)),
-            ('FLOAT', floats, Float64Col(pos=1)), # TODO: verify name
-        ]
-        for name, data, h5_type in data_types:
-            if len(data) == 0:
-                continue
-            nparam = len(data)
-            h5_dict = {
-                'NAME': StringCol(8, pos=0),
-                'VALUE': h5_type,
-                'DOMAIN_ID': Int64Col(pos=2),
-            }
-            table = h5file.create_table(pvt_group, name, h5_dict)
-            arr = np.empty(nparam, dtype=table.dtype)
-            arr["NAME"] = [item[0] for item in data]
-            arr["VALUE"] = [item[1] for item in data]
-            arr["DOMAIN_ID"] = np.ones(nparam, dtype='int64')
-            table.append(arr)
+        from pyNastran.bdf.bdf_interface.write_h5 import write_h5_parameters
+        write_h5_parameters(self.model.params, h5file, input_group)
 
     def write_h5_nodes(self, h5file: File, input_group):
         model = self.model

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import sys
 from typing import TextIO, Optional, Any, cast, TYPE_CHECKING
+import numpy as np
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16
 from pyNastran.bdf.bdf_interface.write_mesh_utils import (
@@ -33,7 +34,11 @@ class Writer:
     #    return self
 
     def write_h5(self, h5file, nastran_group):
-        pass
+        import getpass
+        if getpass.getuser() != 'sdoyle':
+            return
+        from pyNastran.bdf.bdf_interface.write_h5 import write_h5_geometry
+        write_h5_geometry(self.model, h5file, nastran_group)
 
     def get_encoding(self, encoding: Optional[str]=None) -> str:
         if encoding is not None:
