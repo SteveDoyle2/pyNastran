@@ -266,31 +266,15 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
                      endian=endian, size=size)
 
     if not obj_type.endswith("OP2'>"):
-        if 'GEOM1' not in skips:  # nodes
-            write_geom1(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-        if 'GEOM2' not in skips:  # elements
-            write_geom2(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-        if 'GEOM3' not in skips:  # constraints
-            write_geom3(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-        if 'GEOM4' not in skips:  # loads
-            write_geom4(op2_file, fop2_ascii, obj, op2_flags,
-            endian=endian, nastran_format=nastran_format)
-        if 'EPT' not in skips:    # properties
-            write_ept(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-        if 'MPT' not in skips:    # materials
-            write_mpt(op2_file, fop2_ascii, obj, op2_flags,
-            endian=endian, nastran_format=nastran_format)
-        if 'DYNAMIC' not in skips:    # dynamics
-            write_dynamic(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+        if hasattr(obj, 'grid'):
+            from pyNastran.dev.op2_vectorized3.geom_writer.geom1_writer import write_geomv
+            asdf
+            write_geomv(skips, op2_file, fop2_ascii, obj,
+                        endian=endian, nastran_format=nastran_format)
+        else:
+            write_geom(skips, op2_file, fop2_ascii, obj,
+                       endian=endian, nastran_format=nastran_format)
 
-        if 'EDT' not in skips:  # aero
-            write_edt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-        if 'EDOM' not in skips:  # optimization
-            write_edom(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-        if 'DIT' not in skips:  # tables
-            write_dit(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
-        #if 'DYNAMIC' not in skips:
-            #write_dynamic(op2_file, fop2_ascii, obj)
     if 'grid_point_weight' not in skips:
         for key, weight in obj.grid_point_weight.items():
             weight.write_op2(op2_file, fop2_ascii, date, endian=endian)
@@ -304,6 +288,33 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
         obj, op2_file, fop2_ascii, struct_3i, endian, skips)
     return case_count, table_names
 
+
+def write_geom(skips: set[str],
+               op2_file, op2_ascii, obj: OP2, endian: bytes=b'<',
+               nastran_format: str='nx'):
+    if 'GEOM1' not in skips:  # nodes
+        write_geom1(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'GEOM2' not in skips:  # elements
+        write_geom2(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'GEOM3' not in skips:  # constraints
+        write_geom3(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'GEOM4' not in skips:  # loads
+        write_geom4(op2_file, fop2_ascii, obj, op2_flags,
+        endian=endian, nastran_format=nastran_format)
+    if 'EPT' not in skips:    # properties
+        write_ept(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'MPT' not in skips:    # materials
+        write_mpt(op2_file, fop2_ascii, obj, op2_flags,
+        endian=endian, nastran_format=nastran_format)
+    if 'DYNAMIC' not in skips:    # dynamics
+        write_dynamic(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+
+    if 'EDT' not in skips:  # aero
+        write_edt(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'EDOM' not in skips:  # optimization
+        write_edom(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
+    if 'DIT' not in skips:  # tables
+        write_dit(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
 
 def _write_result_tables(obj: OP2, op2_file, fop2_ascii,
                          struct_3i,

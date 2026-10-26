@@ -11,7 +11,7 @@ import numpy as np
 from numpy.testing import assert_equal, assert_array_equal
 
 import pyNastran
-from pyNastran.femutils.io import loadtxt_nice, savetxt_nice
+from pyNastran.femutils.io import loadtxt_nice
 from pyNastran.femutils.matrix3d import (
     dot_33_n33, dot_n33_33, dot_n33_n33,
     transpose3d,

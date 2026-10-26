@@ -10,6 +10,13 @@ from pyNastran.op2.writer.geom1 import (
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.op2.op2 import OP2
 
+def write_geomv(skips: set[str],
+                op2_file, op2_ascii, obj: OP2,
+                endian: bytes=b'<',
+                nastran_format: str='nx'):
+    write_geom1v(op2_file, op2_ascii, obj, endian=endian,
+                 nastran_format=nastran_format)
+                
 def write_geom1v(op2_file, op2_ascii, obj: OP2, endian: bytes=b'<',
                  nastran_format: str='nx'):
     #if not hasattr(obj, 'nodes'):
