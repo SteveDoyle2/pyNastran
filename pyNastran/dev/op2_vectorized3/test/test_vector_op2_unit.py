@@ -308,7 +308,7 @@ class TestOP2(unittest.TestCase):
         op2_2.read_op2(op2_filename_m2)
         op2_1.write_f06(f06_filename)
 
-        op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight']) #, is_mag_phase=False)
+        #op2_1.write_op2(op2_filename_m1_out, skips=['grid_point_weight']) #, is_mag_phase=False)
         #op2_2.write_op2(op2_filename_m2_out, skips=['grid_point_weight']) #, is_mag_phase=False)
         os.remove(f06_filename)
         #os.remove('temp.debug')
@@ -333,7 +333,7 @@ class TestOP2(unittest.TestCase):
 
         op2, unused_is_passed = run_op2(
             op2_filename, make_geom=True, write_bdf=True,
-            write_f06=True, write_op2=False,
+            write_f06=True, write_op2=True,
             is_mag_phase=False,
             is_sort2=False, is_nx=None, delete_f06=True,
             subcases=None, exclude=None, short_stats=False,

@@ -268,11 +268,11 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
     if not obj_type.endswith("OP2'>"):
         if hasattr(obj, 'grid'):
             from pyNastran.dev.op2_vectorized3.geom_writer.geom1_writer import write_geomv
-            asdf
             write_geomv(skips, op2_file, fop2_ascii, obj,
                         endian=endian, nastran_format=nastran_format)
         else:
-            write_geom(skips, op2_file, fop2_ascii, obj,
+            write_geom(skips, op2_file, fop2_ascii,
+                       op2_flags, obj,
                        endian=endian, nastran_format=nastran_format)
 
     if 'grid_point_weight' not in skips:
@@ -288,10 +288,10 @@ def _write_op2(op2_file, fop2_ascii, obj: OP2,
         obj, op2_file, fop2_ascii, struct_3i, endian, skips)
     return case_count, table_names
 
-
 def write_geom(skips: set[str],
-               op2_file, op2_ascii, obj: OP2, endian: bytes=b'<',
-               nastran_format: str='nx'):
+               op2_file, fop2_ascii,
+               op2_flags: dict[str, dict[str, bool]],
+               obj: OP2, endian: bytes=b'<', nastran_format: str='nx'):
     if 'GEOM1' not in skips:  # nodes
         write_geom1(op2_file, fop2_ascii, obj, endian=endian, nastran_format=nastran_format)
     if 'GEOM2' not in skips:  # elements
