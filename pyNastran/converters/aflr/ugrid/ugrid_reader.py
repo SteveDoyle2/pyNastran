@@ -259,7 +259,10 @@ class UGRID:
             pids_to_remove = []
 
         if encoding is None:
-            encoding = sys.getdefaultencoding()
+            # worked on Python < 3.13
+            # encoding = sys.getdefaultencoding()
+            import locale
+            encoding = locale.getpreferredencoding(False)
         log = self.log
 
         float_fmts = float_fmt + ' ' + float_fmt + ' ' + float_fmt + '\n'
@@ -371,7 +374,10 @@ class UGRID:
         self._check_node_ids()
 
         if encoding is None:
-            encoding = sys.getdefaultencoding()
+            # worked on Python < 3.13
+            # encoding = sys.getdefaultencoding()
+            import locale
+            encoding = locale.getpreferredencoding(False)
         #assert encoding.lower() in ['ascii', 'latin1', 'utf8'], encoding
 
         mid = 1

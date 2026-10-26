@@ -47,7 +47,10 @@ class Writer:
             model = self.model
             encoding = model._encoding
             if encoding is None:
-                encoding = sys.getdefaultencoding()
+                # worked on Python < 3.13
+                # encoding = sys.getdefaultencoding()
+                import locale
+                encoding = locale.getpreferredencoding(False)
             elif isinstance(encoding, bytes):
                 # needed for hdf5 loader for some reason...
                 encoding = encoding.decode('latin1')

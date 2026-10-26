@@ -653,7 +653,10 @@ class OP2(OP2_Scalar, OP2Writer):
                 build_dataframe = True
 
         if encoding is None:
-            encoding = sys.getdefaultencoding()
+            # worked on Python < 3.13
+            # encoding = sys.getdefaultencoding()
+            import locale
+            encoding = locale.getpreferredencoding(False)
         self.encoding = encoding
 
         self.skip_undefined_matrices = skip_undefined_matrices

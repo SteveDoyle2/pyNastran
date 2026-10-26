@@ -1736,7 +1736,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
         if encoding is None:
-            encoding = sys.getdefaultencoding()
+            # worked on Python < 3.13
+            # encoding = sys.getdefaultencoding()
+            import locale
+            encoding = locale.getpreferredencoding(False)
         self._encoding = encoding
 
         self.read_includes = read_includes

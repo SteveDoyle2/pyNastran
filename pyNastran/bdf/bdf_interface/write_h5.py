@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from collections import defaultdict
+from typing import Any, TYPE_CHECKING
 from tables import File, Int64Col, Float64Col, StringCol
 import numpy as np
-from pyNastran.utils.numpy_utils import integer_types
+from pyNastran.utils.numpy_utils import integer_types, float_types
 if TYPE_CHECKING:
     from pyNastran.bdf.bdf import BDF
 
@@ -108,7 +109,7 @@ def write_h5_elements(model: BDF, h5file: File, input_group):
 def write_h5_conrod(model: BDF, eids: list[int],
                     h5file: File, element_group):
     neid = len(eids)
-    edict = {
+    h5_dict = {
         'EID': Int64Col(pos=0),  # Signed 64-bit integer
         'PID': Int64Col(pos=1),
         'N': Int64Col(pos=2),
@@ -117,10 +118,11 @@ def write_h5_conrod(model: BDF, eids: list[int],
         'NSM': Float64Col(pos=5),
         'DOMAIN_ID': Int64Col(pos=5),
     }
-    etable = h5file.create_table(element_group, 'CONROD', h5_dict)
+    table = h5file.create_table(element_group, 'CONROD', h5_dict)
     arr = np.empty(neid, dtype=table.dtype)
     pids = np.array(neid, dtype='int32')
-    nodes = np.array((neid, nnode), dtype='int32')
+    nodes = np.array((neid, neid), dtype='int32')
+    mids = np.array(neid, dtype='int32')
     a = np.full(neid, -1, dtype='float64')
     j = np.full(neid, np.nan, dtype='float64')
     nsm = np.full(neid, np.nan, dtype='float64')
@@ -128,6 +130,7 @@ def write_h5_conrod(model: BDF, eids: list[int],
         elem = model.elements[eid]
         pids[i] = elem.pid
         nodes[i, :] = elem.nodes
+        mids[i] = elem.mid
         a[i] = elem.a
         j[i] = elem.j
         nsm[i] = elem.nsm
@@ -144,7 +147,7 @@ def write_h5_cquad4(model: BDF, eids: list[int],
                     h5file: File, element_group):
     neid = len(eids)
     eid0 = eids[0]
-    e1em0 = model.elements[eid0]
+    elem0 = model.elements[eid0]
     etype = elem0.type
     nnode_map = {
         'CQUAD4': 4,
@@ -154,7 +157,7 @@ def write_h5_cquad4(model: BDF, eids: list[int],
     }
     card_type = elem0.type
     nnode = nnode_map[card_type]
-    edict = {
+    h5_dict = {
         'EID': Int64Col(pos=0),  # Signed 64-bit integer
         'PID': Int64Col(pos=1),
         'N': Int64Col(size=(nnode,), pos=2),
@@ -162,7 +165,7 @@ def write_h5_cquad4(model: BDF, eids: list[int],
         'MCID': Int64Col(pos=4),
         'DOMAIN_ID': Int64Col(pos=5),
     }
-    etable = h5file.create_table(element_group, card_type, h5_dict)
+    table = h5file.create_table(element_group, card_type, h5_dict)
     arr = np.empty(neid, dtype=table.dtype)
     pids = np.array(neid, dtype='int32')
     nodes = np.array((neid, nnode), dtype='int32')
@@ -173,6 +176,7 @@ def write_h5_cquad4(model: BDF, eids: list[int],
         elem = model.elements[eid]
         pids[i] = elem.pid
         nodes[i, :] = elem.nodes
+        theta_mcid = elem.theta_mcid
         if isinstance(theta_mcid, integer_types):
             #is_theta[i] = False
             mcid[i] = theta_mcid
@@ -193,7 +197,7 @@ def write_h5_solid(model: BDF, eids: list[int],
     # {'CROD', 'PROD', 'CSHEAR'}:
     neid = len(eids)
     eid0 = eids[0]
-    e1em0 = model.elements[eid0]
+    elem0 = model.elements[eid0]
     etype = elem0.type
     nnode_map = {
         'CTETRA': 10,
@@ -203,13 +207,13 @@ def write_h5_solid(model: BDF, eids: list[int],
     }
     card_type = elem0.type
     nnode = nnode_map[card_type]
-    edict = {
+    h5_dict = {
         'EID': Int64Col(pos=0),  # Signed 64-bit integer
         'PID': Int64Col(pos=1),
         'N': Int64Col(pos=nnode),
         'DOMAIN_ID': Int64Col(pos=4),
     }
-    etable = h5file.create_table(element_group, card_type, h5_dict)
+    table = h5file.create_table(element_group, card_type, h5_dict)
     arr = np.empty(neid, dtype=table.dtype)
     pids = np.array(neid, dtype='int32')
     nodes = np.array((neid, nnode), dtype='int32')
@@ -217,7 +221,7 @@ def write_h5_solid(model: BDF, eids: list[int],
         elem = model.elements[eid]
         pids[i] = elem.pid
         nodesi = elem.nodes
-        nnodesi = len(nodesi)
+        nnodei = len(nodesi)
         nodes[i, :nnodei] = nodesi
     arr["EID"] = eids
     arr["PID"] = pids
@@ -230,16 +234,16 @@ def write_h5_eid_pid_nodes(model: BDF, eids: list[int],
     # {'CROD', 'PROD', 'CSHEAR'}:
     neid = len(eids)
     eid0 = eids[0]
-    e1em0 = model.elements[eid0]
+    elem0 = model.elements[eid0]
     nnode = len(elem0.nodes)
-    edict = {
+    h5_dict = {
         'EID': Int64Col(pos=0),  # Signed 64-bit integer
         'PID': Int64Col(pos=1),
         'N': Int64Col(size=(nnode,), pos=2),
         'DOMAIN_ID': Int64Col(pos=3),
     }
     card_type = elem0.type
-    etable = h5file.create_table(element_group, card_type, h5_dict)
+    table = h5file.create_table(element_group, card_type, h5_dict)
     arr = np.empty(neid, dtype=table.dtype)
     pids = []
     nodes = []
@@ -278,18 +282,22 @@ def write_h5_properties(model: BDF, h5file: File, input_group):
 
 
 def write_h5_materials(self, h5file: File, input_group):
-    log = self.model.log
+    model = self.model
+    log = model.log
     materials_by_type = defaultdict(list)
     for mid, mat in model.materials.items():
         materials_by_type[mat.type].append(mid)
+    if len(materials_by_type) == 0:
+        return
 
+    material_group = h5file.create_group(input_group, 'MATERIAL')
     cls_mapper = {
         #'MAT1': write_h5_mat1,
     }
     for mat_type, mids in materials_by_type.items():
         if mat_type in cls_mapper:
             write_h5_func = cls_mapper[mat_type]
-            write_h5_func(model, eids, h5file, property_group)
+            write_h5_func(model, mids, h5file, material_group)
         else:
             log.warning(f'skipping h5 material {mat_type!r}')
 
@@ -319,7 +327,7 @@ def write_h5_grid(model: BDF, h5file: File, node_group):
         ps.append(psi)
 
     table = h5file.create_table(node_group, 'GRID', h5_dict)
-    ngrid = len(self)
+    ngrid = len(seid)
     arr = np.empty(ngrid, dtype=table.dtype)
     arr["ID"] = node_id
     arr["CP"] = cp
@@ -427,18 +435,26 @@ def write_h5_coord(model: BDF, h5file: File, coord_group):
 def write_h5_prod(model: BDF, pids: list[int],
                   h5file: File, property_group):
     nprop = len(pids)
+    h5_dict = {
+        'PID': Int64Col(pos=0),  # Signed 64-bit integer
+        'MID': Int64Col(pos=1),
+        'A': Float64Col(pos=2),
+        'J': Float64Col(pos=3),
+        'NSM': Float64Col(pos=4),
+        'DOMAIN_ID': Int64Col(pos=5),
+    }
 
     table = h5file.create_table(property_group, 'PROD', h5_dict)
     arr = np.empty(nprop, dtype=table.dtype)
     arr["PID"] = pids
     for i, pid in enumerate(pids):
         prop = model.properties[pid]
-        arr["MID"][i] = nplies
+        arr["MID"][i] = prop.mid
         arr["A"][i] = prop.A
         arr["J"][i] = prop.J
         arr["NSM"][i] = prop.nsm
     arr["DOMAIN_ID"] = np.ones(nprop, dtype='int64')
-    identity_table.append(arr)
+    table.append(arr)
 
 def write_h5_pshell(model: BDF, pids: list[int],
                     h5file: File, property_group):
@@ -496,7 +512,7 @@ def write_h5_pcomp(model: BDF, pids: list[int],
         'PLY_LEN': Int64Col(pos=9),
         'DOMAIN_ID': Int64Col(pos=10),
     }
-    nlayer = len(self.material_id)
+    nlayer = len(model.pcomp.material_id)
     identity_table = h5file.create_table(pcomp_group, 'IDENTITY', h5_identity_dict)
     arr = np.empty(nprop, dtype=identity_table.dtype)
 
@@ -514,8 +530,8 @@ def write_h5_pcomp(model: BDF, pids: list[int],
         arr["NSM"][i] = prop.nsm
         arr["SB"][i] = prop.sb
         arr["FT"][i] = prop.ft_int
-        arr["TREF"][i] = self.tref
-        arr["GE"][i] = self.ge
+        arr["TREF"][i] = prop.tref
+        arr["GE"][i] = prop.ge
         arr["PLY_POS"][i] = nplies_total
         arr["PLY_LEN"][i] = nplies_total+nplies
         material_id.extend(prop.mids)

@@ -1,4 +1,5 @@
 from collections import defaultdict
+import os
 import pathlib
 import unittest
 import numpy as np
@@ -39,6 +40,7 @@ class TestBdfVectorized3(unittest.TestCase):
             save_file_structure=False, skip_cards=None, read_cards=None,
             encoding=None, log=None, debug=None, mode='msc')
         h5_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        modelv.write_h5(h5_filename)
         model.write_h5(h5_filename)
         modelv2 = read_bdf_vectorized(h5_filename)
         os.remove(h5_filename)
