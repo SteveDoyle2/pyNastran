@@ -241,6 +241,7 @@ class MAT1(Material):
             mcsid = np.hstack([self.mcsid, mcsid])
 
         save_ifile_comment(self, ifile, comment)
+        assert nu.dtype.name in {'float32', 'float64'}, nu.dtype.name
         self.material_id = material_id
         self.E = E
         self.G = G
@@ -255,6 +256,46 @@ class MAT1(Material):
         self.mcsid = mcsid
         assert len(self.ifile) == len(self.material_id)
         self.n = len(material_id)
+
+    def write_h5(self, h5file, material_group):
+        nmat = len(self.material_id)
+        if nmat == 0:
+            return
+        from tables import Int64Col, Float64Col
+        h5_dict = {
+            # dtype([('MID', '<i8'), ('E', '<f8'), ('G', '<f8'), ('NU', '<f8'),
+            # ('RHO', '<f8'), ('A', '<f8'), ('TREF', '<f8'), ('GE', '<f8'),
+            # ('ST', '<f8'), ('SC', '<f8'), ('SS', '<f8'), ('MCSID', '<i8'),
+            # ('DOMAIN_ID', '<i8')])
+            'MID': Int64Col(pos=0),
+            'E': Float64Col(pos=1),
+            'G': Float64Col(pos=2),
+            'NU': Float64Col(pos=3),
+            'RHO': Float64Col(pos=4),
+            'A': Float64Col(pos=5),
+            'TREF': Float64Col(pos=6),
+            'GE': Float64Col(pos=7),
+            'ST': Float64Col(pos=8),
+            'SC': Float64Col(pos=9),
+            'SS': Float64Col(pos=10),
+            'MCSID': Int64Col(pos=11),
+            'DOMAIN_ID': Int64Col(pos=12),
+        }
+        table = h5file.create_table(material_group, self.type, h5_dict)
+        arr = np.empty(nmat, dtype=table.dtype)
+        arr["MID"] = self.material_id
+        arr["E"] = self.E
+        arr["G"] = self.G
+        arr["NU"] = self.nu
+        arr["A"] = self.alpha
+        arr["TREF"] = self.tref
+        arr["GE"] = self.ge
+        arr["ST"] = self.St
+        arr["SC"] = self.Sc
+        arr["SS"] = self.Ss
+        arr["MCSID"] = self.mcsid
+        arr["DOMAIN_ID"] = np.ones(nmat, dtype='int64')
+        table.append(arr)
 
     def set_used(self, used_dict: dict[str, list[np.ndarray]]) -> None:
         used_dict['coord_id'].append(self.mcsid)

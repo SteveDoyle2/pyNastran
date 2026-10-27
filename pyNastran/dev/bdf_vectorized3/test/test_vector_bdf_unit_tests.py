@@ -39,7 +39,7 @@ class TestBdfVectorized3(unittest.TestCase):
             bdf_filename, validate=True, xref=True, punch=False,
             save_file_structure=False, skip_cards=None, read_cards=None,
             encoding=None, log=None, debug=None, mode='msc')
-        h5_filename = MODEL_PATH / 'bwb' / 'bwb_saero.bdf'
+        h5_filename = MODEL_PATH / 'bwb' / 'bwb_saero.h5'
         modelv.write_h5(h5_filename)
         model.write_h5(h5_filename)
         modelv2 = read_bdf_vectorized(h5_filename)
@@ -80,5 +80,5 @@ def get_compare_model_vectorized(model, modelv):
             #asdf
     return area, mass
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     unittest.main()

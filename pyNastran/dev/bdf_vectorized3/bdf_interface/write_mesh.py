@@ -174,6 +174,9 @@ class Writer:
         self.write_h5_nodes(h5file, input_group)
         self.write_h5_elements(h5file, input_group)
         self.write_h5_properties(h5file, input_group)
+        self.write_h5_materials(h5file, input_group)
+        # load_group = h5file.create_group(input_group, 'LOAD')
+        # constraints_group = h5file.create_group(input_group, 'CONSTRAINTS')
 
     def write_h5_parameters(self, h5file: File, input_group):
         from pyNastran.bdf.bdf_interface.write_h5 import write_h5_parameters
@@ -217,9 +220,15 @@ class Writer:
         ]
         for prop in properties:
             prop.write_h5(h5file, property_group)
-        # material_group = h5file.create_group(input_group, 'MATERIAL')
-        # load_group = h5file.create_group(input_group, 'LOAD')
-        # constraints_group = h5file.create_group(input_group, 'CONSTRAINTS')
+
+    def write_h5_materials(self, h5file: File, input_group):
+        material_group = h5file.create_group(input_group, 'MATERIAL')
+        model = self.model
+        materials = [
+            model.mat1, #model.mat8,
+        ]
+        for mat in materials:
+            mat.write_h5(h5file, material_group)
 
     def write_bulk_data(self, bdf_file: TextIOLike,
                         size: int=8, is_double: bool=False,

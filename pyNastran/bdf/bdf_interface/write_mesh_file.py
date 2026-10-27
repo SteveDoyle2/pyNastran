@@ -127,6 +127,11 @@ class WriteMesh(BDFAttributes):
         if is_error:
             raise RuntimeError('stopping...')
 
+    def write_h5(self, out_filename: PathLike) -> None:
+        from tables import File
+        with File(out_filename, 'w') as hdf5_file:
+            self.writer.write_h5(hdf5_file)
+
     def write_bdf(self, out_filename: Optional[PathLike | StringIO]=None,
                   encoding: Optional[str]=None,
                   size: int=8,

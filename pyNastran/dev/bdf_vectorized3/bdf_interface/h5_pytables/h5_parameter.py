@@ -22,6 +22,7 @@ def _load_h5_parameter_pvt(model: BDF, group: Group, encoding: str):
             pass
         else: # pragma: no cover
             raise RuntimeError(class_id)
+
         datatype = h5_element.name
         data = h5_element.read()
         name_bytes = data['NAME']
@@ -37,7 +38,7 @@ def _load_h5_parameter_pvt(model: BDF, group: Group, encoding: str):
             value = cast_encoding_strip(value_bytes, encoding)
             for key, valuei in zip(name, value):
                 model.add_param(key, [valuei])
-        elif datatype == 'DOUBLE':
+        elif datatype in {'DOUBLE'}:  # TODO: does FLOAT exist?
             # NAME, VALUE
             value = data['VALUE']
             for key, valuei in zip(name, value):

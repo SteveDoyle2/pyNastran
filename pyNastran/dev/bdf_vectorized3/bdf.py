@@ -21,6 +21,7 @@ from pathlib import PurePath
 from functools import partial
 from collections import defaultdict
 import warnings
+import locale
 import traceback
 
 from typing import (
@@ -4271,11 +4272,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         """
         if isinstance(bdf_filename, (str, PurePath)):
+            # worked on Python < 3.13
+            # encoding = sys.getdefaultencoding()
+            encoding = locale.getpreferredencoding(False)
             try:
-                with open(bdf_filename, 'r') as bdf_file:
+                with open(bdf_filename, 'r', encoding=encoding) as bdf_file:
                     lines = bdf_file.readlines()
             except UnicodeDecodeError:  # pragma: no cover
-                with open(bdf_filename, 'r', errors='replace') as bdf_file:
+                with open(bdf_filename, 'r', errors='replace', encoding=encoding) as bdf_file:
                     line = 'temp'
                     lines = []
                     while line:
@@ -4831,12 +4835,18 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
     elif read_cards:
         model.enable_cards(read_cards)
 
+    bdf_filename_lower = bdf_filename
     if bdf_filename and not isinstance(bdf_filename, StringIO):
+        bdf_filename_lower = str(bdf_filename).lower()
         check_path(bdf_filename, 'bdf_filename')
-    model.read_bdf(bdf_filename=bdf_filename, validate=validate,
-                   xref=xref, punch=punch, read_includes=True,
-                   save_file_structure=save_file_structure,
-                   encoding=encoding)
+
+    if isinstance(bdf_filename_lower, str) and bdf_filename_lower.endswith('.h5'):
+        model.read_h5(bdf_filename)
+    else:
+        model.read_bdf(bdf_filename=bdf_filename, validate=validate,
+                       xref=xref, punch=punch, read_includes=True,
+                       save_file_structure=save_file_structure,
+                       encoding=encoding)
     return model
 
 

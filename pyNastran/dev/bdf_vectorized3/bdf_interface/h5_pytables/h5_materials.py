@@ -4,7 +4,7 @@ import numpy as np
 
 #from .utils import get_group_name
 if TYPE_CHECKING:  # pragma: no cover
-    from pyNastran.dev.bdf_vectorized3.bdf import BDF
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF, MAT1, MAT2, MAT4, MAT5, MAT8
     from tables import Group
 
 
@@ -18,22 +18,7 @@ def load_h5_material(model: BDF, input_group: Group):
 
         if name == 'MAT1':
             mat = model.mat1
-            #dtype([('MID', '<i8'), ('E', '<f8'), ('G', '<f8'), ('NU', '<f8'),
-                   #('RHO', '<f8'), ('A', '<f8'), ('TREF', '<f8'), ('GE', '<f8'),
-                   #('ST', '<f8'), ('SC', '<f8'), ('SS', '<f8'), ('MCSID', '<i8'),
-                   #('DOMAIN_ID', '<i8')])
-            mat.material_id = material_id
-            mat.E = data['E']
-            mat.G = data['G']
-            mat.nu = data['NU']
-            mat.rho = data['RHO']
-            mat.alpha = data['A']
-            mat.tref = data['TREF']
-            mat.ge = data['GE']
-            mat.St = data['ST']
-            mat.Sc = data['SC']
-            mat.Ss = data['SS']
-            mat.mcsid = data['MCSID']
+            _load_mat1(mat, data, material_id, nmaterials)
         elif name == 'MAT2':
             mat = model.mat2
             # dtype([('MID', '<i8'), ('G11', '<f8'), ('G12', '<f8'), ('G13', '<f8'),
@@ -81,36 +66,7 @@ def load_h5_material(model: BDF, input_group: Group):
                       tch, tdelta, qlat)
         elif name == 'MAT8':
             mat = model.mat8
-            # dtype([('MID', '<i8'), ('E1', '<f8'), ('E2', '<f8'), ('NU12', '<f8'),
-            #        ('G12', '<f8'), ('G1Z', '<f8'), ('G2Z', '<f8'), ('RHO', '<f8'),
-            #        ('A1', '<f8'), ('A2', '<f8'), ('TREF', '<f8'), ('XT', '<f8'),
-            #        ('XC', '<f8'), ('YT', '<f8'), ('YC', '<f8'), ('S', '<f8'),
-            #        ('GE', '<f8'), ('F12', '<f8'), ('STRN', '<f8'), ('DOMAIN_ID', '<i8')])
-
-            E1 = data['E1']
-            E2 = data['E2']
-            nu12 = data['NU12']
-            G12 = data['G12']
-            G1z = data['G1Z']
-            G2z = data['G2Z']
-            rho = data['RHO']
-            alpha = np.column_stack([data['A1'], data['A2'], ])
-            alpha2 = np.hstack([
-                data['A1'].reshape(nmaterials, 1),
-                data['A2'].reshape(nmaterials, 1),
-            ])
-            assert np.allclose(alpha, alpha2)
-            tref = data['TREF']
-            Xt = data['XT']
-            Xc = data['XC']
-            Yt = data['YT']
-            Yc = data['YC']
-            S = data['S']
-            ge = data['GE']
-            f12 = data['F12']
-            strn = data['STRN']
-            mat._save(material_id, E1, E2, G12, G1z, G2z, nu12,
-                      rho, alpha, tref, ge, Xt, Xc, Yt, Yc, S, f12, strn)
+            _load_mat8(mat, data, material_id, nmaterials)
         else:  # pragma: no cover
             raise NotImplementedError(name)
         material_id = material_id
@@ -118,3 +74,56 @@ def load_h5_material(model: BDF, input_group: Group):
         mat.write()
         x = 1
     x = 2
+
+
+def _load_mat1(mat: MAT1, data, material_id, nmaterials: int):
+    # dtype([('MID', '<i8'), ('E', '<f8'), ('G', '<f8'), ('NU', '<f8'),
+    # ('RHO', '<f8'), ('A', '<f8'), ('TREF', '<f8'), ('GE', '<f8'),
+    # ('ST', '<f8'), ('SC', '<f8'), ('SS', '<f8'), ('MCSID', '<i8'),
+    # ('DOMAIN_ID', '<i8')])
+    E = data['E']
+    G = data['G']
+    nu = data['NU']
+    rho = data['RHO']
+    alpha = data['A']
+    tref = data['TREF']
+    ge = data['GE']
+    St = data['ST']
+    Sc = data['SC']
+    Ss = data['SS']
+    mcsid = data['MCSID']
+    mat._save(material_id, E, G, nu, rho, alpha, tref, ge,
+              Ss, St, Sc, mcsid)
+
+
+def _load_mat8(mat: MAT8, data, material_id, nmaterials: int):
+    # dtype([('MID', '<i8'), ('E1', '<f8'), ('E2', '<f8'), ('NU12', '<f8'),
+    #        ('G12', '<f8'), ('G1Z', '<f8'), ('G2Z', '<f8'), ('RHO', '<f8'),
+    #        ('A1', '<f8'), ('A2', '<f8'), ('TREF', '<f8'), ('XT', '<f8'),
+    #        ('XC', '<f8'), ('YT', '<f8'), ('YC', '<f8'), ('S', '<f8'),
+    #        ('GE', '<f8'), ('F12', '<f8'), ('STRN', '<f8'), ('DOMAIN_ID', '<i8')])
+
+    E1 = data['E1']
+    E2 = data['E2']
+    nu12 = data['NU12']
+    G12 = data['G12']
+    G1z = data['G1Z']
+    G2z = data['G2Z']
+    rho = data['RHO']
+    alpha = np.column_stack([data['A1'], data['A2'], ])
+    alpha2 = np.hstack([
+        data['A1'].reshape(nmaterials, 1),
+        data['A2'].reshape(nmaterials, 1),
+    ])
+    assert np.allclose(alpha, alpha2)
+    tref = data['TREF']
+    Xt = data['XT']
+    Xc = data['XC']
+    Yt = data['YT']
+    Yc = data['YC']
+    S = data['S']
+    ge = data['GE']
+    f12 = data['F12']
+    strn = data['STRN']
+    mat._save(material_id, E1, E2, G12, G1z, G2z, nu12,
+              rho, alpha, tref, ge, Xt, Xc, Yt, Yc, S, f12, strn)
