@@ -71,7 +71,11 @@ def load_h5_material(model: BDF, input_group: Group):
             raise NotImplementedError(name)
         material_id = material_id
         mat.n = nmaterials
-        mat.write()
+        try:
+            mat.write()
+        except:  # pragma: no cover
+            print(mat.get_stats())
+            raise
         x = 1
     x = 2
 

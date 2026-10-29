@@ -34,9 +34,6 @@ class Writer:
     #    return self
 
     def write_h5(self, h5file, nastran_group=None):
-        import getpass
-        if getpass.getuser() != 'sdoyle':
-            return
         if nastran_group is None:
             nastran_group = h5file.create_group('/', 'NASTRAN')
         input_group = h5file.create_group(nastran_group, 'INPUT')
@@ -51,10 +48,7 @@ class Writer:
             model = self.model
             encoding = model._encoding
             if encoding is None:
-                # worked on Python < 3.13
-                # encoding = sys.getdefaultencoding()
-                import locale
-                encoding = locale.getpreferredencoding(False)
+                encoding = sys.getdefaultencoding()
             elif isinstance(encoding, bytes):
                 # needed for hdf5 loader for some reason...
                 encoding = encoding.decode('latin1')

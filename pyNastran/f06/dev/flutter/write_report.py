@@ -26,13 +26,22 @@ from pyNastran.f06.dev.flutter.utils import get_vlines, get_noline_nopoints
 from pyNastran.f06.dev.flutter.utils_report import write_docx_path
 from pyNastran.f06.dev.flutter.read_zaero_out import read_zaero_out
 
+missed_imports = []
 try:
     from docx import Document
     from docx.shared import Inches
     from docx.enum.text import WD_ALIGN_PARAGRAPH
 except ImportError:
-    warnings.warn(">>> pip install python-docx")
-    raise
+    missed_imports.append('python-docx')
+
+try:
+    import openpyxl
+except ImportError:
+    missed_imports.append('openpyxl')
+
+if len(missed_imports):
+    missed_imports_str = ' '.join(missed_imports)
+    raise RuntimeError(f'>>> pip install {missed_imports_str}')
 
 if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger

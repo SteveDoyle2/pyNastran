@@ -5612,10 +5612,7 @@ class AddCards(AddCoords, Add0dElements, Add1dElements, Add2dElements, Add3dElem
         else:
             encoding = self._encoding
             if encoding is None:
-                # worked on Python < 3.13
-                # encoding = sys.getdefaultencoding()
-                import locale
-                encoding = locale.getpreferredencoding(False)
+                encoding = sys.getdefaultencoding()
             elif isinstance(encoding, bytes):
                 # needed for hdf5 loader for some reason...
                 encoding = self._encoding.decode('latin1')

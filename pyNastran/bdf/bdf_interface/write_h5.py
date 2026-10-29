@@ -291,8 +291,8 @@ def write_ctria3_ctria6(model: BDF, eids: list[int],
     tflag = np.full(neid, -1, dtype='int32')
     t = np.zeros((neid, nnode), dtype='float64')
     zoffset = np.full(neid, -1, dtype='float64')
-    theta = np.full(neid, -1, dtype='float64')
-    mcid = np.full(neid, np.nan, dtype='float64')
+    theta = np.full(neid, np.nan, dtype='float64')
+    mcid = np.full(neid, -1, dtype='int32')
     is_theta = np.zeros(neid, dtype='bool')
     for i, eid in enumerate(eids):
         elem = model.elements[eid]
@@ -306,9 +306,11 @@ def write_ctria3_ctria6(model: BDF, eids: list[int],
         if isinstance(theta_mcid, integer_types):
             #is_theta[i] = False
             mcid[i] = theta_mcid
+            theta[i] = np.nan
         else:
             is_theta[i] = True
             theta[i] = theta_mcid
+            mcid[i] = -1
     arr["EID"] = eids
     arr["PID"] = pids
     arr["G"] = nodes
@@ -355,8 +357,8 @@ def write_cquad4_cquad8(model: BDF, eids: list[int],
     tflag = np.full(neid, -1, dtype='int32')
     t = np.zeros((neid, nnode), dtype='float64')
     zoffset = np.full(neid, -1, dtype='float64')
-    theta = np.full(neid, -1, dtype='float64')
-    mcid = np.full(neid, np.nan, dtype='float64')
+    theta = np.full(neid, np.nan, dtype='float64')
+    mcid = np.full(neid, -1, dtype='int32')
     is_theta = np.zeros(neid, dtype='bool')
     for i, eid in enumerate(eids):
         elem = model.elements[eid]
@@ -370,9 +372,11 @@ def write_cquad4_cquad8(model: BDF, eids: list[int],
         if isinstance(theta_mcid, integer_types):
             #is_theta[i] = False
             mcid[i] = theta_mcid
+            theta[i] = np.nan
         else:
             is_theta[i] = True
             theta[i] = theta_mcid
+            mcid[i] = -1
     arr["EID"] = eids
     arr["PID"] = pids
     arr["G"] = nodes

@@ -21,7 +21,6 @@ from pathlib import PurePath
 from functools import partial
 from collections import defaultdict
 import warnings
-import locale
 import traceback
 
 from typing import (
@@ -1539,10 +1538,7 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         #self.set_error_storage(nparse_errors=None, stop_on_parsing_error=True,
         #                       nxref_errors=None, stop_on_xref_error=True)
         if encoding is None:
-            # worked on Python < 3.13
-            # encoding = sys.getdefaultencoding()
-            import locale
-            encoding = locale.getpreferredencoding(False)
+            encoding = sys.getdefaultencoding()
         self._encoding = encoding
 
         self.read_includes = read_includes
@@ -4274,29 +4270,37 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         if isinstance(bdf_filename, (str, PurePath)):
             # worked on Python < 3.13
             # encoding = sys.getdefaultencoding()
-            encoding = locale.getpreferredencoding(False)
-            try:
-                with open(bdf_filename, 'r', encoding=encoding) as bdf_file:
-                    lines = bdf_file.readlines()
-            except UnicodeDecodeError:  # pragma: no cover
-                with open(bdf_filename, 'r', errors='replace', encoding=encoding) as bdf_file:
-                    line = 'temp'
-                    lines = []
-                    while line:
-                        line = bdf_file.readline()
-                        lines.append(line)
-                        try:
-                            # try to force a crash
-                            unused_bytes_line = line.encode('ascii')  # TODO: use the encoding
-                        except UnicodeEncodeError:
-                            break
-                    n = 20
-                    i = 0
-                    i0 = len(lines) - n
-                    for i, line in enumerate(lines[-n:-1]):
-                        self.log.debug(f'Line {i0+i}: {line.strip()!r}')
-                    self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
-                    raise
+            #encoding = locale.getpreferredencoding(False)
+            #try:
+            #    with open(bdf_filename, 'r', encoding=encoding) as bdf_file:
+            #        lines = bdf_file.readlines()
+            #except UnicodeDecodeError:  # pragma: no cover
+            #    with open(bdf_filename, 'r', errors='replace', encoding=encoding) as bdf_file:
+            #        line = 'temp'
+            #        lines = []
+            #        while line:
+            #            line = bdf_file.readline()
+            #            lines.append(line)
+            #            try:
+            #                # try to force a crash
+            #                unused_bytes_line = line.encode('ascii')  # TODO: use the encoding
+            #            except UnicodeEncodeError:
+            #                break
+            #        n = 20
+            #        i = 0
+            #        i0 = len(lines) - n
+            #        for i, line in enumerate(lines[-n:-1]):
+            #            self.log.debug(f'Line {i0+i}: {line.strip()!r}')
+            #        self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
+            #        raise
+
+            # The $pyNastran header lines are ASCII, but the rest of the deck
+            # is in an encoding we don't know yet (the header may declare it).
+            # latin1 maps every byte to a character, so it can't raise and
+            # reads ASCII identically on all Python versions/platforms.
+            # The deck is decoded with the real encoding later in BDFInputPy.
+            with open(bdf_filename, 'r', encoding='latin1') as bdf_file:
+                lines = bdf_file.readlines()
         else:
             # StringIO
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
