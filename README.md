@@ -23,8 +23,7 @@ for instructions on installing pyNastran.
 
 Also, check out the:
   * [![PyPi Version](https://img.shields.io/pypi/v/pynastran.svg)](https://pypi.python.org/pypi/pyNastran)
-  * [Discussion forum](http://groups.google.com/group/pynastran-discuss) (intended for questions about the latest release)
-  * [Developer forum](http://groups.google.com/group/pynastran-dev) (intended for questions about the main branch)
+  * [Discussion forum](http://groups.google.com/group/pynastran-discuss)
   * [Docs](https://pynastran-git.readthedocs.io/en/1.4/)
   * [Code of Conduct](https://github.com/SteveDoyle2/pyNastran/blob/main/code_of_conduct.md)
   * [Contributing](https://github.com/SteveDoyle2/pyNastran/blob/main/contributing.rst)
