@@ -334,11 +334,57 @@ class TestF06Flutter(unittest.TestCase):
         assert len(axes.collections) == nmodes - nfiltered, (len(axes.collections), nmodes, nfiltered)
         for collection in axes.collections:
             assert not np.allclose(collection.get_facecolor()[0], gray), 'filtered mode has points'
+        legend_modes = [int(text.get_text().split(';')[0].split()[1])
+                        for text in axes.get_legend().get_texts()]
+        modes_expected = resp.modes[~is_filtered].tolist()
+        assert legend_modes == modes_expected, f'filtered modes in legend: {legend_modes} expected={modes_expected}'
         plt.close(fig)
 
         fig, axes = resp.plot_root_locus(freq_tol=freq_tol, freq_tol_remove=freq_tol, show=False)
         assert len(axes.lines) == nmodes - nfiltered, (len(axes.lines), nmodes, nfiltered)
         plt.close(fig)
+
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_freq_tol_legend(self):
+        """modes filtered by freq_tol (gray/dashed) aren't in any legend"""
+        f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(
+            f06_filename, f06_units='english_in', out_units='english_kt', log=log)
+        resp = resps[1]
+
+        freq = resp.results[:, :, resp.ifreq]
+        damping = resp.results[:, :, resp.idamping]
+        dfreq = freq.max(axis=1) - freq.min(axis=1)
+        is_stable = damping.max(axis=1) <= 0.
+        freq_tol = float(dfreq[is_stable].min()) + 1e-6
+        is_filtered = is_stable & (dfreq <= freq_tol)
+        assert 0 < is_filtered.sum() < len(resp.modes), is_filtered.sum()
+        modes_expected = resp.modes[~is_filtered].tolist()
+
+        def legend_modes(fig) -> list[int]:
+            modes = []
+            for ax in fig.axes:
+                legend = ax.get_legend()
+                if legend is None:
+                    continue
+                modes.extend(int(text.get_text().split(';')[0].split()[1])
+                             for text in legend.get_texts()
+                             if text.get_text().startswith('Mode '))
+            return modes
+
+        plt.close('all')
+        plots = {
+            'plot_root_locus': lambda: resp.plot_root_locus(freq_tol=freq_tol, show=False),
+            'plot_vg': lambda: resp.plot_vg(freq_tol=freq_tol, show=False),
+            'plot_vg_vf': lambda: resp.plot_vg_vf(freq_tol=freq_tol, plot_type='tas', show=False),
+            'plot_kfreq_damping': lambda: resp.plot_kfreq_damping(freq_tol=freq_tol, plot_type='tas', show=False),
+        }
+        for name, plot in plots.items():
+            fig = plot()[0]
+            modes = legend_modes(fig)
+            assert modes == modes_expected, f'{name}: legend modes={modes} expected={modes_expected}'
+            plt.close('all')
 
     @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
     def test_plot_zimmerman_given_fig(self):

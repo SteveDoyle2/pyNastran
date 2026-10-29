@@ -1403,6 +1403,9 @@ class FlutterResponse:
             iplot = np.where(freq != np.nan)
             # iplot = np.where(freq > 0.0)
             label = _get_mode_freq_label(mode, freq[0], freq_ndigits=self.freq_ndigits)
+            if linestyle2 != linestyle:
+                # filtered by freq_tol (gray/dashed); keep it out of the legend
+                label = '_nolegend_'
             # print(f'iplot={iplot}')
             assert len(xs[iplot]) > 0
             line = axes.plot(xs[iplot], ys[iplot],
@@ -1470,6 +1473,7 @@ class FlutterResponse:
                    freq_tol: float=-1.0,
                    freq_tol_remove: float=-1.0,
                    png_filename=None,
+                   flutter_bbox_to_anchor: Optional[tuple[float, float]]=None,
                    **legend_kwargs) -> tuple[plt.Figure,
                                              tuple[plt.Axes, plt.Axes]]:
         """
@@ -1582,7 +1586,9 @@ class FlutterResponse:
                 #            color=color2, markersize=markersize, linestyle=linestyle2)
                 # axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
                 #            color=color2, markersize=markersize, linestyle=linestyle2)
-            legend_elements.append(legend_element)
+            if linestyle2 == linestyle:
+                # filtered by freq_tol (gray/dashed) modes aren't in the legend
+                legend_elements.append(legend_element)
 
         axes1.grid(True)
         axes1.set_xlabel(xlabel)  # , fontsize=self.font_size)
@@ -1604,7 +1610,12 @@ class FlutterResponse:
             #         continue
             #     legend_kwargs[key] = value
 
-            axes1.legend(handles=legend_elements, **legend_kwargs)              # TODO: switch to figure...
+            # same placement as plot_vg_vf: outside, to the right of the axes
+            if flutter_bbox_to_anchor is None:
+                flutter_bbox_to_anchor = (1.02, 1.)
+            legend_kwargs.setdefault('loc', 2)
+            axes1.legend(handles=legend_elements, bbox_to_anchor=flutter_bbox_to_anchor,
+                         ncol=ncol, **legend_kwargs)
             # axes1.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)  # TODO: switch to figure...
             # fig.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)
 
@@ -1625,12 +1636,18 @@ class FlutterResponse:
                            png_filename=None,
                            damping_limit=None,
                            v_lines: list[LineData]=None,
+                           ncol: int=0,
+                           flutter_bbox_to_anchor: Optional[tuple[float, float]]=None,
                            **kwargs) -> tuple[plt.Figure,
                                               tuple[plt.Axes, plt.Axes]]:
         """
         Plots a kfreq vs. damping curve
 
         See ``plot_root_locus`` for arguments
+        ncol : int; default=0 -> auto
+            number of columns for the legend
+        flutter_bbox_to_anchor : tuple[float, float]; default=None -> (1.02, 1.)
+            legend location (same as plot_vg_vf)
         """
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
 
@@ -1646,10 +1663,12 @@ class FlutterResponse:
             ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
             modes=modes, fig=fig, axes1=damp_axes, axes2=freq_axes,
             xlim=xlim, ylim1=ylim_damping, ylim2=ylim_kfreq,
+            ncol=ncol,
             show=show, clear=clear, close=close,
             legend=legend,
             freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
+            flutter_bbox_to_anchor=flutter_bbox_to_anchor,
             **kwargs)
 
         ax_damp, ax_kfreq = axes2
@@ -2116,7 +2135,9 @@ class FlutterResponse:
                 label, texti, ioffset,
                 self.markevery,
                 markersize=None)
-            legend_elements_damp.extend(legend_elementsi)
+            if linestyle2 == linestyle:
+                # filtered by freq_tol (gray/dashed) modes aren't in the legend
+                legend_elements_damp.extend(legend_elementsi)
             if ivelocity and symbol2 and ivelocity < len(vel):
                 markersize = 10
                 plot_kwargs = {
