@@ -786,6 +786,7 @@ class FlutterResponse:
                 freq_tol: float=-1.0,
                 freq_tol_remove: float=-1.0,
                 png_filename=None, show: bool=True,
+                bbox_to_anchor: Optional[tuple[float, float]]=None,
                 **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
         Make a V-g plot
@@ -795,7 +796,7 @@ class FlutterResponse:
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         ylabel = 'Structural Damping'
         iy = self.idamping
-        scatter = True
+        scatter = False  # velocity-scaled point size is only for the root locus
         fig, axes = self._plot_x_y(
             ix, iy, xlabel, ylabel, scatter,
             modes=modes, fig=fig, xlim=xlim, ylim=ylim_damping,
@@ -804,6 +805,7 @@ class FlutterResponse:
             freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             v_lines=v_lines, plot_type=plot_type, xunit=xunit,
             png_filename=png_filename,
+            bbox_to_anchor=bbox_to_anchor,
             **legend_kwargs)
         return fig, axes
 
@@ -945,6 +947,7 @@ class FlutterResponse:
                         freq_tol: float=-1.0,
                         freq_tol_remove: float=-1.0,
                         png_filename=None,
+                        bbox_to_anchor: Optional[tuple[float, float]]=None,
                         **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
         Plots a root locus
@@ -970,6 +973,10 @@ class FlutterResponse:
             a mode must be filtered by freq_tol for it to be hidden (i.e., freq_tol_remove <= freq_tol)
             -1.0: no filtering (default)
             >0.0: filter is active
+        ncol : int; default=0 -> auto
+            number of columns for the legend
+        bbox_to_anchor : tuple[float, float]; default=None -> (1.02, 1.)
+            legend location (same as plot_vg_vf)
         show : bool; default=True
             show the plot
         clear : bool; default=False
@@ -1009,6 +1016,7 @@ class FlutterResponse:
             show=show, clear=clear, close=close, legend=legend,
             freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
+            bbox_to_anchor=bbox_to_anchor,
             **legend_kwargs)
         return fig, axes
 
@@ -1339,6 +1347,7 @@ class FlutterResponse:
                   freq_tol: float=-1.0,
                   freq_tol_remove: float=-1.0,
                   png_filename=None,
+                  bbox_to_anchor: Optional[tuple[float, float]]=None,
                   **legend_kwargs) -> tuple[plt.Figure, plt.Axes]:
         """
         builds the plot for:
@@ -1346,6 +1355,7 @@ class FlutterResponse:
          - root-locus
         """
         legend_elements = []
+        legend_handles = []  # what's in the legend
         self.fix()
         # print('plot_xy')
         legend_kwargs = get_legend_kwargs(self.font_size, legend_kwargs)
@@ -1358,8 +1368,10 @@ class FlutterResponse:
         # print(f'plot_xy: ncol   = {ncol}')
 
         if fig is None:
+            # leave room on the right for the legend (like plot_vg_vf)
             fig = plt.figure()
-            axes = fig.add_subplot(111)
+            gridspeci = gridspec.GridSpec(1, 4)
+            axes = fig.add_subplot(gridspeci[0, :3])
 
         symbols, colors = self._get_symbols_colors_from_modes(modes)
         linestyle = 'None' if self.noline else '-'
@@ -1408,9 +1420,16 @@ class FlutterResponse:
                 label = '_nolegend_'
             # print(f'iplot={iplot}')
             assert len(xs[iplot]) > 0
+            # root locus: the line has no markers; the scatter below draws them
             line = axes.plot(xs[iplot], ys[iplot],
                              color=color2, marker=symbol2, label=label,
-                             linestyle=linestyle2, markersize=0)
+                             linestyle=linestyle2,
+                             markersize=0 if scatter else None)
+            if linestyle2 == linestyle:
+                # same legend entry as plot_vg_vf (_plot_two_axes): color + symbol
+                legend_handles.append(Line2D(
+                    [0], [0], color=color2, marker=symbol2,
+                    label=label, linestyle=linestyle2))
             legend_elements.append(line)
 
             if ivelocity and symbol2 and ivelocity < len(xs):
@@ -1434,6 +1453,7 @@ class FlutterResponse:
         legend_elementsi = _add_vertical_lines(
             [axes], v_lines, plot_type, xunit)
         legend_elements.extend(legend_elementsi)
+        legend_handles.extend(legend_elementsi)
 
         axes.grid(True)
         # axes.set_xlabel(xlabel  + '; _plot_x_y', fontsize=self.font_size)
@@ -1446,8 +1466,12 @@ class FlutterResponse:
         title = self._get_title(nlines=2)
         fig.suptitle(title)
         if legend:
-            # bbox_to_anchor=(1.125, 1.), ncol=ncol,
-            axes.legend(**legend_kwargs)
+            # same placement as plot_vg_vf: outside, to the right of the axes
+            if bbox_to_anchor is None:
+                bbox_to_anchor = (1.02, 1.)
+            legend_kwargs.setdefault('loc', 2)
+            axes.legend(handles=legend_handles, bbox_to_anchor=bbox_to_anchor,
+                        ncol=ncol, **legend_kwargs)
 
         _show_save_clear_close(
             fig, show, png_filename, clear, close)
@@ -1473,7 +1497,7 @@ class FlutterResponse:
                    freq_tol: float=-1.0,
                    freq_tol_remove: float=-1.0,
                    png_filename=None,
-                   flutter_bbox_to_anchor: Optional[tuple[float, float]]=None,
+                   bbox_to_anchor: Optional[tuple[float, float]]=None,
                    **legend_kwargs) -> tuple[plt.Figure,
                                              tuple[plt.Axes, plt.Axes]]:
         """
@@ -1576,11 +1600,13 @@ class FlutterResponse:
                 axes2.plot(xs[iplot], y2s[iplot], marker=symbol2,
                            color=color2, markersize=markersize, linestyle=linestyle2)
             else:
+                # same as plot_vg_vf: constant point size; freq_tol-filtered
+                # modes are gray/dashed (color2/linestyle2)
                 legend_elementsi = _plot_two_axes(
                     axes1, axes2,
                     xs[iplot], y1s[iplot], y2s[iplot],
-                    color, symbol2, linestyle, label, texti, ioffset,
-                    self.markevery, markersize=markersize,
+                    color2, symbol2, linestyle2, label, texti, ioffset,
+                    self.markevery, markersize=None,
                 )
                 # axes1.plot(xs[iplot], y1s[iplot], marker=symbol2, label=label,
                 #            color=color2, markersize=markersize, linestyle=linestyle2)
@@ -1611,10 +1637,10 @@ class FlutterResponse:
             #     legend_kwargs[key] = value
 
             # same placement as plot_vg_vf: outside, to the right of the axes
-            if flutter_bbox_to_anchor is None:
-                flutter_bbox_to_anchor = (1.02, 1.)
+            if bbox_to_anchor is None:
+                bbox_to_anchor = (1.02, 1.)
             legend_kwargs.setdefault('loc', 2)
-            axes1.legend(handles=legend_elements, bbox_to_anchor=flutter_bbox_to_anchor,
+            axes1.legend(handles=legend_elements, bbox_to_anchor=bbox_to_anchor,
                          ncol=ncol, **legend_kwargs)
             # axes1.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)  # TODO: switch to figure...
             # fig.legend(handles=legend_elements, ncol=ncol, **legend_kwargs)
@@ -1637,7 +1663,7 @@ class FlutterResponse:
                            damping_limit=None,
                            v_lines: list[LineData]=None,
                            ncol: int=0,
-                           flutter_bbox_to_anchor: Optional[tuple[float, float]]=None,
+                           bbox_to_anchor: Optional[tuple[float, float]]=None,
                            **kwargs) -> tuple[plt.Figure,
                                               tuple[plt.Axes, plt.Axes]]:
         """
@@ -1646,7 +1672,7 @@ class FlutterResponse:
         See ``plot_root_locus`` for arguments
         ncol : int; default=0 -> auto
             number of columns for the legend
-        flutter_bbox_to_anchor : tuple[float, float]; default=None -> (1.02, 1.)
+        bbox_to_anchor : tuple[float, float]; default=None -> (1.02, 1.)
             legend location (same as plot_vg_vf)
         """
         assert damping_limit is None or isinstance(damping_limit, float_types), damping_limit
@@ -1657,7 +1683,7 @@ class FlutterResponse:
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         iy1 = self.idamping
         iy2 = self.ikfreq
-        scatter = True
+        scatter = False  # velocity-scaled point size is only for the root locus
         # print(f"plot_kfreq_damping; plot_type={plot_type}")
         fig, axes2 = self._plot_x_y2(
             ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
@@ -1668,7 +1694,7 @@ class FlutterResponse:
             legend=legend,
             freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
             png_filename=png_filename,
-            flutter_bbox_to_anchor=flutter_bbox_to_anchor,
+            bbox_to_anchor=bbox_to_anchor,
             **kwargs)
 
         ax_damp, ax_kfreq = axes2
@@ -1698,7 +1724,7 @@ class FlutterResponse:
         ix = self.ikfreq
         iy1 = self.idamping
         iy2 = self.ifreq
-        scatter = True
+        scatter = False  # velocity-scaled point size is only for the root locus
         fig, axes2 = self._plot_x_y2(
             ix, iy1, iy2, xlabel, ylabel1, ylabel2, scatter,
             modes=modes,
@@ -1838,6 +1864,12 @@ class FlutterResponse:
         ix = self.ieas
         xvalues = self.results[0, :, ix]
         print(f'zimmerman imodes={imodes}')
+
+        # lines/points like the other flutter plots, so the legend shows
+        # the line and symbol (F: 1st symbol, Fs: 2nd symbol)
+        symbols, colors = self._get_symbols_colors_from_modes(np.arange(2))
+        linestyle = 'None' if self.noline else '-'
+        markevery = None if self.markevery in {0, None} else self.markevery + 1
         for i, imodei, modei in zip(count(), imodes, modes):
             for j, jmodei, modej in zip(count(), imodes[i+1:], modes[i+1:]):
                 if modei == modej:
@@ -1848,8 +1880,10 @@ class FlutterResponse:
                 # print(axes)
                 print((i, j), (int(jmodei), int(jmodei)), f'shape={axes.shape}')
                 ax = axes[i, j]
-                ax.plot(xvalues, Fi, label=f'F({modei}, {modej})')
-                ax.plot(xvalues, Fsi, label=f'Fs({modei}, {modej})')
+                ax.plot(xvalues, Fi, label=f'F({modei}, {modej})',
+                        marker=symbols[0], linestyle=linestyle, markevery=markevery)
+                ax.plot(xvalues, Fsi, label=f'Fs({modei}, {modej})',
+                        marker=symbols[1], linestyle=linestyle, markevery=markevery)
 
         for ax in axes.ravel():
             ax.grid(True)
@@ -1921,7 +1955,7 @@ class FlutterResponse:
                    damping_crossings: list[dict[float, float]]=None,
                    show_detailed_mode_info: bool=False,
                    divergence_legend_loc: str='best',
-                   flutter_bbox_to_anchor: Optional[tuple[float, float]]=None,
+                   bbox_to_anchor: Optional[tuple[float, float]]=None,
                    filter_damping: bool=False,
                    eas_range: Optional[tuple[float, float]]=None,
                    png_filename=None, show: bool=False,
@@ -2011,8 +2045,8 @@ class FlutterResponse:
         # print(f'filter_freq = {filter_freq}')
 
         ncol = 0 if ncol is None else ncol
-        if flutter_bbox_to_anchor is None:
-            flutter_bbox_to_anchor = (1.02, 1.)
+        if bbox_to_anchor is None:
+            bbox_to_anchor = (1.02, 1.)
         self._apply_mode_switch_method(mode_switch_method)
 
         # assert vl_limit is None or isinstance(vl_limit, float_types), vl_limit
@@ -2204,7 +2238,7 @@ class FlutterResponse:
                 damp_axes.legend(
                     handles=legend_elements_damp,
                     # bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol,  # OG
-                    bbox_to_anchor=flutter_bbox_to_anchor, loc=2, ncol=ncol,  # tighter gap for legend
+                    bbox_to_anchor=bbox_to_anchor, loc=2, ncol=ncol,  # tighter gap for legend
                     # fontsize=10,
                 )
             # damp_axes.legend(fontsize=10, bbox_to_anchor=(1.125, 1.), loc=2, ncol=ncol)

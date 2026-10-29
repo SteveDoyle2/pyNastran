@@ -1256,7 +1256,9 @@ class PlotLayout(QHBoxLayout):
                 axes = fig.add_subplot(111)
                 response.plot_zimmerman(fig=fig, axes=axes, modes=modes, show=False)
             elif plot_type == 'root-locus':
-                axes = fig.add_subplot(111)
+                # leave room on the right for the legend (like x-damp-freq)
+                gridspeci = gridspec.GridSpec(1, 4)
+                axes = fig.add_subplot(gridspeci[0, :3])
                 # log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
                 # log.info(f'png_filename={png_filename}')
                 response.plot_root_locus(
@@ -1266,6 +1268,8 @@ class PlotLayout(QHBoxLayout):
                     show=False, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
+                    ncol=parent.flutter_ncolumns,
+                    bbox_to_anchor=(parent.flutter_bbox_to_anchor_x, 1.),
                 )
             elif plot_type == 'modal-participation':
                 axes = fig.add_subplot(111)
@@ -1295,6 +1299,8 @@ class PlotLayout(QHBoxLayout):
                     show=False, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
+                    ncol=parent.flutter_ncolumns,
+                    bbox_to_anchor=(parent.flutter_bbox_to_anchor_x, 1.),
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
             else:
@@ -1326,7 +1332,7 @@ class PlotLayout(QHBoxLayout):
                     show_detailed_mode_info=parent.show_detailed_mode_info,
                     ncol=parent.flutter_ncolumns,
                     divergence_legend_loc=parent.divergence_legend_loc,
-                    flutter_bbox_to_anchor=(parent.flutter_bbox_to_anchor_x, 1.),
+                    bbox_to_anchor=(parent.flutter_bbox_to_anchor_x, 1.),
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
                 fig.canvas.draw()

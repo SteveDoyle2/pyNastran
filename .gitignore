@@ -79,12 +79,14 @@ nosetests.xml
 *test_op2.bdf
 *test_op2.f06
 *test_op2.op2
+*test_op2.mat
 *test_f06.f06
 *test_f06.op2
 plane_face_*.bdf
 plane_face2_*.bdf
 *.solver.f06
 *.solver.op2
+*.solver.op4
 *.bdf_out
 *.dat_out
 *.f04
@@ -93,6 +95,7 @@ plane_face2_*.bdf
 *.log.*
 *.op2.*
 *.f06.*
+*.inp_ase
 *.err
 *.rej
 *.db
@@ -105,6 +108,10 @@ plane_face2_*.bdf
 # Tecplot
 *.plt
 *.mcr
+
+# Fluent
+*.vrt
+*.vrt.png
 
 # GMesh
 *.bb

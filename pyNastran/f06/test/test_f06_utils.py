@@ -3,6 +3,7 @@ tests:
  - plot sol_145
 """
 import os
+import re
 import warnings
 from pathlib import Path
 import unittest
@@ -385,6 +386,160 @@ class TestF06Flutter(unittest.TestCase):
             modes = legend_modes(fig)
             assert modes == modes_expected, f'{name}: legend modes={modes} expected={modes_expected}'
             plt.close('all')
+
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_kfreq_damping_legend_outside(self):
+        """the x-kfreq legend is placed like the x-freq legend: right of the axes"""
+        f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(
+            f06_filename, f06_units='english_in', out_units='english_kt', log=log)
+        resp = resps[1]
+
+        plt.close('all')
+        plots = {
+            'plot_vg_vf': lambda: resp.plot_vg_vf(plot_type='tas', show=False),
+            'plot_kfreq_damping': lambda: resp.plot_kfreq_damping(plot_type='tas', show=False),
+        }
+        x0_legends = {}
+        for name, plot in plots.items():
+            fig, (damp_axes, freq_axes) = plot()
+            fig.canvas.draw()
+            legend = damp_axes.get_legend()
+            assert legend is not None, name
+            legend_box = legend.get_window_extent()
+            axes_box = damp_axes.get_window_extent()
+            assert legend_box.x0 >= axes_box.x1, f'{name}: legend overlaps the axes; legend.x0={legend_box.x0} axes.x1={axes_box.x1}'
+            x0_legends[name] = legend_box.x0 - axes_box.x1
+            plt.close(fig)
+        assert np.isclose(x0_legends['plot_vg_vf'], x0_legends['plot_kfreq_damping']), x0_legends
+
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_root_locus_legend(self):
+        """
+        The root locus legend matches the eas plots:
+         - each entry shows the mode's symbol and color (same as its points)
+         - the legend is outside, to the right of the axes
+        """
+        from matplotlib.colors import to_rgba
+        f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(
+            f06_filename, f06_units='english_in', out_units='english_kt', log=log)
+        resp = resps[1]
+
+        plt.close('all')
+        for name, plot in [('plot_root_locus', resp.plot_root_locus), ('plot_vg', resp.plot_vg)]:
+            fig, axes = plot(show=False)
+            fig.canvas.draw()
+            legend = axes.get_legend()
+            handles = legend.legend_handles if hasattr(legend, 'legend_handles') else legend.legendHandles
+            assert len(handles) == len(resp.modes), (name, len(handles))
+            if name == 'plot_vg':
+                # V-g points are on the lines (no velocity-scaled scatter)
+                assert len(axes.collections) == 0, (name, len(axes.collections))
+                for handle, text, line in zip(handles, legend.get_texts(), axes.get_lines()):
+                    assert handle.get_marker() == line.get_marker(), f'{name}: {text.get_text()!r} symbol differs from its points'
+                    assert handle.get_color() == line.get_color(), f'{name}: {text.get_text()!r} color differs from its points'
+                    assert line.get_markersize() > 0, f'{name}: {text.get_text()!r} points are not visible'
+            else:
+                assert len(axes.collections) == len(resp.modes), (name, len(axes.collections))
+            for handle, text, collection in zip(handles, legend.get_texts(), axes.collections):
+                marker = handle.get_marker()
+                assert marker not in {'', 'None', None}, f'{name}: {text.get_text()!r} has no symbol'
+                assert handle.get_markersize() > 0, f'{name}: {text.get_text()!r} symbol is not visible'
+                point_color = collection.get_facecolor()[0]
+                assert np.allclose(to_rgba(handle.get_color()), point_color), \
+                    f'{name}: {text.get_text()!r} color={handle.get_color()} points={point_color}'
+                # the points use the same marker as the legend entry
+                handle_path = handle._marker.get_path().transformed(handle._marker.get_transform())
+                point_path = collection.get_paths()[0]
+                assert np.allclose(handle_path.vertices, point_path.vertices), \
+                    f'{name}: {text.get_text()!r} symbol differs from its points'
+
+            legend_box = legend.get_window_extent()
+            axes_box = axes.get_window_extent()
+            assert legend_box.x0 >= axes_box.x1, f'{name}: legend overlaps the axes; legend.x0={legend_box.x0} axes.x1={axes_box.x1}'
+            plt.close(fig)
+
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_legend_line_symbol_style(self):
+        """
+        The mode legend entries for freq, kfreq, root locus, and zimmerman
+        show the line if lines are shown and the symbol if points are shown
+        (e.g., line+symbol when both are shown)
+        """
+        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'  # PKNL for zimmerman
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(
+            f06_filename, f06_units='english_in', out_units='english_in', log=log)
+        resp = resps[1]
+
+        plots = {
+            'x-damp-freq': lambda: resp.plot_vg_vf(plot_type='eas', show=False)[0],
+            'x-damp-kfreq': lambda: resp.plot_kfreq_damping(plot_type='eas', show=False)[0],
+            'root-locus': lambda: resp.plot_root_locus(show=False)[0],
+            'zimmerman': lambda: resp.plot_zimmerman(modes=[1, 2], show=False),
+        }
+        plt.close('all')
+        for show_lines, show_points in [(True, True), (True, False), (False, True)]:
+            resp.noline = not show_lines
+            resp.set_symbol_settings(nopoints=not show_points)
+            for name, plot in plots.items():
+                fig = plot()
+                legend = fig.axes[0].get_legend()
+                handles = legend.legend_handles if hasattr(legend, 'legend_handles') else legend.legendHandles
+                # mode entries ('Mode 1; 2.7 Hz', 'F(1, 2)'), not the crossing points ('Mode 2: g=0%; ...')
+                entries = [(handle, text.get_text()) for handle, text in zip(handles, legend.get_texts())
+                           if re.match(r'(Mode \d+; |Fs?\()', text.get_text())]
+                assert len(entries) >= 2, (name, [text for handle, text in entries])
+                for handle, text in entries:
+                    has_line = handle.get_linestyle() not in {'None', '', ' '}
+                    has_symbol = handle.get_marker() not in {'None', '', None} and handle.get_markersize() > 0
+                    assert (has_line, has_symbol) == (show_lines, show_points), (
+                        f'{name}: {text!r} legend line={has_line} symbol={has_symbol}; '
+                        f'expected line={show_lines} symbol={show_points}')
+                plt.close(fig)
+        resp.noline = False
+        resp.set_symbol_settings(nopoints=False)
+
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_point_size_root_locus_only(self):
+        """
+        The point size grows with velocity ONLY for the root locus;
+        V-g and kfreq plots use a constant point size on the lines
+        """
+        f06_filename = AERO_PATH / '2_mode_flutter' / '0012_flutter.f06'
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(
+            f06_filename, f06_units='english_in', out_units='english_in', log=log)
+        resp = resps[1]
+
+        plots = {
+            'root-locus': lambda: resp.plot_root_locus(show=False),
+            'vg': lambda: resp.plot_vg(plot_type='eas', show=False),
+            'x-damp-kfreq': lambda: resp.plot_kfreq_damping(plot_type='eas', show=False),
+            'kfreq-damp-freq': lambda: resp.plot_kfreq_damping2(show=False),
+        }
+        plt.close('all')
+        for noline in [False, True]:
+            resp.noline = noline
+            for name, plot in plots.items():
+                fig, unused_axes = plot()
+                for axes in fig.axes:
+                    sizes = [collection.get_sizes() for collection in axes.collections]
+                    sizes = np.hstack(sizes) if sizes else np.zeros(0)
+                    is_varied = len(sizes) > 1 and sizes.min() != sizes.max()
+                    if name == 'root-locus':
+                        assert is_varied, f'{name}: point size should grow with velocity'
+                    else:
+                        assert not is_varied, f'{name} noline={noline}: point size should be constant; sizes=[{sizes.min()}, {sizes.max()}]'
+                        lines = axes.get_lines()[:len(resp.modes)]
+                        assert all(line.get_markersize() > 0 for line in lines), f'{name} noline={noline}: points are not visible'
+                        has_line = all(line.get_linestyle() not in {'None', '', ' '} for line in lines)
+                        assert has_line == (not noline), f'{name} noline={noline}: line shown={has_line}'
+                plt.close(fig)
+        resp.noline = False
 
     @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
     def test_plot_zimmerman_given_fig(self):

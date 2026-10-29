@@ -448,7 +448,7 @@ def write_report(
                     freq_tol_remove=freq_tol_remove,
                     mode_switch_method=mode_switch_method,
                     divergence_legend_loc=divergence_legend_loc,
-                    flutter_bbox_to_anchor=(flutter_bbox_to_anchor_x, 1.0),
+                    bbox_to_anchor=(flutter_bbox_to_anchor_x, 1.0),
                     damping_crossings=damping_crossings,
                     filter_damping=True,
                     eas_range=eas_range,
