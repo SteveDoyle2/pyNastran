@@ -21,6 +21,7 @@ except ModuleNotFoundError:  # pragma: no cover
 if IS_MATPLOTLIB:
     #matplotlib.use('Qt5Agg')
     import matplotlib.pyplot as plt
+    from matplotlib.colors import to_rgba
 
     #try:  # pragma: no cover
         #plt.figure()
@@ -282,6 +283,96 @@ class TestF06Flutter(unittest.TestCase):
         #                 plot_vg=False, plot_vg_vf=True, plot_root_locus=True, plot_kfreq_damping=False,
         #                 subcases=[1, 3],
         #                 log=log)
+
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_root_locus_modes_velocity_freq_tol(self):
+        """
+        Tests the root locus:
+         - only the requested modes are plotted
+         - the point size scales with velocity over all plotted modes
+         - freq_tol modes are gray/dashed with no points
+         - freq_tol_remove modes are removed
+        """
+        f06_filename = AERO_PATH / 'bah_plane' / 'bah_plane.f06'
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(
+            f06_filename, f06_units='english_in', out_units='english_kt', log=log)
+        resp = resps[1]
+        nmodes = len(resp.modes)
+
+        # restricted modes + velocity point size
+        fig, axes = resp.plot_root_locus(modes=[5, 7], show=False)
+        labels = [text.get_text().split(';')[0] for text in axes.get_legend().get_texts()]
+        assert labels == ['Mode 5', 'Mode 7'], labels
+        assert len(axes.collections) == 2, len(axes.collections)
+
+        vel_all = resp.results[[4, 6], :, resp.ivelocity]
+        vel_min = vel_all.min()
+        vel_max = vel_all.max()
+        for collection, imode in zip(axes.collections, [4, 6]):
+            vel = resp.results[imode, :, resp.ivelocity]
+            sizes_expected = 0.75 + (50. - 0.75) * (vel - vel_min) / (vel_max - vel_min)
+            sizes = collection.get_sizes()
+            assert np.allclose(sizes, sizes_expected), f'mode={imode+1}\nsizes={sizes}\nexpected={sizes_expected}'
+        plt.close(fig)
+
+        # freq_tol filters modes with a small frequency change that are stable
+        freq = resp.results[:, :, resp.ifreq]
+        damping = resp.results[:, :, resp.idamping]
+        dfreq = freq.max(axis=1) - freq.min(axis=1)
+        is_stable = damping.max(axis=1) <= 0.
+        freq_tol = float(dfreq[is_stable].min()) + 1e-6
+        is_filtered = is_stable & (dfreq <= freq_tol)
+        nfiltered = is_filtered.sum()
+        assert 0 < nfiltered < nmodes, nfiltered
+
+        fig, axes = resp.plot_root_locus(freq_tol=freq_tol, show=False)
+        gray = to_rgba('gray')
+        gray_dashed_lines = [line for line in axes.lines
+                             if line.get_linestyle() == '--' and to_rgba(line.get_color()) == gray]
+        assert len(gray_dashed_lines) == nfiltered, (len(gray_dashed_lines), nfiltered)
+        assert len(axes.collections) == nmodes - nfiltered, (len(axes.collections), nmodes, nfiltered)
+        for collection in axes.collections:
+            assert not np.allclose(collection.get_facecolor()[0], gray), 'filtered mode has points'
+        plt.close(fig)
+
+        fig, axes = resp.plot_root_locus(freq_tol=freq_tol, freq_tol_remove=freq_tol, show=False)
+        assert len(axes.lines) == nmodes - nfiltered, (len(axes.lines), nmodes, nfiltered)
+        plt.close(fig)
+
+    @unittest.skipIf(not IS_MATPLOTLIB, 'no matplotlib')
+    def test_plot_zimmerman_given_fig(self):
+        """
+        Tests the zimmerman plot draws into the given fig:
+         - 2 modes: the given axes is used
+         - N modes: an (N-1)x(N-1) grid with 1 subplot per mode pair
+        """
+        # zimmerman needs PKNL (eas); 40 modes
+        f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_flutter.f06'
+        log = SimpleLogger(level='warning')
+        resps, data = make_flutter_response(
+            f06_filename, f06_units='english_in', out_units='english_kt', log=log)
+        resp = resps[1]
+
+        plt.close('all')
+        fig = plt.figure()
+        axes = fig.add_subplot(111)
+        fig_out = resp.plot_zimmerman(fig=fig, axes=axes, modes=[5, 7], show=False)
+        assert fig_out is fig
+        assert plt.get_fignums() == [fig.number], plt.get_fignums()
+        assert fig.axes == [axes], fig.axes
+        labels = [line.get_label() for line in axes.lines]
+        assert labels == ['F(5, 7)', 'Fs(5, 7)'], labels
+        plt.close(fig)
+
+        fig = plt.figure()
+        axes = fig.add_subplot(111)
+        resp.plot_zimmerman(fig=fig, axes=axes, modes=[5, 6, 7], show=False)
+        assert plt.get_fignums() == [fig.number], plt.get_fignums()
+        assert len(fig.axes) == 4, len(fig.axes)  # 2x2 grid
+        npairs = sum(1 for ax in fig.axes if len(ax.lines))
+        assert npairs == 3, npairs  # (5,6), (5,7), (6,7)
+        plt.close(fig)
 
     def test_get_flutter_crossings(self):
         """

@@ -1799,28 +1799,21 @@ class FlutterResponse:
         """
         # print('plot_zimmerman')
         modes, imodes = _get_modes_imodes(self.modes, modes)
-        imodes = np.array([0, 1, 0, 1])
         nmodes = len(imodes)
         # print(f'nmodes = {nmodes}')
         if nmodes < 2:
             print(f'less than 2 modes specified; modes={modes}')
             return
 
-        if fig is None or 1:
+        # draw into the given fig (the GUI/report figure) instead of a new one
+        if fig is None:
             fig = plt.figure()  # figsize=(12,9), self.subcase
-            if nmodes == 2:
-                # print('nmodesA')
-                ax = fig.gca()
-                axes = np.array([[fig.gca()]])
-            else:
-                # print('nmodesB')
-                # print(nmodes, '*******')
-                fig, axes = plt.subplots(ncols=nmodes-1, nrows=nmodes-1)
-                # print(axes[0])
-                # print(axes[1])
-                # print(axes[2])
-                # print(axes[3])
-        # fig.clear()
+        if nmodes == 2 and axes is not None:
+            axes = np.array([[axes]])
+        else:
+            # 1 subplot per mode pair
+            fig.clear()
+            axes = fig.subplots(ncols=nmodes-1, nrows=nmodes-1, squeeze=False)
 
         ix, xlabel, xunit = self._plot_type_to_ix_xlabel(plot_type)
         ix = self.ieas
@@ -1852,7 +1845,7 @@ class FlutterResponse:
 
             title = self._get_title(nlines=1)
             title += f'\nModes: {modes[0]}, {modes[1]}'
-            plt.suptitle(title)
+            fig.suptitle(title)
 
         else:
             fig.suptitle('Zimmerman Flutter Margin Criterion')
