@@ -87,6 +87,22 @@ ICON_PATH = Path('')
 PLOTS_DAMPING_NOT_REQUIRED = {'root-locus', 'modal-participation', 'zimmerman'}
 PLOTS_XLIM_NOT_REQUIRED = {'root-locus', 'modal-participation', 'zimmerman'}
 
+def _to_float(value: Optional[float | str], default: float=-1.0) -> float:
+    """
+    Converts a get_float_or_none value to a float.
+    Hidden boxes return their raw text and empty/invalid boxes return None;
+    both map to default when they can't be parsed.
+    """
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return default
+    if value is None:
+        return default
+    return float(value)
+
+
 def _set_modes_table(modes_widget: QListWidget,
                      modes: list[int],
                      freqs: list[float]) -> None:
@@ -834,6 +850,17 @@ class PlotLayout(QHBoxLayout):
         damping_required = _float_passed_to_default(damping_required, is_passed_damping_required)
         damping = _float_passed_to_default(damping, is_passed_damping)
 
+        # hidden boxes echo back their raw text (e.g., '-1.0' or '') and
+        # empty/invalid boxes give None; the plot code needs floats
+        freq_tol = _to_float(freq_tol)
+        freq_tol_remove = _to_float(freq_tol_remove)
+        mag_tol = _to_float(mag_tol)
+        vl = _to_float(vl)
+        vf = _to_float(vf)
+        damping_required = _to_float(damping_required)
+        damping_required_tol = _to_float(damping_required_tol)
+        damping = _to_float(damping)
+
         # if is_passed_eas_damping_lim1 and eas_damping_lim_min is None:
         #    eas_damping_lim_min = None
         # if is_passed_eas_damping_lim2 and eas_damping_lim_max is None:
@@ -1227,7 +1254,7 @@ class PlotLayout(QHBoxLayout):
         try:
             if plot_type == 'zimmerman':
                 axes = fig.add_subplot(111)
-                response.plot_zimmerman(fig=fig, axes=axes, modes=modes, show=True)
+                response.plot_zimmerman(fig=fig, axes=axes, modes=modes, show=False)
             elif plot_type == 'root-locus':
                 axes = fig.add_subplot(111)
                 # log.info(f'modes={modes}; eigr_lim={self.eigr_lim}; eigi_lim={self.eigi_lim}; freq_tol={freq_tol}')
@@ -1236,7 +1263,7 @@ class PlotLayout(QHBoxLayout):
                     fig=fig, axes=axes,
                     modes=modes, eigr_lim=parent.eigr_lim, eigi_lim=parent.eigi_lim,
                     freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
-                    show=True, clear=False, close=False,
+                    show=False, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
                 )
@@ -1251,7 +1278,7 @@ class PlotLayout(QHBoxLayout):
                     modes=modes,  # eigr_lim=self.eigr_lim, eigi_lim=self.eigi_lim,
                     freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
                     mag_tol=mag_tol,
-                    show=True, clear=False, close=False,
+                    show=False, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
                 )
@@ -1265,7 +1292,7 @@ class PlotLayout(QHBoxLayout):
                     modes=modes, plot_type=x_plot_type,
                     xlim=xlim, ylim_damping=ylim_damping, ylim_kfreq=xlim_kfreq,
                     freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
-                    show=True, clear=False, close=False,
+                    show=False, clear=False, close=False,
                     legend=True,
                     png_filename=png_filename,
                 )
@@ -1287,7 +1314,7 @@ class PlotLayout(QHBoxLayout):
                     xlim=xlim, ylim_damping=ylim_damping, ylim_freq=ylim_freq,
                     eas_range=eas_flutter_range,
                     freq_tol=freq_tol, freq_tol_remove=freq_tol_remove,
-                    show=True, clear=False, close=False,
+                    show=False, clear=False, close=False,
                     legend=True,
                     v_lines=v_lines,
                     damping_limit=damping_limit,
@@ -1310,6 +1337,12 @@ class PlotLayout(QHBoxLayout):
             # print(traceback.print_tb())
             print(traceback.print_exception(e))
             raise
+
+        # plt.show() would try to start a 2nd Qt event loop inside the
+        # running one ("QCoreApplication::exec: The event loop is already
+        # running"); fig.show() just shows the window
+        fig.canvas.draw_idle()
+        fig.show()
 
         export_flutter_results(
             response, modes, png_filename0,

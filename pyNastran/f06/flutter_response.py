@@ -961,6 +961,15 @@ class FlutterResponse:
             the x plot limits
         eigi_lim : list[float/None, float/None]
             the y plot limits
+        freq_tol :  float; default=-1.0
+            set modes to gray/dashed with no points if they fall under the tolerance
+            -1.0: no filtering (default)
+            >0.0: filter is active
+        freq_tol_remove : float; default=-1.0
+            hide modes if they fall under the tolerance
+            a mode must be filtered by freq_tol for it to be hidden (i.e., freq_tol_remove <= freq_tol)
+            -1.0: no filtering (default)
+            >0.0: filter is active
         show : bool; default=True
             show the plot
         clear : bool; default=False
@@ -980,6 +989,8 @@ class FlutterResponse:
         framealpha : float; 0.0 <= alpha <= 1.0
             1.0 - no transparency / opaque
             0.0 - fully transparent
+
+        The point size scales with velocity (over all plotted modes).
 
         """
         assert isinstance(freq_tol, float_types), freq_tol
@@ -1353,6 +1364,13 @@ class FlutterResponse:
         symbols, colors = self._get_symbols_colors_from_modes(modes)
         linestyle = 'None' if self.noline else '-'
 
+        if scatter:
+            # root locus: the point size scales with velocity; the range is
+            # over all plotted modes, so the same velocity is the same size
+            vel_all = self.results[imodes, :, self.ivelocity]
+            vel_min = np.nanmin(vel_all)
+            vel_max = np.nanmax(vel_all)
+
         jcolor = 0
         # print('starting plot part; jcolor=0')
         for i, imode, mode in zip(count(), imodes, modes):
@@ -1401,13 +1419,13 @@ class FlutterResponse:
                 line = axes.scatter(xs[ivelocity], ys[ivelocity], **plot_kwargs)
                 legend_elements.append(line)
 
-            if scatter:
+            if scatter and symbol2:
                 # used for the root locus
-                # velocity increases driving an incrase in the point size
-                scatteri = np.linspace(.75, 50., len(xs))
-                # assert symbol[2] == '-', symbol
-                # axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=symbol[0], marker=symbol[1])
-                line = axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color, marker=symbol2)
+                # velocity increases driving an increase in the point size
+                # a mode filtered by freq_tol has no symbol (gray dashed line only)
+                vel = self.results[imode, :, self.ivelocity].ravel()
+                scatteri = _velocity_to_point_size(vel[iplot], vel_min, vel_max)
+                line = axes.scatter(xs[iplot], ys[iplot], s=scatteri, color=color2, marker=symbol2)
                 legend_elements.append(line)
 
         legend_elementsi = _add_vertical_lines(
@@ -3375,6 +3393,24 @@ def _get_mode_freq_label(mode: int, freq: float,
         freq_num = freq_num.replace('-0', '-').replace('-0', '-').replace('+0', '+')
     label = f'Mode {mode:d}; {freq_num} Hz'
     return label
+
+
+def _velocity_to_point_size(vel: np.ndarray,
+                            vel_min: float, vel_max: float,
+                            size_min: float=0.75,
+                            size_max: float=50.) -> np.ndarray:
+    """
+    Linearly maps velocity to a scatter point size (area in points^2),
+    so vel_min -> size_min and vel_max -> size_max.
+    A constant velocity or NaN velocity gets the middle size.
+    """
+    size_mid = 0.5 * (size_min + size_max)
+    dvel = vel_max - vel_min
+    if not np.isfinite(dvel) or dvel <= 0.:
+        return np.full(vel.shape, size_mid)
+    sizes = size_min + (size_max - size_min) * (vel - vel_min) / dvel
+    sizes[~np.isfinite(sizes)] = size_mid
+    return sizes
 
 
 def _increment_jcolor(mode: int,
