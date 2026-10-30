@@ -1352,7 +1352,7 @@ class Solver:
         # print(f'ndof_g={ndof_g} phi.shape={phi.shape}')
         xq = np.zeros((nfreq, nmode), dtype="complex64")
         for ifreq, omega2i in enumerate(omega2):
-            log.info(f"ifreq={ifreq}")
+            # log.info(f"ifreq={ifreq}")
             # denom = np.sqrt((1-omega2i/omegan2)**2 + zomegan2**2)
             # p / (k * denom) * np.sin(omegan)
 
@@ -1365,7 +1365,7 @@ class Solver:
             xq_freq = real + 1j * imag
             # print(xq_freq.shape)
             xq[ifreq, :] = xq_freq
-            log.info(xq_freq)
+            # log.info(xq_freq)
 
         xg = xq @ phi_t  # (1000,2) * (2,18) = (1000,18)
         # vg = (1j * omega)[:, np.newaxis] * xg[np.newaxis, :]
@@ -1485,7 +1485,7 @@ class Solver:
         isubcase = subcase.id
         assert isinstance(isubcase, int), isubcase
         # -----------------------------------------------------------------------
-    
+
         log.debug("run_sol_105 (buckling)")
         has_load, load_id = get_load_id(subcase)
         #has_temp, temp_load_id = get_temp_load_id(subcase)
