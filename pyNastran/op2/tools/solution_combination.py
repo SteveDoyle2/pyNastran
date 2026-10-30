@@ -702,27 +702,36 @@ def combine(model: OP2,
             assert len(subcases) == len(factors)
 
             case_new.linear_combination(0.0, update=False)
-            try:
-                for subcase, factor in zip(subcases, factors):
-                    # assert isinstance(factor, integer_float_types), f'bad factor type (expected float); subcase={subcase} factor={factor}'
-                    try:
-                        casei = res_type[subcase]
-                    except KeyError:
-                        msg = f'cannot find result_type={table_type!r} subcase={subcase}'
-                        log.error(msg)
-                        if stop_on_failure:
-                            raise RuntimeError(msg)
-                        continue
-
-                    assert case_new.data.shape == casei.data.shape, f'bad shapes; case_new.data.shape={case_new.data.shape}; casei.data.shape={casei.data.shape}'
-                    case_new.linear_combination(factor, casei.data, update=False)
-            except AssertionError as error:
-                # ('bad shapes; case_new.data.shape=(1, 124011, 6); casei.data.shape=(1, 124130, 6)',)
-                # bad shapes; case_new.data.shape
-                if case_new.class_name == 'RealGridPointForcesArray' and 'bad shapes; case_new.data.shape' in error.args[0]:
-                    log.error('skipping grid point forces')
+            tables = []
+            table_factors = []
+            for subcase, factor in zip(subcases, factors):
+                # assert isinstance(factor, integer_float_types), f'bad factor type (expected float); subcase={subcase} factor={factor}'
+                try:
+                    casei = res_type[subcase]
+                except KeyError:
+                    msg = f'cannot find result_type={table_type!r} subcase={subcase}'
+                    log.error(msg)
+                    if stop_on_failure:
+                        raise RuntimeError(msg)
                     continue
-                raise
+                tables.append(casei)
+                table_factors.append(factor)
+
+            if hasattr(case_new, 'linear_combination_from_tables'):
+                # the rows can differ by subcase (e.g., grid point forces)
+                case_new.linear_combination_from_tables(tables, table_factors, update=False)
+            else:
+                try:
+                    for casei, factor in zip(tables, table_factors):
+                        assert case_new.data.shape == casei.data.shape, f'bad shapes; case_new.data.shape={case_new.data.shape}; casei.data.shape={casei.data.shape}'
+                        case_new.linear_combination(factor, casei.data, update=False)
+                except AssertionError as error:
+                    # ('bad shapes; case_new.data.shape=(1, 124011, 6); casei.data.shape=(1, 124130, 6)',)
+                    # bad shapes; case_new.data.shape
+                    # if case_new.class_name == 'RealGridPointForcesArray' and 'bad shapes; case_new.data.shape' in error.args[0]:
+                    #     log.error('skipping grid point forces')
+                    #     continue
+                    raise
             if hasattr(case_new, 'update_data_components'):
                 case_new.update_data_components()
             else:
