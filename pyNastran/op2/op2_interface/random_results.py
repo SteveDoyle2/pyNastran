@@ -578,6 +578,7 @@ class RAGCONS:
     """storage class for the RAGCONS objects"""
     def __init__(self):
         self.grid_point_forces = {}
+
     def get_table_types(self):
         tables = [
             'grid_point_forces',

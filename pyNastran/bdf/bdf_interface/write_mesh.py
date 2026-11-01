@@ -33,12 +33,13 @@ class Writer:
     #    # TODO: update self.model...
     #    return self
 
-    def write_h5(self, h5file, nastran_group):
-        import getpass
-        if getpass.getuser() != 'sdoyle':
-            return
+    def write_h5(self, h5file, nastran_group=None):
+        if nastran_group is None:
+            nastran_group = h5file.create_group('/', 'NASTRAN')
+        input_group = h5file.create_group(nastran_group, 'INPUT')
+
         from pyNastran.bdf.bdf_interface.write_h5 import write_h5_geometry
-        write_h5_geometry(self.model, h5file, nastran_group)
+        write_h5_geometry(self.model, h5file, nastran_group, input_group)
 
     def get_encoding(self, encoding: Optional[str]=None) -> str:
         if encoding is not None:

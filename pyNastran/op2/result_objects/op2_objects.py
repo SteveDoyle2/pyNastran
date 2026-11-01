@@ -5,7 +5,7 @@ import warnings
 from getpass import getuser
 from itertools import count
 from struct import pack
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 import numpy as np
 
 from cpylog import SimpleLogger
@@ -152,7 +152,7 @@ def h5_deepcopy(self, memo):
     # Create result without calling __init__ to avoid side effects
     cls = self.__class__
     result = cls.__new__(cls)
-    
+
     # Add new object to memo to prevent infinite loops
     memo[id(self)] = result
     1

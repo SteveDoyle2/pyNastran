@@ -7,7 +7,6 @@ The capitalization of the sub-functions is important.
 """
 from __future__ import annotations
 import re
-import sys
 import copy
 from typing import Any, Optional, TYPE_CHECKING
 import numpy as np
@@ -156,6 +155,24 @@ def _get_ta(f: float) -> tuple[float, float]:
 # we'll add _ to the beginning of these variables
 BUILTINS = ['del', 'eval', 'yield', 'async', 'await', 'property',
             'slice', 'filter', 'map']
+
+# Only the real Python builtins a generated equation body could legitimately need: casts and
+# plain functions, plus isinstance/Exception/print, which _write_variables() bakes into every
+# generated function's own type-coercion prologue (see that function below). Everything else
+# an equation needs is reachable through the math helpers above.
+_DEQATN_SAFE_BUILTINS = {'abs': abs, 'min': min, 'max': max, 'float': float, 'int': int,
+                         'str': str, 'len': len, 'isinstance': isinstance,
+                         'Exception': Exception, 'print': print}
+
+
+def _deqatn_exec_namespace() -> dict[str, Any]:
+    """The globals dict a DEQATN-generated function body executes in: this module's own math
+    helpers (pi, rss, avg, sin, cos, sqrt, ...) plus a small builtins allowlist -- no open(),
+    __import__(), eval(), or anything else outside what an equation can legitimately need."""
+    namespace = {name: value for name, value in globals().items()
+                 if not name.startswith('_') and callable(value)}
+    namespace['__builtins__'] = _DEQATN_SAFE_BUILTINS
+    return namespace
 
 
 def split_deqatn_line0(card: list[str]) -> tuple[int, str, str, list[str]]:
@@ -320,15 +337,19 @@ class DEQATN(BaseCard):
 
         self.func_str = func_str
         self.func_name = func_name
-        exec_args = {'locals': sys._getframe().f_locals} if sys.version_info > (3, 13) else {}
+        # A restricted namespace, not the caller's own locals/globals: func_str is generated
+        # from user-supplied equation text, so it should only be able to reach the math
+        # helpers above, not open()/__import__()/eval()/etc. This also sidesteps the
+        # Python 3.13+ locals() semantics (PEP 667) the old sys._getframe() hack worked
+        # around, since an explicit dict behaves the same on every version.
+        namespace = _deqatn_exec_namespace()
         try:
-            exec(func_str, **exec_args)
+            exec(func_str, namespace)
         except SyntaxError:
             print(func_str)
             raise
-        #print(locals().keys())
 
-        func = locals()[func_name]
+        func = namespace[func_name]
         setattr(self, func_name, func)
         #print(func)
         self.func = func

@@ -57,7 +57,17 @@ ICON_PATH = Path('')
 
 
 class FlutterGui(LoggableGui):
-    def __init__(self, f06_filename: str=''):
+    def __init__(self, f06_filename: str='',
+                 save_filename: str=JSON_FILENAME):
+        """
+        Parameters
+        ----------
+        f06_filename : str; default=''
+            the f06 to put in the F06 Filename box
+        save_filename : str; default=~/plot_flutter.json
+            the settings file that is loaded at startup and saved
+            on Load F06/Run; '' -> don't load/save settings
+        """
         super().__init__(html_logging=False)
         self.use_vtk = USE_VTK
         self.use_tabs = USE_TABS
@@ -97,7 +107,7 @@ class FlutterGui(LoggableGui):
         self.qactions = {}
         self.nrecent_files_max = 20
         self.recent_files = []
-        self.save_filename = JSON_FILENAME
+        self.save_filename = str(save_filename)
         self.is_valid = False
 
         self.data = {}

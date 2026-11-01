@@ -4268,28 +4268,39 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
 
         """
         if isinstance(bdf_filename, (str, PurePath)):
-            try:
-                with open(bdf_filename, 'r') as bdf_file:
-                    lines = bdf_file.readlines()
-            except UnicodeDecodeError:  # pragma: no cover
-                with open(bdf_filename, 'r', errors='replace') as bdf_file:
-                    line = 'temp'
-                    lines = []
-                    while line:
-                        line = bdf_file.readline()
-                        lines.append(line)
-                        try:
-                            # try to force a crash
-                            unused_bytes_line = line.encode('ascii')  # TODO: use the encoding
-                        except UnicodeEncodeError:
-                            break
-                    n = 20
-                    i = 0
-                    i0 = len(lines) - n
-                    for i, line in enumerate(lines[-n:-1]):
-                        self.log.debug(f'Line {i0+i}: {line.strip()!r}')
-                    self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
-                    raise
+            # worked on Python < 3.13
+            # encoding = sys.getdefaultencoding()
+            #encoding = locale.getpreferredencoding(False)
+            #try:
+            #    with open(bdf_filename, 'r', encoding=encoding) as bdf_file:
+            #        lines = bdf_file.readlines()
+            #except UnicodeDecodeError:  # pragma: no cover
+            #    with open(bdf_filename, 'r', errors='replace', encoding=encoding) as bdf_file:
+            #        line = 'temp'
+            #        lines = []
+            #        while line:
+            #            line = bdf_file.readline()
+            #            lines.append(line)
+            #            try:
+            #                # try to force a crash
+            #                unused_bytes_line = line.encode('ascii')  # TODO: use the encoding
+            #            except UnicodeEncodeError:
+            #                break
+            #        n = 20
+            #        i = 0
+            #        i0 = len(lines) - n
+            #        for i, line in enumerate(lines[-n:-1]):
+            #            self.log.debug(f'Line {i0+i}: {line.strip()!r}')
+            #        self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
+            #        raise
+
+            # The $pyNastran header lines are ASCII, but the rest of the deck
+            # is in an encoding we don't know yet (the header may declare it).
+            # latin1 maps every byte to a character, so it can't raise and
+            # reads ASCII identically on all Python versions/platforms.
+            # The deck is decoded with the real encoding later in BDFInputPy.
+            with open(bdf_filename, 'r', encoding='latin1') as bdf_file:
+                lines = bdf_file.readlines()
         else:
             # StringIO
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):
@@ -4828,12 +4839,18 @@ def read_bdf(bdf_filename: Optional[PathLike]=None, validate: bool=True,
     elif read_cards:
         model.enable_cards(read_cards)
 
+    bdf_filename_lower = bdf_filename
     if bdf_filename and not isinstance(bdf_filename, StringIO):
+        bdf_filename_lower = str(bdf_filename).lower()
         check_path(bdf_filename, 'bdf_filename')
-    model.read_bdf(bdf_filename=bdf_filename, validate=validate,
-                   xref=xref, punch=punch, read_includes=True,
-                   save_file_structure=save_file_structure,
-                   encoding=encoding)
+
+    if isinstance(bdf_filename_lower, str) and bdf_filename_lower.endswith('.h5'):
+        model.read_h5(bdf_filename)
+    else:
+        model.read_bdf(bdf_filename=bdf_filename, validate=validate,
+                       xref=xref, punch=punch, read_includes=True,
+                       save_file_structure=save_file_structure,
+                       encoding=encoding)
     return model
 
 

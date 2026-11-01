@@ -35,6 +35,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.bdf import BDF, Coord
 
 
+# row order within a node (Nastran); elements are 3
+_GPFORCE_SOURCE_RANK = {'APP-LOAD': 0, 'F-OF-SPC': 1, 'F-OF-MPC': 2, '*TOTALS*': 4}
+
 table_name_to_table_code = {
     'OGPFB1': 19,
     'OGPFB2': 19,
@@ -110,7 +113,7 @@ class GridPointForces(BaseElement):
         obj.ntotal = ntotal
         return obj
 
-    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime): #, itable=-3, itime=0):
+    def _write_table_3(self, op2_file, op2_ascii, new_result, itable, itime):
         frame = inspect.currentframe()
         call_frame = inspect.getouterframes(frame, 2)
         op2_ascii.write('%s.write_table_3: %s\n' % (self.__class__.__name__, call_frame[1][3]))
@@ -414,11 +417,56 @@ class RealGridPointForcesArray(GridPointForces):
         return new_table
 
     def linear_combination(self, factor: integer_float_types,
-                           data: Optional[np.ndarray]=None,
-                           update: bool=True) -> None:
+                           data: Optional[np.ndarray] = None,
+                           update: bool = True) -> None:
         combination_inplace(self.data, data, factor)
-        # if update:
-        #     self.update_data_components()
+        if update:
+            self.update_data_components()
+
+    def linear_combination_from_tables(self, tables: list[RealGridPointForcesArray],
+                                       factors: list[float],
+                                       update: bool=True) -> None:
+        """
+        self = sum(factor * table)
+
+        APP-LOAD, F-OF-SPC, and F-OF-MPC rows only exist where they are
+        nonzero, so tables can have a different number of rows, or the same
+        number of rows on different nodes.  Every time step of every table
+        is aligned with stack_grid_point_force(diff_method='same'), so self
+        has common rows (the rows in any table/time; 0 where a table doesn't
+        have the row) and _ntotals is the same for every time.
+        """
+        assert len(tables) == len(factors), f'ntables={len(tables)} nfactors={len(factors)}'
+        assert len(tables) > 0
+        ntimes = tables[0].data.shape[0]
+        for table in tables:
+            assert table.data.shape[0] == ntimes, f'ntimes={table.data.shape[0]}; expected {ntimes}'
+
+        # one entry per (table, time); rows after _ntotals[itime] are padding
+        node_element_list = []
+        element_names_list = []
+        data_list = []
+        for table in tables:
+            for itime, nrow in enumerate(table._ntotals):
+                node_element_list.append(table.node_element[itime, :nrow, :])
+                element_names_list.append(table.element_names[itime, :nrow])
+                data_list.append(table.data[itime:itime+1, :nrow, :])
+        _is_square_ntotal, _is_unique, node_element, element_names, data = stack_grid_point_force(
+            node_element_list, element_names_list, data_list, diff_method='same')
+
+        # data is (ntables*ntimes, ntotal, 6) with common rows
+        ntotal = data.shape[1]
+        data = data.reshape(len(tables), ntimes, ntotal, 6)
+        self.data = np.zeros((ntimes, ntotal, 6), dtype=self.data.dtype)
+        for factor, data_table in zip(factors, data):
+            self.data += factor * data_table
+        self.node_element = np.repeat(node_element[:1, :, :], ntimes, axis=0)
+        self.element_names = np.repeat(element_names[:1, :], ntimes, axis=0)
+        self._ntotals = [ntotal] * ntimes
+        self.ntotal = ntotal
+        self.is_unique = True
+        if update:
+            self.update_data_components()
 
     def update_data_components(self):
         return
@@ -2483,6 +2531,8 @@ def ogpf_data_code(table_name: str,
         num_wide = 8
     elif is_complex:
         num_wide = 14
+    else:  # pragma: no cover
+        raise NotImplementedError((is_real, is_complex))
 
     table_code = table_name_to_table_code[table_name]
     sort_code = 1 # TODO: what should this be???
@@ -2532,12 +2582,11 @@ def set_real_table(cls,
         assert datai.ndim == 3, datai.shape
         assert datai.shape == (1, nelement_node, 6), (datai.shape, (1, nelement_node, 6))
 
-    #         13,   101,         1,     1, 0,   APPLIED, 30.9864, 19.7278, 70.2515, 53.3872, 80.9687, 77.4302
-    #         13,   101,         1,     1, 301, RBE3,    41.9012, 53.6651, 0.09483, 76.041,  67.506,  98.0225
-    #         13,   101,         1,     1, 0,   SPC,     71.6306, 97.0527, 89.8733, 5.89262, 61.0523, 48.9043
-    #         13,   101,         1,     1, 301, CTRIA3,  84.5273, 69.36,   92.3295, 52.7074, 77.9904, 68.905
-    #         13,   101,         1,     1, 302, CQUAD4,  97.7843, 11.7545, 99.3901, 44.9476, 70.818,  7.47876
-
+    # 13, 101, 1, 1, 0,   APPLIED, 30.9864, 19.7278, 70.2515, 53.3872, 80.9687, 77.4302
+    # 13, 101, 1, 1, 301, RBE3,    41.9012, 53.6651, 0.09483, 76.041,  67.506,  98.0225
+    # 13, 101, 1, 1, 0,   SPC,     71.6306, 97.0527, 89.8733, 5.89262, 61.0523, 48.9043
+    # 13, 101, 1, 1, 301, CTRIA3,  84.5273, 69.36,   92.3295, 52.7074, 77.9904, 68.905
+    # 13, 101, 1, 1, 302, CQUAD4,  97.7843, 11.7545, 99.3901, 44.9476, 70.818,  7.47876
     dt = times[0]
     data_code['sort_code'] = 0
     obj = cls(data_code, is_sort1, isubcase, dt)
@@ -2749,30 +2798,14 @@ def stack_different_shapes_combo(
         'F-OF-MPC', 'F-OF-SPC',
     ]
 
-    # 1. update the element id for '*TOTALS*' to be -1
-    # this will fix the sort issue downstream
-    itotals = []
-    for i, names, node_element in zip(count(), element_names_list, node_element_list):
-        # hacking the node id so we can stack data...
-        # node_element[:, 0] = np.arange(len(names))
-
-        itotal = (names == '*TOTALS*')
-        if itotal.sum() == 0:  # pragma: no cover
+    # 1. every table needs *TOTALS*
+    for i, names in enumerate(element_names_list):
+        if (names == '*TOTALS*').sum() == 0:  # pragma: no cover
             raise RuntimeError(f'no *TOTALS* found in element_names[{i}]={names}')
-        itotali = np.where(itotals)[0]
-        itotals.append(itotali)
-        # print(f'itotal = {itotal}')
-        # print(node_element, node_element.shape)
-        node_element[itotal, 1] = -1
 
-    # 2. get the list of elements and results that are used
-    # uall_names = np.unique(np.hstack([np.unique(element_names) for element_names in element_names_list]))
-    # names0 = element_names_list[0]
-    all_names = np.hstack(element_names_list[0])
-    uall_names = np.unique(all_names)
-
-    removed_names = np.setdiff1d(uall_names, names_to_keep_list)
-    names_to_keep = np.setdiff1d(uall_names, removed_names)
+    # 2. get the list of results that are used (in any table)
+    names_to_keep = [name for name in names_to_keep_list
+                     if any((names == name).any() for names in element_names_list)]
 
     # nodes = np.unique(node_element_out[:, :, 0])
     # nnode = len(nodes)
@@ -2781,6 +2814,7 @@ def stack_different_shapes_combo(
     assert len(nodes) > 0, nodes
     nnode = itotal.sum()
     assert len(nodes) == nnode
+    inodes_sort = np.argsort(nodes)  # nodes are in file order, not necessarily sorted
 
     node_element_list1 = []
     element_names_list1 = []
@@ -2800,13 +2834,8 @@ def stack_different_shapes_combo(
     for itime, element_names, node_element, data in zip(
             count(), element_names_list, node_element_list, data_list):
 
-        # 3. pull out all the elements and totals
-        istored_list = []
-        for name in removed_names:  # CQUADs
-            # put CQUAD4s in correct spot (it's unsorted, but fine)
-            iname = np.where(element_names == name)[0]
-            istored_list.append(iname)
-        istored = np.hstack(istored_list)
+        # 3. pull out all the elements and totals (in file order)
+        istored = np.where(~np.isin(element_names, names_to_keep_list))[0]
 
         node_element_list1.append(node_element[istored, :])
         element_names_list1.append(element_names[istored])
@@ -2820,14 +2849,13 @@ def stack_different_shapes_combo(
         data_stack_list = []
         for name in names_to_keep:
             log.info(f'working on name={str(name)!r}')
-            iname = (element_names == name)
-            assert iname.sum() > 0, iname.sum()
+            iname = (element_names == name)  # may be empty for this table
 
             node_elementi = node_element[iname, :]
             nodei = node_elementi[:, 0]
             log.debug(f'  nodes = {nodes}')
             log.debug(f'  nodei = {nodei}')
-            idata = np.searchsorted(nodes, nodei)
+            idata = inodes_sort[np.searchsorted(nodes, nodei, sorter=inodes_sort)]
             log.debug(f'  idata = {idata}')
             element_names_out_namei = np.full(nnode, name, dtype='U8')
             element_names_outi = np.full(nnode, '', dtype='U8')
@@ -2854,9 +2882,10 @@ def stack_different_shapes_combo(
         assert data_stack.ndim == 2, data_stack.shape
 
         nnodes2 = len(element_names_stack)
-        assert element_names_stack.shape == (nnodes2,), (element_names_stack, element_names2.shape)  # the times
-        assert node_element_stack.shape == (nnodes2, 2), (node_element_stack.shape, (ntimes, nnodes2, 2))  # the times
-        assert data_stack.shape == (nnodes2, 6), (data_stack.shape, (nnodes2, 6))  # the times
+        # the times
+        assert element_names_stack.shape == (nnodes2,), element_names_stack
+        assert node_element_stack.shape == (nnodes2, 2), (node_element_stack.shape, (ntimes, nnodes2, 2))
+        assert data_stack.shape == (nnodes2, 6), (data_stack.shape, (nnodes2, 6))
 
         node_element_list2.append(node_element_stack)
         element_names_list2.append(element_names_stack)
@@ -2876,14 +2905,16 @@ def stack_different_shapes_combo(
     assert data1.ndim == 3, data1.shape
 
     nnodes1 = element_names1.shape[1]
-    assert element_names1.shape == (ntimes, nnodes1), (element_names1, element_names1.shape)  # the times
-    assert node_element1.shape == (ntimes, nnodes1, 2), (node_element1.shape, (ntimes, nnodes1, 2))  # the times
-    assert data1.shape == (ntimes, nnodes1, 6), data2.shape  # the times
+
+    # the times
+    assert element_names1.shape == (ntimes, nnodes1), (element_names1, element_names1.shape)
+    assert node_element1.shape == (ntimes, nnodes1, 2), (node_element1.shape, (ntimes, nnodes1, 2))
+    assert data1.shape == (ntimes, nnodes1, 6), data1.shape
 
     # these are oversized
     # print('stacking oversized')
     node_element2 = np.array(node_element_list2, dtype=node_element_dtype)
-    element_names2 = np.column_stack(element_names_list2)
+    element_names2 = np.array(element_names_list2, dtype='U8')
     element_names_full = np.array(element_names_list2_full, dtype='U8')
     data2 = np.array(data_list2, dtype=data_dtype)
 
@@ -2892,18 +2923,19 @@ def stack_different_shapes_combo(
     assert data2.ndim == 3, data2.shape
 
     nnodes2 = element_names2.shape[1]
-    assert element_names2.shape == (ntimes, nnodes2), (element_names2, element_names2.shape)  # the times
-    assert node_element2.shape == (ntimes, nnodes2, 2), (node_element2.shape, (ntimes, nnodes2, 2))  # the times
-    assert data2.shape == (ntimes, nnodes2, 6), data2.shape  # the times
+    # the times
+    assert element_names2.shape == (ntimes, nnodes2), (element_names2, element_names2.shape)
+    assert node_element2.shape == (ntimes, nnodes2, 2), (node_element2.shape, (ntimes, nnodes2, 2))
+    assert data2.shape == (ntimes, nnodes2, 6), data2.shape
 
     # 5. Are there any names across the element_names_out2 column?
     #    If there were, we have a node with an F-OF-SPC.
-    is_name = np.any(element_names2, axis=1)  # element_names is 2d
-    element_names2[is_name, :] = element_names_full[0, is_name]
+    is_name = np.any(element_names2 != '', axis=0)  # element_names2 is (ntimes, nnodes2)
+    element_names2[:, is_name] = element_names_full[0, is_name]
     # del element_names_full
 
     # 6. "save" the name across all columns
-    element_names2 = element_names2[is_name, :]
+    element_names2 = element_names2[:, is_name]
     node_element2 = node_element2[:, is_name, :]
     data2 = data2[:, is_name, :]
 
@@ -2923,13 +2955,16 @@ def stack_different_shapes_combo(
     assert element_names_out.ndim == 2, element_names_out.shape
     assert data_out.ndim == 3, data_out
 
-    # 7. We put the data in the wrong order, so use an
-    #    reversed sort of the elements fixes this because
-    #    we set the *TOTALS* flags to -1
-    node_element_out0 = node_element_out[0, :, :]
-    isort = np.argsort(node_element_out0[:, 1])[::-1]
-    # sort over the nodes
-    isort = np.argsort(node_element_out0[isort, 1])
+    # 7. We put the data in the wrong order, so sort like Nastran:
+    #    by node (in *TOTALS* order), then APP-LOAD, F-OF-SPC, F-OF-MPC,
+    #    elements (in file order), *TOTALS*
+    nids_out = node_element_out[0, :, 0]
+    inode = inodes_sort[np.searchsorted(nodes, nids_out, sorter=inodes_sort)]
+    names_out0 = np.char.strip(element_names_out[0, :])
+    rank = np.full(len(names_out0), 3)  # elements
+    for name, ranki in _GPFORCE_SOURCE_RANK.items():
+        rank[names_out0 == name] = ranki
+    isort = np.lexsort((np.arange(len(names_out0)), rank, inode))
 
     # 8. apply the sort
     element_names_out = element_names_out[:, isort]

@@ -7,11 +7,11 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import (
         PELAS, PELAST, PDAMP, PVISC,
         PROD, PTUBE,
-        PBUSH1D, PBAR,
+        PBUSH1D,
         PSHEAR, PSHELL, PCOMP)
     from pyNastran.dev.bdf_vectorized3.cards.elements.beam import PBEAM
     from pyNastran.dev.bdf_vectorized3.cards.elements.solid import PSOLID
-    from pyNastran.dev.bdf_vectorized3.cards.elements.bar import PBARL
+    from pyNastran.dev.bdf_vectorized3.cards.elements.bar import PBAR, PBARL
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
     from tables import Group
 

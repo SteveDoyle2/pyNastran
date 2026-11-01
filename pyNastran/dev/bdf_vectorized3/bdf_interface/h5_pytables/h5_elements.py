@@ -173,7 +173,11 @@ def load_h5_element(model: BDF, input_group: Group):
             continue
         elem.domain_id = data['DOMAIN_ID']
         elem.n = nelements
-        elem.write()
+        try:
+            elem.write()
+        except RuntimeError:
+            print(elem.get_stats())
+            raise
     return
     #for (element_name, h5_element) in input_group._v_children.items():
         #if element_name in {'RBE2', 'RBE3'}:
@@ -282,7 +286,7 @@ def _load_h5_cbar(elem: CBAR, data, element_id):
     offt = np.full(len(element_id), '', dtype='|U3')
     for uflag in np.unique(flag):
         iflag = (uflag == flag)
-        if flag == 1:
+        if np.all(flag == 1):
             offt[iflag] = 'GGG'
         else:  # pragma: no cover
             raise NotImplementedError(flag)

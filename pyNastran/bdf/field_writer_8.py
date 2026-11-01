@@ -70,7 +70,21 @@ def print_scientific_8(value: float) -> str:
 
     abs_val = abs(value)
     exponent = int(math.floor(math.log10(abs_val)))
-    mantissa = value / 10.0 ** exponent
+    try:
+        mantissa = value / 10.0 ** exponent
+    except FloatingPointError:
+        #
+        svalue = f'{value:8e}'
+        sfloat, sexp = svalue.split('e')
+        mantissa = float(sfloat)
+        # if exponent < 0:
+        #     # value2 = '4.940656e-324'
+        #     out = '      0.'
+        #     assert len(out) == 8, out
+        #     return out
+        # warnings.warn(f'value={value!r} abs_val={abs_val} exponenent={exponent} 10.0**exponent={10.0**exponent}')
+        # raise
+
     # Fix floating point edge case where mantissa rounds to 10
     if abs(mantissa) >= 9.9999999999:
         mantissa /= 10.0
@@ -308,7 +322,7 @@ def print_card_8(fields: list[int | float | str | None]) -> str:
         try:
             out += print_field_8(field)
         except Exception:
-            warnings.warn("bad fields = %s" % fields)
+            warnings.warn(f"bad field[{i}]={field} fields={fields}")
             raise
         if i % 8 == 0:  # allow 1+8 fields per line
             out = out.rstrip(' ')

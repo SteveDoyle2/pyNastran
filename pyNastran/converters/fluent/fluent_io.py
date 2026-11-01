@@ -7,7 +7,7 @@ import vtkmodules
 from pyNastran.gui.vtk_interface import vtkTriangle, vtkQuad
 
 from pyNastran.utils.convert import convert_pressure, convert_length
-from pyNastran.converters.fluent.fluent import read_fluent, Fluent
+from pyNastran.converters.fluent.fluent import read_fluent, Fluent, compute_cp_force_moment_coefficients
 from pyNastran.gui.gui_objects.gui_result import GuiResult, NormalResult
 from pyNastran.gui.utils.vtk.vtk_utils import (
     create_vtk_cells_of_constant_element_types, numpy_to_vtk_points)
@@ -197,93 +197,6 @@ class FluentIO:
         #log.debug(f'running _finish_results_io2')
         gui._finish_results_io2(model_name, form, cases)
         #log.info(f'finished')
-
-
-def compute_cp_force_moment_coefficients(
-        cp: np.ndarray, area: np.ndarray,
-        centroid: np.ndarray, normal: np.ndarray,
-        region: np.ndarray,
-        sref: float=1.0, cref: float=1.0, bref: float=1.0,
-        xyz_ref=None,
-        units_length_in: str='unitless',
-        units_length_out: str='in',
-        log_info=None) -> tuple[np.ndarray, np.ndarray,
-                                dict[int, tuple[np.ndarray, np.ndarray]]]:
-    """
-    Integrates the pressure coefficient into force/moment coefficients
-
-    force = q * Cp * A * n = q * sref * CF
-      CF = sum(Cp * A * n) / sref
-      CM = sum((r - xyz_ref) x (Cp * A * n)) / (sref * lref)
-      lref = [bref, cref, bref]  (roll, pitch, yaw)
-
-    Parameters
-    ----------
-    cp : (nelement,) float array
-        pressure coefficient
-    area : (nelement,) float array
-        element area in units_length_in^2
-    centroid : (nelement, 3) float array
-        element centroid in units_length_in
-    normal : (nelement, 3) float array
-        unit normal
-    region : (nelement,) int array
-        the region id
-    sref / cref / bref : float
-        reference area (units_length_out^2) / chord / span (units_length_out)
-    xyz_ref : (3,) float array; default=None -> [0., 0., 0.]
-        moment reference point in units_length_out
-    units_length_in : str
-        the model length unit (e.g., 'm'); 'unitless' means no scaling
-    units_length_out : str
-        the unit of sref/cref/bref/xyz_ref (e.g., 'in')
-
-    Returns
-    -------
-    cf_total : (3,) float array
-        CFx, CFy, CFz
-    cm_total : (3,) float array
-        CMx, CMy, CMz (CMy is the pitching moment)
-    region_dict : dict[region_id] = (cf_xyz, cm_xyz)
-
-    """
-    if xyz_ref is None:
-        xyz_ref = np.zeros(3, dtype='float64')
-    xyz_ref = np.asarray(xyz_ref, dtype='float64')
-    assert xyz_ref.shape == (3,), xyz_ref.shape
-    assert sref > 0. and cref > 0. and bref > 0., (sref, cref, bref)
-
-    # put the geometry in the same units as the reference quantities
-    centroid = np.asarray(centroid, dtype='float64')
-    area = np.asarray(area, dtype='float64')
-    if units_length_in not in {'', 'unitless'}:
-        centroid = convert_length(centroid, units_length_in, units_length_out)
-        length_factor = convert_length(1.0, units_length_in, units_length_out)
-        area = area * length_factor ** 2
-
-    lref = np.array([bref, cref, bref], dtype='float64')
-    cfs = (cp * area / sref)[:, np.newaxis] * normal
-    cms = np.cross(centroid - xyz_ref, cfs) / lref
-
-    cf_total = cfs.sum(axis=0)
-    cm_total = cms.sum(axis=0)
-    region_dict = {}
-    for regioni in np.unique(region):
-        iregion = np.where(region == regioni)[0]
-        cf_xyz = cfs[iregion, :].sum(axis=0)
-        cm_xyz = cms[iregion, :].sum(axis=0)
-        region_dict[regioni] = (cf_xyz, cm_xyz)
-
-    if log_info is not None:
-        units = '' if units_length_in in {'', 'unitless'} else units_length_out
-        area_units = f' {units}^2' if units else ''
-        length_units = f' {units}' if units else ''
-        log_info(f'Sref={sref}{area_units}; cref={cref}{length_units}; '
-                 f'bref={bref}{length_units}; xyz_ref={xyz_ref.tolist()}{length_units}')
-        log_info(f'total: CFxyz={cf_total} CMxyz={cm_total}')
-        for regioni, (cf_xyz, cm_xyz) in region_dict.items():
-            log_info(f'  region {regioni}: CFxyz={cf_xyz} CMxyz={cm_xyz}')
-    return cf_total, cm_total, region_dict
 
 
 def _create_elements(ugrid: vtkUnstructuredGrid,

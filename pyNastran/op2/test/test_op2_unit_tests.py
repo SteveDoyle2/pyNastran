@@ -2108,7 +2108,7 @@ class TestOP2Main(Tester):
         #print(op2.get_op2_stats())
         write_csv(op2, csv_filename)
 
-        exclude_results = ['modal_contribution.cquadr_composite_strain', 'grid_point_forces',
+        exclude_results = ['modal_contribution.cquadr_composite_strain', #'grid_point_forces',
                            'force*', 'load_vectors']
         op2b, unused_is_passed = run_op2(
             op2_filename, make_geom=False, write_bdf=False, read_bdf=False,

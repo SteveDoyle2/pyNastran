@@ -456,7 +456,21 @@ class BDFInputPy:
             try:
                 lines = bdf_file.readlines()
             except UnicodeDecodeError:
-                _show_bad_file(self, bdf_filename, encoding=self.encoding)
+                encodings = [self.encoding, 'utf8', 'latin1', 'cp1252']
+                found_encodings = []
+                for encoding in encodings:
+                    try:
+                        with open(bdf_filename, encoding=encoding) as bdf_file_temp:
+                            lines = bdf_file_temp.readlines()
+                    except UnicodeDecodeError:
+                        continue
+                    found_encodings.append(encoding)
+                if len(found_encodings) > 1:
+                    raise RuntimeError(f'encoding={self.encoding} and should be one of {found_encodings}')
+                elif len(found_encodings):
+                    _show_bad_file(self, bdf_filename, encoding=found_encodings[0])
+                else:
+                    raise RuntimeError(f'Invalid encoding={self.encoding!r}; could not determine encoding from [latin1, cp1252, utf8].')
         return lines
 
     def lines_to_deck_lines(self, lines: list[str]) -> tuple[list[str], np.ndarray]:

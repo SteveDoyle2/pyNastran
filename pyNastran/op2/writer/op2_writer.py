@@ -75,7 +75,7 @@ class OP2Writer(OP2_F06_Common):
         # might change this to the run date vs. the conversion date
         local_now = datetime.datetime.now().astimezone()
         offset_hours = local_now.utcoffset().total_seconds() / 3600
-        local_time_str = local_now.strftime("%a %b %d %H:%M:%S %Y") + ' (UTC%+d)' % offset_hours  #  (UTC-8)
+        local_time = local_now.strftime("%a %b %d %H:%M:%S %Y") + ' (UTC%+d)' % offset_hours  # (UTC-8)
 
         #print(utc_now.strftime("%a %b %d %H:%M:%S %Y (UTC-8)"))
         with File(h5_filename, 'w') as h5file:
@@ -85,10 +85,10 @@ class OP2Writer(OP2_F06_Common):
             h5file.set_node_attr(nastran_group, "IFPSTAR", 'YES')  # yes=strict parser
             h5file.set_node_attr(nastran_group, "INPUT", 'A1') # TODO: what is this???
             h5file.set_node_attr(nastran_group, "SOL", str(sol))
-            h5file.set_node_attr(nastran_group, "TIME", local_time_str)  # Tue Dec 29 13:07:22 2020 (UTC-8)
+            h5file.set_node_attr(nastran_group, "TIME", local_time)  # Tue Dec 29 13:07:22 2020 (UTC-8)
             h5file.set_node_attr(nastran_group, "VERSION", version)
             if include_geometry:
-            #     print(self)
+                # print(self)
                 if hasattr(self, 'writer'):
                     self.writer.write_h5(h5file, nastran_group)
                 else:

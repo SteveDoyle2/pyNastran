@@ -46,6 +46,8 @@ FT_INT_TO_NAME = {
     6: 'HTAP',  # secret MSC
     7: 'HFAB',  # secret MSC
 }
+FT_NAME_TO_INT = {ft: ft_int for ft_int, ft in FT_INT_TO_NAME.items()}
+SOUT_NAME_TO_INT = {'NO': 0, 'YES': 1}
 
 
 class CompositeShellProperty(Property):
@@ -1143,6 +1145,18 @@ class PCOMP(CompositeShellProperty):
             #self.thetas[i] = theta
             #self.souts[i] = sout
             #i += 1
+
+    @property
+    def ft_int(self) -> int:
+        return FT_NAME_TO_INT[self.ft]
+
+    @property
+    def sout_ints(self) -> list[int]:
+        sout_ints = []
+        for sout in self.souts:
+            sout_int = SOUT_NAME_TO_INT[sout]
+            sout_ints.append(sout_int)
+        return sout_ints
 
     def is_balanced_symmetric(self, debug=True):
         """assumes materials with different mids are unique"""

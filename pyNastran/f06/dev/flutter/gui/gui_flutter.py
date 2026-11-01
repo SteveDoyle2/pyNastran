@@ -1706,7 +1706,7 @@ class FlutterGui(LoggableGui):
                     show_detailed_mode_info=self.show_detailed_mode_info,
                     ncol=self.flutter_ncolumns,
                     divergence_legend_loc=self.divergence_legend_loc,
-                    flutter_bbox_to_anchor=(self.flutter_bbox_to_anchor_x, 1.),
+                    bbox_to_anchor=(self.flutter_bbox_to_anchor_x, 1.),
                 )
                 update_ylog_style(fig, log_scale_x, log_scale_y1, log_scale_y2)
                 fig.canvas.draw()

@@ -38,16 +38,16 @@ def delete_bad_shells(model: BDF,
     model : BDF ()
         this should be equivalenced
     min_theta : float; default=0.1
-        the maximum interior angle (degrees)
+        the minimum interior angle (degrees)
     max_theta : float; default=175.
         the maximum interior angle (degrees)
     max_skew : float; default=70.
         the maximum skew angle (degrees)
     max_aspect_ratio : float; default=100.
         the max aspect ratio
-    taper_ratio : float; default=4.0
+    max_taper_ratio : float; default=4.0
         the taper ratio; applies to CQUAD4s only
-    max_warping: float: default=20.0
+    max_warping: float: default=90.
         the maximum warp angle (degrees)
     """
     xyz_cid0 = model.get_xyz_in_coord(cid=0, fdtype='float32')
@@ -92,14 +92,14 @@ def get_bad_shells(model: BDF, xyz_cid0, nid_map,
         index : int
             the index of the node id in xyz_cid0
     min_theta : float; default=0.1
-        the maximum interior angle (degrees)
+        the minimum interior angle (degrees)
     max_theta : float; default=175.
         the maximum interior angle (degrees)
     max_skew : float; default=70.
         the maximum skew angle (degrees)
     max_aspect_ratio : float; default=100.
         the max aspect ratio
-    taper_ratio : float; default=4.0
+    max_taper_ratio : float; default=4.0
         the taper ratio; applies to CQUAD4s only
     max_warping: float: default=60.0
         the maximum warp angle (degrees)
