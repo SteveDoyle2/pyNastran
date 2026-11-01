@@ -8,8 +8,8 @@ from .utils import log_range
 
 def get_structural_eids_from_csv_load_id(structure_model: BDF,
                                          eids_structure: np.ndarray,
-                                         csv_filename: PathLike='',
-                                         load_id: int=0,
+                                         eid_csv_filename: PathLike='',
+                                         eid_load_id: int=0,
                                          idtype: str='int32') -> np.ndarray:
     """
     Parameters
@@ -18,9 +18,9 @@ def get_structural_eids_from_csv_load_id(structure_model: BDF,
         ???
     eids_structure : np.ndarray
         the direct method to specify eids
-    csv_filename : PathLike; default=''
-        ???
-    load_id : int; default=0
+    eid_csv_filename : PathLike; default=''
+        a csv of the element ids
+    eid_load_id : int; default=0
         -1: use all elements
         1+: grab the eids defined on the PLOAD, PLOAD2, or PLOAD4
     idtype : str; default='int32'
@@ -28,12 +28,14 @@ def get_structural_eids_from_csv_load_id(structure_model: BDF,
 
     Returns
     -------
+    structural_eids_out : int np.ndarray
+        the element ids
     """
     nelements = len(eids_structure)
     # one must be true
     is_nelements = (nelements > 0)
-    is_csv = len(csv_filename) > 0
-    is_load_id = (abs(load_id) > 0)
+    is_csv = len(eid_csv_filename) > 0
+    is_load_id = (abs(eid_load_id) > 0)
     # exclusive or / XOR
     is_passed = (is_nelements ^ is_csv) or (is_csv ^ is_load_id)
     if not is_passed:
@@ -44,17 +46,19 @@ def get_structural_eids_from_csv_load_id(structure_model: BDF,
 
     if nelements:
         structural_eids_out = eids_structure
-    elif csv_filename:
-        structural_eids_out = _load_structural_eids_from_csv(csv_filename, idtype=idtype)
+    elif eid_csv_filename:
+        structural_eids_out = _load_structural_eids_from_csv(
+            eid_csv_filename, idtype=idtype)
     elif load_id == -1:
         ids = list(structure_model.elements)
         structural_eids_out = np.array(ids, dtype=idtype)
         del ids
     elif load_id > 0:
         # load_id
-        structural_eids_out = get_element_ids_by_sid(structure_model, load_id, idtype=idtype)
+        structural_eids_out = get_element_ids_by_sid(
+            structure_model, eid_load_id, idtype=idtype)
     else:  # pragma: no cover
-        raise RuntimeError('failed to load eids')
+        raise RuntimeError('failed to load eids; use eids_structure, eid_csv_filename, eid_load_id')
     structural_eids_out.sort()
     return structural_eids_out
 

@@ -18,9 +18,9 @@ log messages and card comments.  So the rule is:
   +=====================+===============================================+
   | aero xyz (file)     | whatever the CFD wrote (e.g. m)               |
   | aero_xyz_scale      | CFD length -> structure length (m->in: 39.3701)|
-  | Cp                  | nondimensional; must be a TRUE Cp             |
+  | Cp                  | nondimensional; Cp=(p-pinf)/qinf              |
   | qinf                | structure pressure units (psi for in/lbf)     |
-  | sref                | structure length**2 (in^2)                    |
+  | sref                | structure length^2 (in^2)                     |
   | bref, cref          | structure length (in)                         |
   | reference_point     | structure length, basic coords (in)           |
   +---------------------+-----------------------------------------------+
@@ -187,15 +187,16 @@ def pressure_filename_to_fa2j(pressure_filename: PathLike,
     model.write_bdf(fa2j_filename)
 
 
-def pressure_filename_to_wkk_diag(cfd_force_moment_bdf_filename1: PathLike | np.ndarray,
-                                  cfd_force_moment_bdf_filename2: PathLike | np.ndarray,
-                                  nastran_f06_op2_force_moment1: PathLike | np.ndarray,
-                                  nastran_f06_op2_force_moment2: PathLike | np.ndarray,
-                                  wkk_filename: PathLike,
-                                  dtheta_deg: float=1.,
-                                  force_sid1: int=2, moment_sid1: int=3,
-                                  force_sid2: int=2, moment_sid2: int=3,
-                                  log: Optional[SimpleLogger]=None):
+def pressure_filename_to_wkk_diag(
+        cfd_force_moment_bdf_filename1: PathLike | np.ndarray,
+        cfd_force_moment_bdf_filename2: PathLike | np.ndarray,
+        nastran_f06_op2_force_moment1: PathLike | np.ndarray,
+        nastran_f06_op2_force_moment2: PathLike | np.ndarray,
+        wkk_filename: PathLike,
+        dtheta_deg: float=1.,
+        force_sid1: int=2, moment_sid1: int=3,
+        force_sid2: int=2, moment_sid2: int=3,
+        log: Optional[SimpleLogger]=None):
     """
     TODO: not done
 
@@ -265,13 +266,13 @@ def _get_force_moment(pressure_filename: PathLike | np.ndarray,
 
 def pressure_map(aero_filename: PathLike,
                  nastran_filename: PathLike | BDF,
-                 eids_structure=np.array([]),
                  is_obj: bool=False,
+                 eids_structure=np.array([]),
                  eid_csv_filename: PathLike='',
-                 eid_load_id: int=10,
+                 eid_load_id: int=0,
                  aero_format: str='cart3d',
                  map_type: str='pressure',
-                 method: str='full_model',
+                 method: str='full_model',  # full_model, panel_model, LCP
                  xyz_units_in: str='???',
                  xyz_units_out: str='???',
                  pressure_units: str='???',
@@ -284,13 +285,19 @@ def pressure_map(aero_filename: PathLike,
                  fdtype: str='float64',
                  pressure_filename: PathLike='pressure.bdf',
                  pressure_str: str='',
-                 flip_xy_Cp: bool=False,
-                 flip_xz_Cp: bool=False,
+                 flip_Cp_xy: bool=False,
+                 flip_Cp_xz: bool=False,
                  aero_xyz_scale: float=1.0,
                  qinf: float=1.0,
                  sref: float=1.0,
                  cref: float=1.0,
                  bref: float=1.0,
+                 # only used for LCP
+                 # {
+                 #   'fuse': {'regions': [11], 'nids': [1, 2, 3]},
+                 #   'wing': {'regions': [12], 'nids': [4, 5, 6]},
+                 # },
+                 load_control_nids: dict[str, dict[str, list[int]]] | None = None,
                  reference_point: np.ndarray | None=None,
                  regions_to_include=None,
                  regions_to_remove=None,
@@ -321,7 +328,7 @@ def pressure_map(aero_filename: PathLike,
         save/use the obj_filename that is determined from
         nastran_filename
     eid_csv_filename : PathLike
-        ???
+        a csv of element ids
     eids_structure : int np.ndarray
         the element ids to map
     eid_load_id: int; default=0
@@ -375,10 +382,10 @@ def pressure_map(aero_filename: PathLike,
           1000.      aero in m,  structure in mm
         Areas scale by aero_xyz_scale**2 automatically, since they are
         recomputed from the scaled xyz.
-    flip_xy_Cp: bool; False
-        flip the Cp to account for the normal
-    flip_xz_Cp: bool; False
-        flip the Cp to account for the normal
+    flip_Cp_xy: bool; False
+        flip the Cp to account for the normal; panel_model only (unused)
+    flip_Cp_xz: bool; False
+        flip the Cp to account for the normal; panel_model only (unused)
     pressure_sid : int; default=1
         the output pressure id
     force_sid : int; default=2
@@ -419,15 +426,21 @@ def pressure_map(aero_filename: PathLike,
         - different aero regions
 
     TODO: add support for excluding y/z pressure mapping
-    TODO: consider aero panel dihedral; need to reduce load by cos(theta); do a dot product
+    TODO: consider aero panel dihedral; need to reduce load by cos(theta); do a dot product?
     """
     # assert pressure_filename != 'pressure.bdf', pressure_filename
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
     assert map_type in {'pressure', 'force', 'force_moment'}, aero_format
+    assert method in ['full_model', 'panel_model', 'LCP'], method
     assert isinstance(qinf, float), qinf
     assert isinstance(sref, float), sref
     assert isinstance(bref, float), bref
     assert isinstance(cref, float), cref
+    if method == 'LCP':
+        if load_control_nids is None:
+            load_control_nids = {}  # total
+        assert isinstance(load_control_nids, dict), (method, load_control_nids)
+
     if regions_to_include is None:
         regions_to_include = []
     if regions_to_remove is None:
@@ -436,26 +449,16 @@ def pressure_map(aero_filename: PathLike,
         reference_point = np.zeros(3, dtype=fdtype)
 
     stop_on_failure = True
-    if isinstance(nastran_filename, BDF):
-        structure_model = nastran_filename
-        _check_model(structure_model)
-    else:
-        base, ext = os.path.splitext(nastran_filename)
-        obj_filename = base + '.obj'
-        if os.path.exists(obj_filename) and is_obj:
-            structure_model = BDF(log=log)
-            structure_model.bdf_filename = nastran_filename
-            structure_model.load(obj_filename)
-            _check_model(structure_model)
-        else:
-            structure_model = read_bdf(nastran_filename, punch=punch, xref=False, log=log)
-            _check_model(structure_model)
-            structure_model.save(obj_filename)
-        structure_model.cross_reference()
-    structure_eids = get_structural_eids_from_csv_load_id(
-        structure_model,
-        eids_structure, eid_csv_filename, eid_load_id,
-        idtype=idtype)
+    structure_model = _load_structure(
+        nastran_filename, punch, is_obj, method, log)
+
+    structure_eids = np.array([], dtype=idtype)
+    if method != 'LCP':
+        structure_eids = get_structural_eids_from_csv_load_id(
+            structure_model,
+            eids_structure, eid_csv_filename, eid_load_id,
+            idtype=idtype)
+
     aero_model, unused_variables = get_aero_model(
         aero_filename, aero_format,
         aero_xyz_scale=aero_xyz_scale,
@@ -483,7 +486,7 @@ def pressure_map(aero_filename: PathLike,
             regions_to_include=regions_to_include,
             regions_to_remove=regions_to_remove,
             pressure_sid=pressure_sid,
-            flip_xy_Cp=flip_xy_Cp, flip_xz_Cp=flip_xz_Cp,
+            flip_Cp_xy=flip_Cp_xy, flip_Cp_xz=flip_Cp_xz,
             force_sid=force_sid,
             moment_sid=moment_sid,
             cp_sid=cp_sid,
@@ -520,22 +523,83 @@ def pressure_map(aero_filename: PathLike,
             force_to_pressure_tol=force_to_pressure_tol,
             #idtype=idtype,
             fdtype=fdtype)
+
+    elif method == 'LCP':
+        pressure_model = pressure_map_to_lcp_model(
+            aero_model, structure_model, structure_eids,
+            reference_point,
+            load_control_nids,
+            #pressure_sid=pressure_sid,
+            force_sid=force_sid,
+            moment_sid=moment_sid,
+            #cp_sid=cp_sid,
+            #cp_signed_sid=cp_signed_sid,
+            #map_type=map_type,
+            qinf=qinf, pressure_units=pressure_units,
+            sref=sref, bref=bref, cref=cref,
+            regions_to_include=regions_to_include,
+            regions_to_remove=regions_to_remove,
+            xyz_units=xyz_units_out,
+            #idtype=idtype,
+            fdtype=fdtype)
     else:
         expected = ['panel_model', 'full_model']
         raise RuntimeError(f'method={method}; expected={list(expected)}')
 
-    _write_pressure_file(
-        pressure_model, pressure_filename, pressure_str,
-        nastran_filename, map_type,
-        cp_sid=cp_sid, pressure_sid=pressure_sid,
-        force_sid=force_sid, moment_sid=moment_sid, cp_signed_sid=cp_signed_sid)
+    assert method == 'LCP', method
+    if method == 'LCP':
+        _write_lcp_pressure_file(
+            pressure_model, pressure_filename, pressure_str,
+            nastran_filename, map_type, method,
+            cp_sid=cp_sid, pressure_sid=pressure_sid,
+            force_sid=force_sid, moment_sid=moment_sid, cp_signed_sid=cp_signed_sid)
+    else:
+        _write_pressure_file(
+            pressure_model, pressure_filename, pressure_str,
+            nastran_filename, map_type, method,
+            cp_sid=cp_sid, pressure_sid=pressure_sid,
+            force_sid=force_sid, moment_sid=moment_sid, cp_signed_sid=cp_signed_sid)
     return pressure_model
 
-def _check_model(structure_model: BDF) -> None:
+
+def _load_structure(nastran_filename: BDF | str,
+                    punch: bool,
+                    is_obj: bool,
+                    method: str,
+                    log: SimpleLogger) -> BDF:
+    if isinstance(nastran_filename, BDF):
+        structure_model = nastran_filename
+        _check_model(structure_model, method)
+    else:
+        base, ext = os.path.splitext(nastran_filename)
+        obj_filename = base + '.obj'
+        if os.path.exists(obj_filename) and is_obj:
+            structure_model = BDF(log=log)
+            structure_model.bdf_filename = nastran_filename
+            structure_model.load(obj_filename)
+            _check_model(structure_model, method)
+        else:
+            structure_model = read_bdf(nastran_filename, punch=punch, xref=False, log=log)
+            _check_model(structure_model, method)
+            structure_model.save(obj_filename)
+        structure_model.cross_reference()
+    return structure_model
+
+def _check_model(structure_model: BDF, method: str) -> None:
     nnodes = len(structure_model.nodes)
     nelements = len(structure_model.elements)
+    if method == 'LCP':
+        if nnodes > 0:
+            return
+        else:
+            msg = (
+                f'BDF file={structure_model.bdf_filename} must have nodes (n={nnodes})\n'
+                f'{structure_model.get_bdf_stats()}')
+            raise RuntimeError(msg)
+
     if nnodes > 0 and nelements > 0:
         return
+        
     msg = (
         f'BDF file={structure_model.bdf_filename} must have nodes (n={nnodes}) and elements (n={nelements})\n'
         f'{structure_model.get_bdf_stats()}')
@@ -546,6 +610,7 @@ def _write_pressure_file(model: BDF,
                          pressure_str: str,
                          aero_panel_bdf_filename: PathLike,
                          map_type: str,
+                         method: str,
                          pressure_sid: int=1,
                          force_sid: int=2,
                          moment_sid: int=3,
@@ -571,7 +636,20 @@ def _write_pressure_file(model: BDF,
     moments = []
     pressures = []
     write_header = True
-    if map_type == 'force_moment':
+    if method == 'LCP':
+        msg += (
+            'SUBCASE 2\n'
+            '  SUBTITLE = Force\n'
+            f'  LOAD = {force_sid}\n'
+            'SUBCASE 3\n'
+            '  SUBTITLE = Moment\n'
+            f'  LOAD = {moment_sid}\n'
+            )
+        forces: list[PLOAD2] = model.loads[force_sid]
+        moments: list[PLOAD2] = model.loads[moment_sid]
+        write_header = False
+
+    elif map_type == 'force_moment':
         msg += (
             'SUBCASE 1\n'
             '  SUBTITLE = Pressure\n'
@@ -630,12 +708,8 @@ def _write_pressure_file(model: BDF,
     # model.log.debug(f'base     = {base}')
 
     main_bdf_filename = os.path.join(dirname, f'main_{base}.bdf')
-    if isinstance(aero_panel_bdf_filename, PathLike):
-        rel_main_filename = os.path.relpath(aero_panel_bdf_filename, dirname)
-    elif isinstance(aero_panel_bdf_filename, BDF):
-        rel_main_filename = os.path.relpath(aero_panel_bdf_filename.bdf_filename, dirname)
-    else:
-        log.warning('cant write main pressure file because the wrong type was found...')
+    rel_main_filename = _get_rel_filename(
+        aero_panel_bdf_filename, dirname, base, log)
 
     msg += (
         'BEGIN BULK\n'
@@ -725,6 +799,136 @@ def _write_pressure_file(model: BDF,
     if len(forces) == 0 and len(pressures) == 0:  # pragma: no cover
         raise NotImplementedError(map_type)
 
+def _write_lcp_pressure_file(model: BDF,
+                             pressure_filename: PathLike,
+                             pressure_str: str,
+                             aero_panel_bdf_filename: PathLike,
+                             map_type: str,
+                             method: str,
+                             pressure_sid: int=1,
+                             force_sid: int=2,
+                             moment_sid: int=3,
+                             cp_sid: int=4,
+                             cp_signed_sid: int=5,
+                             idtype: str='int32') -> None:
+    if len(str(pressure_filename)) == 0:
+        print(f'skipping pressure_filename={pressure_filename}')
+        return
+    if pressure_str == '':
+        pressure_str = (
+            'SOL 101\n'
+            'CEND\n'
+            'ECHO = NONE\n'
+            'DISPLACEMENT(PLOT) = ALL\n'
+            'OLOAD(PLOT) = ALL\n'
+            'SPCFORCE(PLOT) = ALL\n'
+            'ESE(PLOT) = ALL\n'
+        )
+    msg = pressure_str
+    log = model.log
+    cp_signeds = []
+    forces = []
+    moments = []
+    pressures = []
+    write_header = True
+    assert method == 'LCP', method
+    msg += (
+        'SUBCASE 2\n'
+        '  SUBTITLE = Force\n'
+        f'  LOAD = {force_sid}\n'
+        'SUBCASE 3\n'
+        '  SUBTITLE = Moment\n'
+        f'  LOAD = {moment_sid}\n'
+        )
+    forces: list[PLOAD2] = model.loads[force_sid]
+    moments: list[PLOAD2] = model.loads[moment_sid]
+    write_header = False
+
+    dirname = os.path.dirname(pressure_filename)
+    base_ext = os.path.basename(pressure_filename)
+    base = os.path.splitext(base_ext)[0]
+    # model.log.debug(f'dirname  = {dirname}')
+    # model.log.debug(f'base_ext = {base_ext}')
+    # model.log.debug(f'base     = {base}')
+
+    main_bdf_filename = os.path.join(dirname, f'main_{base}.bdf')
+    rel_main_filename = _get_rel_filename(
+        aero_panel_bdf_filename, dirname, base, log)
+
+    msg += (
+        'BEGIN BULK\n'
+        'PARAM,INREL,-2\n'
+    )
+    msg += write_include(rel_main_filename)
+    msg += write_include(os.path.basename(pressure_filename))
+    msg += 'ENDDATA\n'
+
+    # print(msg)
+    log.debug(f'bdf_rel_main_filename = {rel_main_filename}')
+    log.debug(f'bdf_pressure_filename = {pressure_filename}')
+    log.debug(f'bdf_aero_panel_filename = {aero_panel_bdf_filename}')
+    log.debug(f'writing main_bdf_filename: {main_bdf_filename}')
+    with open(main_bdf_filename, 'w') as bdf_file:
+        bdf_file.write(msg)
+    level = log.level
+    log.level = 'info'
+    model.write_bdf(pressure_filename, write_header=write_header)
+    log.level = level
+
+    bdf_filename2 = pressure_filename
+    base = os.path.splitext(bdf_filename2)[0]
+    assert len(base) > 0, base
+
+    nid_list: list[int] = []
+    force_list: list[np.ndarray] = []
+    moment_list: list[np.ndarray] = []
+    for force_obj, moment_obj in zip(forces, moments):
+        fi = force_obj.scaled_vector
+        fnid = force_obj.node
+        mnid = moment_obj.node
+        assert fnid == mnid, (fnid, mnid)
+        mi = moment_obj.scaled_vector
+        nid_list.append(fnid)
+        force_list.append(fi)
+        moment_list.append(mi)
+
+    nids = np.array(nid_list, dtype=idtype)
+    force = np.array(force_list)
+    moment = np.array(moment_list)
+
+    force_moment_filename = base + '.force_moment.csv'
+    model.log.debug(f'writing csv: {str(force_moment_filename)}')
+    savetxt_nid_fm(
+        force_moment_filename,
+        nids, force, moment,
+        header='Node,Fx,Fy,Fz,Mx,My,Mz')
+    #np.savetxt(force_moment_filename, result, header='Node,Fx,Fy,Fz,Mx,My,Mz',
+    #           delimiter=',', fmt=['%d',
+    #                               '%.18e', '%.18e', '%.18e',
+    #                               '%.18e', '%.18e', '%.18e'])
+    return
+
+def savetxt_nid_fm(filename: PathLike, nids, force, moment, header=''):
+    with open(filename, 'w') as file_obj:
+        for nid, forcei, momenti in zip(nids, force, moment):
+            file_obj.write(f'{nid:d},{forcei[0]:18e},{forcei[1]:18e},{forcei[2]:18e},{momenti[0]:18e},{momenti[1]:18e},{momenti[2]:18e},\n')
+                
+def _get_rel_filename(
+        aero_panel_bdf_filename: PathLike | BDF,
+        dirname: PathLike,
+        base: str,
+        log: SimpleLogger) -> PathLike:
+    rel_main_filename = ''
+    if isinstance(aero_panel_bdf_filename, PathLike):
+        rel_main_filename = os.path.relpath(aero_panel_bdf_filename, dirname)
+    elif isinstance(aero_panel_bdf_filename, BDF):
+        pressure_filename_inc = aero_panel_bdf_filename.bdf_filename
+        if pressure_filename_inc is None:
+            raise TypeError('aero_panel_bdf_filename has not BDF().bdf_filename')
+        rel_main_filename = os.path.relpath(pressure_filename_inc, dirname)
+    else:
+        log.warning('cant write main pressure file because the wrong type was found...')
+    return rel_main_filename
 
 def _sum_pressure_force_moment(pressure: np.ndarray,
                                area: np.ndarray,
@@ -801,11 +1005,11 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
                                 structure_model: BDF,
                                 structure_eids: np.ndarray,
                                 reference_point: np.ndarray,
-                                structure_sid=0,
+                                #structure_sid=0,
                                 map_type: str='pressure',
                                 map_directions: str='yz',
-                                flip_xy_Cp: bool=False,
-                                flip_xz_Cp: bool=False,
+                                flip_Cp_xy: bool=False,
+                                flip_Cp_xz: bool=False,
                                 scale: float=1.0,
                                 qinf: float=1.0,
                                 pressure_sid: int=1,
@@ -828,10 +1032,10 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
      - 2d structure model panel model
 
     Handles:
-     - cruiciform fuselage/vtail
-     - standard wing/tail
+     - cruiciform (standard) fuselage, horizontal tail, vertical tail
+     - total or piece-part mapping
     Doesn't handle:
-     - vtail (should be possible by explicitly defining mapping directions)
+     - vtail: needs a mapping directions or rotation
     """
     aero_format = aero_model.__class__.__name__.lower()
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
@@ -969,7 +1173,7 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             aero_quad_nodes, aero_quad_area, aero_quad_cp, aero_quad_normal, aero_quad_centroid, aero_quad_force_coeff_per_q,
             structure_nodes, structure_xyz,
             structure_eids, structure_area, structure_centroid, iz_structure, z_structure_sign,
-            flip_Cp=flip_xy_Cp,
+            flip_Cp=flip_Cp_xy,
             qinf=qinf,
             pressure_sid=pressure_sid,
             force_sid=force_sid, moment_sid=moment_sid, cp_sid=cp_sid,
@@ -991,7 +1195,7 @@ def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
             aero_quad_nodes, aero_quad_area, aero_quad_cp, aero_quad_normal, aero_quad_centroid, aero_quad_force_coeff_per_q,
             structure_nodes, structure_xyz,
             structure_eids, structure_area, structure_centroid, iy_structure, y_structure_sign,
-            flip_Cp=flip_xz_Cp,
+            flip_Cp=flip_Cp_xz,
             qinf=qinf,
             pressure_sid=pressure_sid,
             force_sid=force_sid, moment_sid=moment_sid, cp_sid=cp_sid,
@@ -1061,6 +1265,12 @@ def _map_pressure_panel_model(structure_model: BDF,
                               bref: float=1.0,
                               cref: float=1.0,
                               ) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Parameters
+    ----------
+    flip_Cp : bool; default=False
+        flips the pressure on the panel model b/c ???; unused
+    """
     eids_z = structure_eids[iz_structure]
 
     fig = plt.figure()
@@ -2461,3 +2671,246 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     else:  # pragma: no cover
         raise RuntimeError(map_type)
     return bdf_model_out
+
+
+def pressure_map_to_lcp_model(aero_model: Cart3D | Tecplot,
+                              structure_model: BDF,
+                              structure_eids: np.ndarray,
+                              reference_point: np.ndarray,
+                              load_control_nids: dict[str, dict[str, list[int]]],
+                              #structure_sid=0,
+                              #map_type: str='force_moment',
+                              map_directions: str='yz',
+                              scale: float=1.0,
+                              qinf: float=1.0,
+                              #pressure_sid: int=1,
+                              force_sid: int=2,
+                              moment_sid: int=3,
+                              #cp_sid: int=4,
+                              #cp_signed_sid: int=5,
+                              sref: float=1.0,
+                              cref: float=1.0,
+                              bref: float=1.0,
+                              xyz_units: str='in',
+                              regions_to_include=None,
+                              regions_to_remove=None,
+                              pressure_units: str='',
+                              #idtype: str='int32',
+                              fdtype: str='float64') -> BDF:
+    """
+    Parameters
+    ----------
+    load_control_nids: dict[str, dict[str, list[int]]]
+        blocks out regions of the model
+        if None -> use all regions and all nodes
+        {
+          'fuse': {'regions': [11], 'nodes': [1, 2, 3]},
+          'wing': {'regions': [12], 'nodes': [4, 5, 6]},
+        }
+    """
+    aero_format = aero_model.__class__.__name__.lower()
+    map_type = 'force_moment'
+    assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
+    assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
+    assert map_type in {'force_moment'}, aero_format
+    assert isinstance(scale, float), scale
+    assert isinstance(qinf, float), qinf
+    if reference_point is None:
+        reference_point = np.zeros(3, dtype=fdtype)
+
+    map_location = 'node'
+    #stop_on_failure = True
+    log = aero_model.log
+
+    #---------------------------------------------------------------
+    aero_dict = get_aero_pressure_centroid(
+        aero_model, aero_format, map_type,
+        regions_to_include=regions_to_include,
+        regions_to_remove=regions_to_remove,
+    )
+    #aero_xyz_nodal = aero_dict['xyz_nodal']
+    # aero_Cp = aero_dict['Cp_centroid']
+    # aero_area = aero_dict['area']
+    # aero_centroid = aero_dict['centroid']
+    # aero_normal = aero_dict['normal']
+    aero_tri_region = aero_dict['tri_region']
+    aero_quad_region = aero_dict['quad_region']
+    aero_region = np.hstack([aero_tri_region, aero_quad_region])
+    uaero_region = np.unique(aero_region)
+
+    aero_xyz = aero_dict['xyz_nodal']
+    aero_node_id = aero_dict['node_id']
+
+    aero_tri_nodes = aero_dict['tri_nodes']
+    aero_tri_cp = aero_dict['tri_Cp_centroid']
+    aero_tri_area = aero_dict['tri_area']
+    aero_tri_centroid = aero_dict['tri_centroid']
+    aero_tri_normal = aero_dict['tri_normal']
+    aero_tri_region = aero_dict['tri_region']
+    if len(aero_tri_normal):
+        assert np.abs(aero_tri_normal).max() <= 1.001, (aero_tri_normal.min(), aero_tri_normal.max())
+
+    aero_quad_nodes = aero_dict['quad_nodes']
+    aero_quad_cp = aero_dict['quad_Cp_centroid']
+    aero_quad_area = aero_dict['quad_area']
+    aero_quad_centroid = aero_dict['quad_centroid']
+    aero_quad_normal = aero_dict['quad_normal']
+    aero_quad_region = aero_dict['quad_region']
+    nquad = len(aero_quad_area)
+    if nquad:
+        assert np.abs(aero_quad_normal).max() <= 1.001, (aero_quad_normal.min(), aero_quad_normal.max())
+
+    assert len(aero_tri_cp) == len(aero_tri_centroid), (len(aero_tri_cp), len(aero_tri_centroid))
+    aero_tri_dr = aero_tri_centroid - reference_point
+    aero_quad_dr = aero_quad_centroid - reference_point
+
+    # F/qinf per aero panel
+    #   Cp = p/qinf -> p = qinf*Cp*qinf
+    #   F = p*A*n = qinf*Cp*A*n
+    #   F/qinf = Cp*A*n
+    # afterwards we'll sum forces/moments and find Cp for each structural panel
+    #   Cp = sum_F/(qinf*A)
+    aero_tri_force_coeff_per_q = (aero_tri_cp * aero_tri_area)[:, np.newaxis] * aero_tri_normal
+    aero_quad_force_coeff_per_q = (aero_quad_cp * aero_quad_area)[:, np.newaxis] * aero_quad_normal
+
+    # M/qinf per panel
+    aero_tri_moment_coeff_per_q = np.cross(aero_tri_dr, aero_tri_force_coeff_per_q)
+    aero_quad_moment_coeff_per_q = np.cross(aero_quad_dr, aero_quad_force_coeff_per_q)
+
+    # Cp = (p-pinf)/qinf
+    # for qinf=0.
+    #    Cp = p/qinf; p=qinf*Cp
+    # Fi = pi * Ai * ni = qinf * Cpi * Ai * ni
+    # F = qinf * sum(Cpi * Ai * ni)
+    # CF = F/(qinf*sref) = 1/sref * sum(Cpi * Ai * ni)
+
+    # M = r x F
+    # assume Lref = cref
+    lref = np.array([bref, cref, bref])
+    log.info(f'bref={bref} cref={cref} -> Lref={lref.tolist()}')
+    log.info(f'reference_point ({xyz_units}) = {reference_point}')
+    # M = (xyz - xyz_ref) x F = dr x F = dr x qinf * sum(Cpi * Ai * ni)
+    # M/qinf = dr x sum(Cpi * Ai * ni)
+    # CM = M / (q*S*lref) = M / q * 1/(S*lref)
+    # CM = dr x sum(Cpi * Ai * ni) * 1/(S*lref) = aero_moment_coeff / (S*lref)
+    total_aero_force_coeff = (aero_tri_force_coeff_per_q.sum(axis=0) + aero_quad_force_coeff_per_q.sum(axis=0)) / sref
+    total_aero_moment_coeff = (aero_tri_moment_coeff_per_q.sum(axis=0) + aero_quad_moment_coeff_per_q.sum(axis=0)) / (sref * lref)
+    assert len(total_aero_force_coeff) == 3, total_aero_force_coeff
+    log.info(f'total_aero_force_coeff  = F/qS  = {total_aero_force_coeff}')
+    log.info(f'total_aero_moment_coeff = M/qSL = {total_aero_moment_coeff}')
+
+    nelements_structure = len(structure_eids)
+    log.info(f'nelements_structure = {nelements_structure}')
+    log = structure_model.log
+    structure_nodes, structure_xyz = get_structure_xyz(structure_model, xyz_units=xyz_units)
+
+    bdf_model_out = BDF(log=structure_model.log)
+
+    load_control_nids = _simplify_load_control_nids(
+        load_control_nids, uaero_region, structure_nodes)
+
+    for group_name, group in load_control_nids.items():
+        aero_regionsi = group['regions']
+        structure_nidsi = group['nodes']
+        istructure_nidsi = np.searchsorted(structure_nodes, structure_nidsi)
+        structure_xyzi = structure_xyz[istructure_nidsi, :]
+        nnode = len(structure_nidsi)
+
+        iregion_tri_list = []
+        iregion_quad_list = []
+        for region in aero_region:
+            itri = np.where(aero_tri_region == region)[0]
+            iquad = np.where(aero_quad_region == region)[0]
+            iregion_tri_list.append(itri)
+            iregion_quad_list.append(iquad)
+        itri = np.hstack(iregion_tri_list)
+        iquad = np.hstack(iregion_quad_list)
+
+        local_aero_tri_centroid = aero_tri_centroid[itri, :]
+        local_aero_tri_force = aero_tri_force_coeff_per_q[itri, :]
+        #local_aero_tri_moment = aero_tri_moment_coeff_per_q[itri, :]
+
+        local_aero_quad_centroid = aero_quad_centroid[iquad, :]
+        local_aero_quad_force = aero_quad_force_coeff_per_q[iquad, :]
+        #local_aero_quad_moment = aero_quad_moment_coeff_per_q[iquad, :]
+        
+        local_aero_centroid = np.vstack([local_aero_tri_centroid, local_aero_quad_centroid])
+        local_aero_force = np.vstack([local_aero_tri_force, local_aero_quad_force])
+        #local_aero_moment = np.vstack([local_aero_tri_moment, local_aero_quad_moment])
+
+        # get closest structure node for each aero centroid
+        nnodes_structure = len(structure_xyz)
+        tree = _get_tree(structure_xyz)
+        deq, ieq = tree.query(local_aero_centroid, k=1)
+        slots = np.where(ieq < nnodes_structure)
+        istructure = ieq[slots]
+        mapped_structure_nids = structure_nidsi[istructure]
+        istructure = np.searchsorted(structure_nodes, mapped_structure_nids)
+
+        node_force_out = np.zeros((nnode, 3), dtype=local_aero_force.dtype)
+        np.add.at(node_force_out, istructure, local_aero_force)
+
+        iloaded = np.unique(istructure)
+        nids = structure_nidsi[iloaded]
+        node_force = node_force_out[iloaded, :]
+
+        fcomment = f'Force; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
+        mcomment = f'Moment; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
+        for nid, xyz, force in zip(structure_nidsi, structure_xyzi, node_force):
+            assert len(force) == 3, force
+            moment = np.cross(xyz - reference_point, force)
+            fmag = np.linalg.norm(force)
+            mmag = np.linalg.norm(moment)
+            fmag = 1. if fmag == 0. else fmag
+            mmag = 1. if mmag == 0. else mmag
+            #if fmag > 0.0:
+            bdf_model_out.add_force(
+                force_sid, nid, fmag, force / fmag, cid=0, comment=fcomment)
+            fcomment = ''
+            #if mmag > 0.0:
+            bdf_model_out.add_moment(
+                moment_sid, nid, mmag, moment / mmag, cid=0, comment=mcomment)
+            mcomment = ''
+    #cc = model.case_control_deck
+    #subcase = cc.add_subcase(1)
+    #subcase.add_str
+    #if check_force_moment:
+    #    force, moment = sum_force_moment(bdf_model_out)
+    return bdf_model_out
+
+def _simplify_load_control_nids(
+        load_control_nids: dict[str, dict[str, list[int]]],
+        uaero_region: np.ndarray,
+        structure_nodes: np.ndarray) -> dict[str, dict[str, np.ndarray]]:
+    """remove missing nodes/regions and throw a warning"""
+    if len(load_control_nids) == 0:
+        load_control_nids2 = {'total': {
+            'regions': uaero_region, 'nodes': structure_nodes}, }
+        return load_control_nids2
+
+    load_control_nids2 = {}
+    for group_name, group in load_control_nids.items():
+        aero_regionsi = group['regions']
+        structure_nidsi = group['nodes']
+        assert len(aero_regions), aero_regions
+        assert len(structure_nidsi), structure_nidsi
+
+        missing_regions = np.setdiff1d(aero_regionsi, uaero_region)
+        if len(missing_regions):
+            nmissing = len(missing_regions)
+            log.warning(f'LCP group={group_name!r} has {nmissing} missing regions; {missing_regions}')
+        aero_regionsi = np.intersection(aero_regionsi, uaero_region)
+
+        missing_nodes = np.setdiff1d(structure_nidsi, structure_nodes)
+        if len(missing_nodes):
+            nmissing = len(missing_nodes)
+            log.warning(f'LCP group={group_name!r} has {nmissing} missing nodes; {missing_nodes}')
+        structure_nidsi = np.intersection(structure_nidsi, structure_nodes)
+
+        assert len(aero_regionsi), (group_name, aero_regionsi)
+        assert len(structure_nidsi), (group_name, structure_nidsi)
+
+        load_control_nids2[group_name] = {
+            'regions': aero_regionsi, 'nodes': structure_nidsi}
+    return load_control_nids2
+

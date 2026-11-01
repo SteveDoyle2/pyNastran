@@ -221,11 +221,14 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
     aero_format = aero_format.lower()
     assert map_type in {'pressure', 'force', 'force_moment'}, aero_format
 
+    tri_region = np.array([], dtype=idtype)
+
     quad_nodes = np.zeros((0, 4), dtype=idtype)
     quad_area = np.array([], dtype=fdtype)
     quad_centroid = np.zeros((0, 3), dtype=fdtype)
     quad_normal = np.zeros((0, 3), dtype=fdtype)
     quad_Cp_centroid = np.array([], dtype=fdtype)
+    quad_region = np.array([], dtype=idtype)
     if aero_format == 'cart3d':
         aero_model = cast(Cart3D, aero_model)
         tri_nodes = aero_model.elements
@@ -261,9 +264,11 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         element_id, tris, quads, quad_results, tri_results = filter_by_region(
             aero_model, regions_to_remove, regions_to_include)
         tri_eids = tris[:, 0]
-        quad_eids = quads[:, 0]
-
+        tri_region = tris[:, 1]
         tri_nodes = tris[:, 2:]
+
+        quad_eids = quads[:, 0]
+        quad_region = quads[:, 1]
         quad_nodes = quads[:, 2:]
 
         assert len(tri_results) == len(tri_nodes), (len(tri_results), len(tri_nodes))
@@ -326,6 +331,7 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
     assert len(tri_centroid) == ntri, (len(tri_centroid), ntri)
     assert len(tri_normal) == ntri, (len(tri_normal), ntri)
     assert len(tri_Cp_centroid) == ntri, (len(tri_Cp_centroid), ntri)
+    assert len(tri_region) == ntri, (len(tri_region), ntri)
 
     if ntri:
         assert np.abs(tri_normal).max() <= 1.001, (tri_normal.min(), tri_normal.max())
@@ -345,12 +351,14 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
         'tri_area': tri_area,
         'tri_Cp_centroid': tri_Cp_centroid,
         'tri_normal': tri_normal,
+        'tri_region': tri_region,
 
         'quad_nodes': quad_nodes,
         'quad_centroid': quad_centroid,
         'quad_area': quad_area,
         'quad_Cp_centroid': quad_Cp_centroid,
         'quad_normal': quad_normal,
+        'quad_region': quad_region,
     }
     # aero_Cp_centroidal = out_dict['aero_Cp_centroidal']
     # aero_area = out_dict['aero_area']

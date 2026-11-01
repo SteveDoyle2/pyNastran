@@ -50,6 +50,8 @@ class TestPressureMap(unittest.TestCase):
         neids = len(aero_model.elements)
         eids = np.arange(neids)
         cp = np.sin(eids/neids)
+        aero_model.quads[:, 1] = 1
+        aero_model.tris[:, 1] = 2
         aero_model.loads['Cp'] = cp
 
         pressure_map(
@@ -200,7 +202,7 @@ class TestPressureMap(unittest.TestCase):
         #     map_type, variable='Cp',
         #     regions_to_include=None,
         #     regions_to_remove=None)
-        log.info('running 1st prssure map')
+        log.info('running 1st pressure map')
         # log.level = 'debug'
         pressure_map(
             aero_model, #cart3d_filename,
@@ -225,7 +227,7 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None,
             log=log)
 
-        log.info('running 2nd prssure map')
+        log.info('running 2nd pressure map')
         pressure_map(
             aero_model, #cart3d_filename,
             caero_bdf_filename,
@@ -249,7 +251,7 @@ class TestPressureMap(unittest.TestCase):
             regions_to_remove=None,
             log=log)
 
-        log.info('running 3rd prssure map (force -> pressure)')
+        log.info('running 3rd pressure map (force -> pressure)')
         pressure_filename = DIRNAME / 'fluent_force_pressure_fullmodel_3.bdf'
         pressure_model = pressure_map(
             aero_model,
@@ -272,6 +274,54 @@ class TestPressureMap(unittest.TestCase):
         if 'FORCE' in load_types:
             self.assertTrue(pressure_filename.with_suffix('.force.csv').exists())
 
+    def test_fluent_lcp(self):
+        bwb_dirname = MODEL_DIR / 'bwb'
+        aero_format = 'fluent'
+        log = SimpleLogger(level='warning')
+        #bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
+
+        vrt_filename = bwb_dirname / 'bwb-saero.vrt'
+        aero_model, variables = get_aero_model(
+            vrt_filename, aero_format,
+                   aero_xyz_scale=1.0,
+                   xyz_units_out='in',
+                   stop_on_failure=True, log=log)
+        aero_model.titles = aero_model.titles.tolist()
+
+        from pyNastran.utils import object_stats
+        #print(object_stats(aero_model))
+        neid = len(aero_model.results)
+        eids = np.arange(neid)
+        cp = np.sin(eids/neid)
+        aero_model.results[:, -1] = cp
+        aero_model.titles[-1] = 'Pressure Coefficient'
+
+        #model = read_bdf(bdf_filename)
+        #nid0 = max(model.nodes) + 1
+        model = BDF(log=log)
+        model.bdf_filename = bwb_dirname / 'bwb_lcp_nodes.bdf'
+        nid0 = 1
+        x = np.linspace(0., 1000., num=21)
+        for inid, xi in enumerate(x):
+            nid = nid0 + inid
+            model.add_grid(nid, [xi, 0., 0.])
+
+        log.info('running LCP / force_moment map')
+        pressure_filename = bwb_dirname / 'fluent_LCP.bdf'
+        pressure_model = pressure_map(
+            aero_model,
+            model,
+            eid_load_id=-1,
+            aero_format='fluent',
+            map_type='force_moment',
+            method='LCP',
+            xyz_units_out='in',
+            pressure_units='psi',
+            force_sid=2,
+            moment_sid=3,
+            pressure_filename=pressure_filename,
+            aero_xyz_scale=1.0, qinf=1.0,
+            log=log)
 
 def _empty_quad_arrays():
     """Return empty aero quad arrays (area, Cp, normal, centroid, force/q)."""
