@@ -232,6 +232,7 @@ def get_aero_pressure_centroid(aero_model: Cart3D | Tecplot | Fluent,
     if aero_format == 'cart3d':
         aero_model = cast(Cart3D, aero_model)
         tri_nodes = aero_model.elements
+        tri_region = aero_model.regions
         xyz_nodal = aero_model.nodes
         node_id = np.arange(len(aero_model.nodes), dtype=idtype)
         ntri = len(tri_nodes)

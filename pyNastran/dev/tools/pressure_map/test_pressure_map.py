@@ -864,6 +864,7 @@ def _two_tri_cart3d(log: SimpleLogger, xyz_scale: float=1.0) -> Cart3D:
         [3.5, 0.5, 1.5],
         [2.5, 1.5, 0.5],
     ])
+    model.regions = np.array([1, 1], dtype='int32')
     model.elements = np.array([[0, 1, 2],
                                [1, 3, 4]], dtype='int32')
     model.loads = {'Cp': np.array([1.0, 2.0])}
@@ -1082,6 +1083,7 @@ def _skin_fin_cart3d(log: SimpleLogger) -> Cart3D:
         [1., 0.5, 0.1], [3., 0.5, 0.1], [1., 1.5, 0.1],
         [10., 0.5, 0.5], [10., 0.5, 1.5], [10., 1.5, 0.5],
     ])
+    model.regions = np.ones(2, dtype='int32')
     model.elements = np.array([[0, 1, 2],
                                [3, 4, 5]], dtype='int32')
     model.loads = {'Cp': np.array([1.0, 2.0])}
@@ -1321,8 +1323,10 @@ class TestFullModelForce(unittest.TestCase):
                 n1 = i * (ny + 1) + j
                 n2 = n1 + (ny + 1)
                 tris.extend([(n1, n2, n2 + 1), (n1, n2 + 1, n1 + 1)])
+        ntri = len(tris)
         aero_model = Cart3D(log=log)
         aero_model.points = points
+        aero_model.regions = np.ones(ntri, dtype='int32')
         aero_model.elements = np.array(tris, dtype='int32')
         aero_model.loads = {'Cp': np.ones(len(tris))}
 
