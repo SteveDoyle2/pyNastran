@@ -126,6 +126,75 @@ closed CFD OML mapped onto a Nastran shell model, expect these deltas:
    mounts).  This is wrong and must be avoided by excluding those
    elements from eids_structure; it is a separate issue from the
    balance mismatch above.
+
+LCP: aero panels -> load collection points (nodes)
+..................................................
+method='LCP' lumps every aero tri/quad onto the nearest load collection
+point (LCP).  An LCP is just a GRID; the structure model only needs
+nodes (no elements, no eids_structure / eid_load_id).  A typical use is
+a line of nodes along a beam/stick model (e.g. a fuselage or wing
+reference axis).
+
+For each aero element i, with centroid c_i and force F_i = qinf*Cp_i*A_i*n_i
+(a full 3-D vector, so drag is kept), the nearest node k gets::
+
+    F_k = sum_i F_i                      -> FORCE  card under force_sid
+    M_k = sum_i (c_i - x_k) x F_i        -> MOMENT card under moment_sid
+
+M_k is the transfer moment from the aero centroids to the node, not the
+moment about reference_point.  FORCE + MOMENT together reproduce the aero
+force and the aero moment about ANY point exactly.  map_type is ignored
+(LCP is always force_moment).
+
+Components (load_control_nids)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+By default (load_control_nids=None or {}) there is one group, 'total':
+all aero regions go to all nodes.  To sum by component, pass groups of
+aero regions and the nodes they may load::
+
+    load_control_nids = {
+        'fuse': {'regions': [11],     'nodes': fuse_axis_nids},
+        'wing': {'regions': [12, 13], 'nodes': wing_axis_nids},
+        'tail': {'regions': [14],     'nodes': tail_axis_nids},
+    }
+
+Each group maps only its own aero regions onto only its own nodes.
+That's the same as calling pressure_map once per component (with the
+aero model and node set cut by hand), but in one call and one deck.
+Notes:
+
+ - Region/node ids that aren't in the models are dropped with a warning.
+   A group with nothing left raises a ValueError.
+ - An aero region in no group is NOT mapped (warning).  An aero region in
+   more than one group is mapped once per group (warning).
+ - A node may be in several groups.  It then gets one FORCE/MOMENT card
+   per group (Nastran sums them).
+ - One force/moment balance is logged per group, against that group's
+   aero panels: "Force/Moment Balance: Aero vs Mapped Structure
+   (LCP; group=NAME)".  Struct and aero agree exactly; a mismatch is a
+   bug.
+
+Output files (pressure_filename='lcp.bdf')
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+ - lcp.bdf: FORCE (force_sid) and MOMENT (moment_sid) cards
+ - main_lcp.bdf: SOL 101 deck that INCLUDEs the structure
+   (nastran_filename / BDF.bdf_filename) and lcp.bdf.  SUBCASE 2 is the
+   force and SUBCASE 3 is the moment; they're separate loads, so combine
+   them (e.g. a LOAD card) to apply the full aero load.
+ - lcp.force_moment.csv: one row per card pair:
+   ``nid,Fx,Fy,Fz,Mx,My,Mz,`` (no header, trailing comma)
+
+Example::
+
+    pressure_map(
+        aero_model, lcp_model,          # lcp_model: BDF with GRIDs only
+        aero_format='fluent',
+        method='LCP',
+        load_control_nids=load_control_nids,   # or None for 'total'
+        qinf=21.79, reference_point=np.array([807., 0., 0.]),
+        xyz_units_in='in', xyz_units_out='in', pressure_units='psi',
+        force_sid=2, moment_sid=3,
+        pressure_filename='lcp.bdf')
 """
 from __future__ import annotations
 import os
@@ -295,8 +364,8 @@ def pressure_map(aero_filename: PathLike,
                  bref: float=1.0,
                  # only used for LCP
                  # {
-                 #   'fuse': {'regions': [11], 'nids': [1, 2, 3]},
-                 #   'wing': {'regions': [12], 'nids': [4, 5, 6]},
+                 #   'fuse': {'regions': [11], 'nodes': [1, 2, 3]},
+                 #   'wing': {'regions': [12], 'nodes': [4, 5, 6]},
                  # },
                  load_control_nids: dict[str, dict[str, list[int]]] | None = None,
                  reference_point: np.ndarray | None=None,
@@ -345,9 +414,16 @@ def pressure_map(aero_filename: PathLike,
     aero_format: str
         cart3d, fluent
     map_type: str
-        pressure, force, force_moment
+        pressure, force, force_moment (ignored for method='LCP')
     method : str
-        full_model, panel_model
+        full_model, panel_model, LCP
+        LCP: lump each aero element onto the nearest node (FORCE +
+        transfer MOMENT); see the module docstring "LCP" section
+    load_control_nids : dict | None; default=None
+        method='LCP' only.  None/{} -> one 'total' group (all aero
+        regions -> all nodes).  Otherwise per-component groups:
+        {'wing': {'regions': [12], 'nodes': [4, 5, 6]}, ...}; each
+        group's regions are mapped only to that group's nodes.
     qinf : float; default=1.0
         dynamic pressure in the STRUCTURE's pressure units
         (psi for an in/lbf model; Pa for m/N; MPa for mm/N).
@@ -418,7 +494,10 @@ def pressure_map(aero_filename: PathLike,
     +-------------------+----------+-------+---------------+
     | panel_model       |   NOTE   | NOTE  |      x        |
     +-------------------+----------+-------+---------------+
+    | LCP               |          |       |      x        |
+    +-------------------+----------+-------+---------------+
     *NOTE: panel_model outputs pressure/force/moment as sid=1,2,3. Select what you want.
+    LCP writes FORCE (force_sid) + MOMENT (moment_sid) on GRIDs.
 
     TODO: Support vtail pressure box mapping:
       - requires:
@@ -2668,7 +2747,7 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
                               load_control_nids: dict[str, dict[str, list[int]]],
                               #structure_sid=0,
                               #map_type: str='force_moment',
-                              map_directions: str='yz',
+                              # map_directions: str='yz',
                               #scale: float=1.0,
                               qinf: float=1.0,
                               #pressure_sid: int=1,
@@ -2686,15 +2765,48 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
                               #idtype: str='int32',
                               fdtype: str='float64') -> BDF:
     """
+    Lumps each aero tri/quad onto the nearest load collection point (node).
+
+    Per group, each aero element force F_i = qinf*Cp_i*A_i*n_i goes to its
+    nearest group node k:
+      FORCE  (force_sid):  F_k = sum(F_i)
+      MOMENT (moment_sid): M_k = sum((c_i - x_k) x F_i)   (transfer moment)
+    so FORCE + MOMENT reproduce the aero F and M exactly.  Logs one
+    force/moment balance per group about reference_point.  See the module
+    docstring "LCP" section.
+
     Parameters
     ----------
+    aero_model : Cart3D | Fluent | Tecplot
+        already in structure units (see get_aero_model)
+    structure_model : BDF
+        only the GRIDs are used (no elements needed)
+    structure_eids : int ndarray
+        unused (LCP maps to nodes)
+    reference_point : (3,) float ndarray
+        moment reference for the logged balance only (structure units);
+        the cards don't depend on it
     load_control_nids: dict[str, dict[str, list[int]]]
-        blocks out regions of the model
-        if None -> use all regions and all nodes
+        per-component groups; {} -> one 'total' group with all aero
+        regions and all nodes.
         {
           'fuse': {'regions': [11], 'nodes': [1, 2, 3]},
           'wing': {'regions': [12], 'nodes': [4, 5, 6]},
         }
+        Each group maps only its regions onto only its nodes (same as
+        one pressure_map call per component).  See
+        _simplify_load_control_nids for the missing/unassigned/overlap
+        rules.
+    qinf : float
+        dynamic pressure in structure pressure units
+    sref, bref, cref : float
+        logged CF/CM only
+
+    Returns
+    -------
+    bdf_model_out : BDF
+        FORCE cards under force_sid and MOMENT cards under moment_sid;
+        one pair per loaded node per group
     """
     aero_format = aero_model.__class__.__name__.lower()
     map_type = 'force_moment'
@@ -2864,11 +2976,13 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
                 moment_sid, nid, mmag, moment / mmag, cid=0, comment=mcomment)
             mcomment = ''
 
-        total_aero_force_dim = total_aero_force_coeff * qinf * sref
-        total_aero_moment_dim = total_aero_moment_coeff * qinf * sref * lref
+        # this group's aero panels only (same as a separate pressure_map call)
+        group_aero_force = local_aero_force.sum(axis=0)
+        group_aero_moment = np.cross(
+            local_aero_centroid - reference_point, local_aero_force).sum(axis=0)
         _log_force_moment_balance(
-            log, 'Force/Moment Balance: Aero vs Mapped Structure (LCP)',
-            total_aero_force_dim, total_aero_moment_dim,
+            log, f'Force/Moment Balance: Aero vs Mapped Structure (LCP; group={group_name})',
+            group_aero_force, group_aero_moment,
             total_structure_force, total_structure_moment,
             reference_point, qinf, sref, bref, cref,
             xyz_units=xyz_units, pressure_units=pressure_units)
@@ -2886,7 +3000,24 @@ def _simplify_load_control_nids(
         uaero_region: np.ndarray,
         structure_nodes: np.ndarray,
         log: SimpleLogger) -> dict[str, dict[str, np.ndarray]]:
-    """remove missing nodes/regions and throw a warning"""
+    """
+    Cleans up the LCP groups (e.g., wing/fuselage/tail).
+
+    Each group is mapped independently: the aero panels in its regions
+    go to the nearest of its nodes.  It's the same as calling
+    pressure_map once per group.
+
+    - {} -> one 'total' group with all aero regions and all nodes
+    - regions/nodes not in the models are dropped with a warning
+    - a group left with no regions or no nodes raises
+    - aero regions in no group (their load is dropped) or in more than
+      one group (their load is counted more than once) get a warning
+
+    Returns
+    -------
+    {group_name: {'regions': (n,) int ndarray, 'nodes': (m,) int ndarray}}
+        sorted, unique ids
+    """
     assert len(uaero_region), uaero_region
     if len(load_control_nids) == 0:
         load_control_nids2 = {'total': {
@@ -2895,27 +3026,41 @@ def _simplify_load_control_nids(
 
     load_control_nids2 = {}
     for group_name, group in load_control_nids.items():
-        aero_regionsi = group['regions']
-        structure_nidsi = group['nodes']
-        assert len(aero_regionsi), aero_regionsi
-        assert len(structure_nidsi), structure_nidsi
+        aero_regionsi = np.unique(np.asarray(group['regions'], dtype=uaero_region.dtype))
+        structure_nidsi = np.unique(np.asarray(group['nodes'], dtype=structure_nodes.dtype))
+        if len(aero_regionsi) == 0:
+            raise ValueError(f'LCP group={group_name!r} has no regions')
+        if len(structure_nidsi) == 0:
+            raise ValueError(f'LCP group={group_name!r} has no nodes')
 
         missing_regions = np.setdiff1d(aero_regionsi, uaero_region)
         if len(missing_regions):
             nmissing = len(missing_regions)
             log.warning(f'LCP group={group_name!r} has {nmissing} missing regions; {missing_regions}')
-        aero_regionsi = np.intersection(aero_regionsi, uaero_region)
+        aero_regionsi = np.intersect1d(aero_regionsi, uaero_region)
 
         missing_nodes = np.setdiff1d(structure_nidsi, structure_nodes)
         if len(missing_nodes):
             nmissing = len(missing_nodes)
             log.warning(f'LCP group={group_name!r} has {nmissing} missing nodes; {missing_nodes}')
-        structure_nidsi = np.intersection(structure_nidsi, structure_nodes)
+        structure_nidsi = np.intersect1d(structure_nidsi, structure_nodes)
 
-        assert len(aero_regionsi), (group_name, aero_regionsi)
-        assert len(structure_nidsi), (group_name, structure_nidsi)
+        if len(aero_regionsi) == 0:
+            raise ValueError(f'LCP group={group_name!r} has no aero regions in the aero model; '
+                             f'aero regions={uaero_region}')
+        if len(structure_nidsi) == 0:
+            raise ValueError(f'LCP group={group_name!r} has no nodes in the structure model')
 
         load_control_nids2[group_name] = {
             'regions': aero_regionsi, 'nodes': structure_nidsi}
+
+    all_group_regions = np.hstack([group['regions'] for group in load_control_nids2.values()])
+    uregions, counts = np.unique(all_group_regions, return_counts=True)
+    unassigned = np.setdiff1d(uaero_region, uregions)
+    if len(unassigned):
+        log.warning(f'LCP aero regions={unassigned} are not in any group; their load is not mapped')
+    multiple = uregions[counts > 1]
+    if len(multiple):
+        log.warning(f'LCP aero regions={multiple} are in more than one group; their load is mapped more than once')
     return load_control_nids2
 

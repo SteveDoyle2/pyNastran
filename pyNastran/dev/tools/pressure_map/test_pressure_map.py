@@ -1508,7 +1508,8 @@ class TestAeroXyzScale(unittest.TestCase):
             self.assertAlmostEqual(values_m[sid], value, places=8, msg=f'sid={sid}')
 
 
-BALANCE_LCP = 'Force/Moment Balance: Aero vs Mapped Structure (LCP)'
+BALANCE_LCP_GROUP = 'Force/Moment Balance: Aero vs Mapped Structure (LCP; group={})'
+BALANCE_LCP = BALANCE_LCP_GROUP.format('total')
 
 
 def _lcp_structure(log: SimpleLogger,
@@ -1546,6 +1547,29 @@ class TestLCP(unittest.TestCase):
         text = '\n'.join(msgs)
         self.assertEqual(text.count(BALANCE_LCP), 1)
         return out_model, _parse_balance(msgs, BALANCE_LCP)
+
+    def _map_groups(self, structure_model, aero_model, load_control_nids):
+        """
+        Returns
+        -------
+        out_model : BDF
+        bals : {group_name: balance}
+        text : str
+            the full log (for warnings)
+        """
+        log, msgs = _capture_log()
+        structure_model.log = log
+        out_model = pressure_map_to_lcp_model(
+            aero_model, structure_model, np.array([], dtype='int32'),
+            np.zeros(3), load_control_nids,
+            qinf=PANEL_QINF, force_sid=2, moment_sid=3)
+        text = '\n'.join(msgs)
+        bals = {}
+        for group_name in load_control_nids:
+            title = BALANCE_LCP_GROUP.format(group_name)
+            if title in text:
+                bals[group_name] = _parse_balance(msgs, title)
+        return out_model, bals, text
 
     def _cards(self, out_model) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
         """({nid: force}, {nid: moment}); one FORCE and one MOMENT per node"""
@@ -1714,6 +1738,165 @@ class TestLCP(unittest.TestCase):
                                    rtol=1e-6, atol=1e-9)
         np.testing.assert_allclose(data[1, 1:], [-2., 0., 2., -1/3, 2/3, -1/3],
                                    rtol=1e-6, atol=1e-9)
+
+    # ------------------------------------------------------------------
+    # load_control_nids groups (wing/tail/...)
+    # ------------------------------------------------------------------
+    def test_lcp_groups(self):
+        """
+        each group maps only its own panels to only its own nodes
+
+        node 1 (3,1,1) is nearest the tilted tri and node 2 (1,1,0) is
+        nearest the flat tri; the groups force the opposite assignment
+        """
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(log, [(3., 1., 1.), (1., 1., 0.)])
+        groups = {
+            'wing': {'regions': [1], 'nodes': [1]},
+            'tail': {'regions': [2], 'nodes': [2]},
+        }
+        out_model, bals, text = self._map_groups(
+            structure_model, _two_region_cart3d(log), groups)
+        self.assertNotIn('missing regions', text)
+        self.assertNotIn('missing nodes', text)
+        self.assertNotIn('LCP aero regions', text)
+        forces, moments = self._cards(out_model)
+        self.assertEqual(sorted(forces), [1, 2])
+
+        # flat tri -> node 1; d=(-11/6, -1/6, -1/2); d x (0,0,2)
+        np.testing.assert_allclose(forces[1], [0., 0., 2.], atol=1e-12)
+        np.testing.assert_allclose(moments[1], [-1/3, 11/3, 0.], atol=1e-12)
+        # tilted tri -> node 2; d=(11/6, -1/6, 5/6); d x (-2,0,2)
+        np.testing.assert_allclose(forces[2], [-2., 0., 2.], atol=1e-12)
+        np.testing.assert_allclose(moments[2], [-1/3, -16/3, -1/3], atol=1e-12)
+
+        # one balance per group, against that group's aero panels
+        self.assertEqual(sorted(bals), ['tail', 'wing'])
+        np.testing.assert_allclose(bals['wing']['aero_f'], [0., 0., 2.], **LOG_TOL)
+        np.testing.assert_allclose(bals['wing']['aero_m'], [5/3, -7/3, 0.], **LOG_TOL)
+        np.testing.assert_allclose(bals['tail']['aero_f'], [-2., 0., 2.], **LOG_TOL)
+        np.testing.assert_allclose(bals['tail']['aero_m'], [5/3, -22/3, 5/3], **LOG_TOL)
+        for bal in bals.values():
+            np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+            np.testing.assert_allclose(bal['struct_m'], bal['aero_m'], **LOG_TOL)
+
+    def test_lcp_groups_match_separate_calls(self):
+        """grouped == one call per component (aero/structure cut by hand)"""
+        log = SimpleLogger(level='warning')
+        xyz_wing = (3., 1., 1.)
+        xyz_tail = (1., 1., 0.)
+        groups = {
+            'wing': {'regions': [1], 'nodes': [1]},
+            'tail': {'regions': [2], 'nodes': [2]},
+        }
+        out_model, unused_bals, unused_text = self._map_groups(
+            _lcp_structure(log, [xyz_wing, xyz_tail]), _two_region_cart3d(log), groups)
+        forces, moments = self._cards(out_model)
+
+        # separate 'total' calls; the single node is nid=1 in each
+        out_wing, unused_bal = self._map(
+            _lcp_structure(log, [xyz_wing]), _two_region_cart3d(log, keep_region=1))
+        out_tail, unused_bal = self._map(
+            _lcp_structure(log, [xyz_tail]), _two_region_cart3d(log, keep_region=2))
+        forces_wing, moments_wing = self._cards(out_wing)
+        forces_tail, moments_tail = self._cards(out_tail)
+
+        np.testing.assert_allclose(forces[1], forces_wing[1], atol=1e-12)
+        np.testing.assert_allclose(moments[1], moments_wing[1], atol=1e-12)
+        np.testing.assert_allclose(forces[2], forces_tail[1], atol=1e-12)
+        np.testing.assert_allclose(moments[2], moments_tail[1], atol=1e-12)
+
+    def test_lcp_groups_shared_node(self):
+        """a node in two groups gets one FORCE/MOMENT per group; the sum is the total"""
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(log, [(10., 0., 0.)])
+        groups = {
+            'wing': {'regions': [1], 'nodes': [1]},
+            'tail': {'regions': [2], 'nodes': [1]},
+        }
+        out_model, bals, unused_text = self._map_groups(
+            structure_model, _two_region_cart3d(log), groups)
+        force_cards = out_model.loads[2]
+        moment_cards = out_model.loads[3]
+        self.assertEqual([load.node for load in force_cards], [1, 1])
+        self.assertEqual([load.node for load in moment_cards], [1, 1])
+        total_f = sum(load.scaled_vector for load in force_cards)
+        total_m = sum(load.scaled_vector for load in moment_cards)
+        # same as test_lcp_all_panels_to_one_node
+        np.testing.assert_allclose(total_f, [-2., 0., 4.], atol=1e-12)
+        np.testing.assert_allclose(total_m, [10/3, 91/3, 5/3], atol=1e-12)
+        self.assertEqual(sorted(bals), ['tail', 'wing'])
+
+    def test_lcp_groups_missing_ids_dropped(self):
+        """unknown regions/nodes are dropped with a warning; the rest still maps"""
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(log, [(3., 1., 1.), (1., 1., 0.)])
+        groups = {
+            'wing': {'regions': [1, 99], 'nodes': [1, 1000]},
+            'tail': {'regions': [2], 'nodes': [2]},
+        }
+        out_model, bals, text = self._map_groups(
+            structure_model, _two_region_cart3d(log), groups)
+        self.assertIn("LCP group='wing' has 1 missing regions; [99]", text)
+        self.assertIn("LCP group='wing' has 1 missing nodes; [1000]", text)
+        forces, unused_moments = self._cards(out_model)
+        self.assertEqual(sorted(forces), [1, 2])
+        np.testing.assert_allclose(forces[1], [0., 0., 2.], atol=1e-12)
+        self.assertEqual(sorted(bals), ['tail', 'wing'])
+
+    def test_lcp_groups_unassigned_and_overlapping_regions_warn(self):
+        """a region in no group or in two groups is logged"""
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(log, [(3., 1., 1.), (1., 1., 0.)])
+
+        # region 2 in no group -> its load is dropped
+        groups = {'wing': {'regions': [1], 'nodes': [1, 2]}}
+        out_model, bals, text = self._map_groups(
+            structure_model, _two_region_cart3d(log), groups)
+        self.assertIn('LCP aero regions=[2] are not in any group', text)
+        forces, unused_moments = self._cards(out_model)
+        np.testing.assert_allclose(sum(forces.values()), [0., 0., 2.], atol=1e-12)
+
+        # region 1 in both groups -> counted twice
+        groups = {
+            'wing': {'regions': [1, 2], 'nodes': [1]},
+            'tail': {'regions': [1], 'nodes': [2]},
+        }
+        unused_out, unused_bals, text = self._map_groups(
+            _lcp_structure(log, [(3., 1., 1.), (1., 1., 0.)]),
+            _two_region_cart3d(log), groups)
+        self.assertIn('LCP aero regions=[1] are in more than one group', text)
+
+    def test_lcp_groups_empty_raises(self):
+        """a group with nothing left after the cleanup can't be mapped"""
+        log = SimpleLogger(level='error')
+        bad_groups = [
+            {'wing': {'regions': [], 'nodes': [1]}},
+            {'wing': {'regions': [1], 'nodes': []}},
+            {'wing': {'regions': [99], 'nodes': [1]}},
+            {'wing': {'regions': [1], 'nodes': [1000]}},
+        ]
+        for groups in bad_groups:
+            with self.assertRaises(ValueError, msg=str(groups)):
+                self._map_groups(_lcp_structure(log, [(1., 1., 0.)]),
+                                 _two_region_cart3d(log), groups)
+
+
+def _two_region_cart3d(log: SimpleLogger, keep_region: int=0) -> Cart3D:
+    """
+    _two_tri_cart3d with the flat tri in region 1 and the tilted tri in region 2
+
+    keep_region : int
+        0 -> both tris; 1/2 -> only that tri
+    """
+    model = _two_tri_cart3d(log)
+    model.regions = np.array([1, 2], dtype='int32')
+    if keep_region:
+        ikeep = np.where(model.regions == keep_region)[0]
+        model.elements = model.elements[ikeep, :]
+        model.regions = model.regions[ikeep]
+        model.loads = {'Cp': model.loads['Cp'][ikeep]}
+    return model
 
 
 if __name__ == '__main__':  # pragma: no cover

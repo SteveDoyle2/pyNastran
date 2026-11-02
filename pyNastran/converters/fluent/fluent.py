@@ -9,12 +9,14 @@ from pyNastran.converters.fluent.utils import (
     filter_by_region,
 )
 from pyNastran.utils.convert import convert_length
+from pyNastran.converters.aero_common import validate_region_rotations
 
 from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
 if CPYLOG_VERSION > '1.6.0':
     from cpylog import get_logger
 else:  # pragma: no cover
     from cpylog import get_logger2 as get_logger
+
 
 class Fluent:
     def __init__(self, auto_read_write_h5: bool=True,
@@ -457,6 +459,114 @@ class Fluent:
         self.log.debug(f'sliced fluent model: ntris={len(self.tris)} '
                        f'nquads={len(self.quads)} nnodes={len(self.node_id)} '
                        f'nresults={len(self.result_element_id)}')
+
+    def rotate_regions(self,
+                       rotations: list[tuple[list[int], np.ndarray, np.ndarray,
+                                             str, float]],
+                       ortho_tol: float=1e-6) -> None:
+        """
+        Rigidly rotates sets of regions (e.g., a flap and a horizontal
+        tail) in place, each about an axis of its own coordinate system.
+
+        Each coordinate system is an origin and its x/y/z axes, all in
+        the basic frame (e.g., a hinge frame with the origin on the
+        hinge line).  The set is rotated by angle about the coordinate
+        system's x, y, or z axis through the origin, using the right-hand
+        rule (+angle about y turns z toward x).  In the basic frame:
+            R = axes.T @ R_local @ axes
+            xyz_new = origin + (xyz - origin) @ R.T
+
+        All sets are computed from the original xyz, so the order of the
+        sets doesn't matter.  Only the geometry changes; results are not
+        rotated, so a warning is logged if there are Cf results.
+
+        Parameters
+        ----------
+        rotations : list[(region_ids, origin, axes, axis, angle)]
+            region_ids : list[int]
+                the regions (self.region) to rotate together
+            origin : (3,) float array
+                the point the regions rotate about
+            axes : (3, 3) float array
+                rows are the coordinate system x, y, z axes (unit
+                vectors); must be orthonormal and right-handed
+            axis : str
+                'x', 'y', or 'z'; the coordinate system axis to rotate about
+            angle : float
+                the rotation angle in degrees
+        ortho_tol : float; default=1e-6
+            tolerance on axes @ axes.T == I and det(axes) == 1
+
+        Raises
+        ------
+        KeyError
+            a region id doesn't exist
+        ValueError
+            bad origin/axes/axis/angle, or a region is in more than one set
+
+        Shared nodes
+        ------------
+        A node used by a rotated set and by any element outside that set
+        (a non-rotated region or another set; e.g., a flap hinge edge
+        stitched to the wing) is split: the set's elements get a new
+        node (id = max(node_id) + 1, ...) that rotates with them and the
+        other elements keep the original.  This opens a seam instead of
+        warping the neighboring elements.  node_id stays sorted.
+
+        Example
+        -------
+        >>> # flap hinge frame: y along the (swept) hinge line
+        >>> model.rotate_regions([
+        ...     ([10, 11], hinge_origin, hinge_axes, 'y', 10.),  # flap
+        ...     ([20], [12., 0., 1.], np.eye(3), 'y', -2.),      # horizontal tail
+        ... ])
+        """
+        # validate everything before changing the model
+        sets = validate_region_rotations(rotations, self.region, ortho_tol=ortho_tol)
+
+        cf_titles = [title for title in self.titles.tolist() if 'Cf' in title]
+        if cf_titles:
+            self.log.warning(f'Cf results are not rotated with the geometry: {cf_titles}')
+
+        node_id = np.asarray(self.node_id).copy()
+        xyz = np.asarray(self.xyz, dtype='float64').copy()
+        tris = self.tris.copy()
+        quads = self.quads.copy()
+        for iset, (region_ids, origin, rotation_matrix, axis, angle) in enumerate(sets):
+            itri = np.isin(tris[:, 1], region_ids)
+            iquad = np.isin(quads[:, 1], region_ids)
+            set_nids = np.unique(np.hstack([
+                tris[itri, 2:].ravel(), quads[iquad, 2:].ravel()]))
+            other_nids = np.unique(np.hstack([
+                tris[~itri, 2:].ravel(), quads[~iquad, 2:].ravel()]))
+
+            # split the shared nodes; the set gets the new copies
+            shared_nids = np.intersect1d(set_nids, other_nids)
+            nshared = len(shared_nids)
+            if nshared:
+                new_nids = node_id.max() + 1 + np.arange(nshared, dtype=node_id.dtype)
+                ishared = np.searchsorted(node_id, shared_nids)
+                node_id = np.hstack([node_id, new_nids])
+                xyz = np.vstack([xyz, xyz[ishared, :]])
+                for elements, ielement in ((tris, itri), (quads, iquad)):
+                    nodes = elements[ielement, 2:]
+                    is_shared = np.isin(nodes, shared_nids)
+                    nodes[is_shared] = new_nids[np.searchsorted(shared_nids, nodes[is_shared])]
+                    elements[ielement, 2:] = nodes
+                set_nids = np.union1d(np.setdiff1d(set_nids, shared_nids), new_nids)
+
+            # set_nids are now only used by this set, so they're still at
+            # their original location
+            inode = np.searchsorted(node_id, set_nids)
+            xyz[inode, :] = origin + (xyz[inode, :] - origin) @ rotation_matrix.T
+            self.log.info(f'rotated set {iset}: regions={region_ids.tolist()} '
+                          f'{angle} deg about {axis}; nnodes={len(set_nids)} '
+                          f'nsplit={nshared} origin={origin.tolist()}')
+
+        self.node_id = node_id
+        self.xyz = xyz
+        self.tris = tris
+        self.quads = quads
 
     @property
     def region(self) -> np.ndarray:

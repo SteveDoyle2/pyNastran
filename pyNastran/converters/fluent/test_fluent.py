@@ -217,6 +217,141 @@ class TestFluent(unittest.TestCase):
         assert len(model.tris) == 3 and len(model.quads) == 2
         assert len(model.result_element_id) == 5
 
+    def test_rotate_regions(self):
+        """rotate 2 sets (flap + tail) about basic axes; region 1 doesn't move"""
+        model = _three_region_model()
+        xyz0 = model.xyz.copy()
+        eye = np.eye(3)
+        model.rotate_regions([
+            ([2], [2., 0., 0.], eye, 'z', 90.),  # flap: x -> y
+            ([3], np.zeros(3), eye, 'x', 180.),  # tail: (y, z) -> (-y, -z)
+        ])
+        assert np.array_equal(model.xyz[:4], xyz0[:4])  # region 1
+        # flap node (3, 1, 0): d=(1, 1, 0) -> (-1, 1, 0) -> (1, 1, 0)
+        assert np.allclose(model.xyz[4:8], [[2., 0., 0.], [2., 1., 0.],
+                                            [1., 1., 0.], [1., 0., 0.]]), model.xyz[4:8]
+        assert np.allclose(model.xyz[8:], xyz0[8:] * [1., -1., -1.]), model.xyz[8:]
+        # rigid: areas don't change
+        _, quad_area, _, _ = model.get_area_centroid(model.tris, model.quads)
+        assert np.allclose(quad_area, 1.0), quad_area
+
+    def test_rotate_regions_local_axis(self):
+        """local axes: x=basic y, y=-basic x, z=basic z"""
+        hinge_axes = np.array([[0., 1., 0.], [-1., 0., 0.], [0., 0., 1.]])
+        origin = [2., 0., 0.]
+
+        # +90 about basic y turns z toward x, so x -> -z
+        model = _three_region_model()
+        model.rotate_regions([([2], origin, np.eye(3), 'y', 90.)])
+        assert np.allclose(model.xyz[4:8], [[2., 0., 0.], [2., 0., -1.],
+                                            [2., 1., -1.], [2., 1., 0.]]), model.xyz[4:8]
+
+        # local x is basic y, so it's the same rotation
+        model2 = _three_region_model()
+        model2.rotate_regions([([2], origin, hinge_axes, 'x', 90.)])
+        assert np.allclose(model2.xyz, model.xyz), model2.xyz
+
+        # local y is -basic x, so -90 about it == +90 about basic x
+        model3 = _three_region_model()
+        model3.rotate_regions([([2], origin, hinge_axes, 'y', -90.)])
+        model4 = _three_region_model()
+        model4.rotate_regions([([2], origin, np.eye(3), 'x', 90.)])
+        assert np.allclose(model3.xyz, model4.xyz), model3.xyz
+
+        # local z is basic z
+        model5 = _three_region_model()
+        model5.rotate_regions([([2], origin, hinge_axes, 'z', 30.)])
+        model6 = _three_region_model()
+        model6.rotate_regions([([2], origin, np.eye(3), 'z', 30.)])
+        assert np.allclose(model5.xyz, model6.xyz), model5.xyz
+
+    def test_rotate_regions_errors(self):
+        model = _three_region_model()
+        xyz0 = model.xyz.copy()
+        eye = np.eye(3)
+        zero = np.zeros(3)
+        with self.assertRaises(KeyError):
+            model.rotate_regions([([99], zero, eye, 'x', 10.)])
+        with self.assertRaises(ValueError):  # not orthonormal
+            model.rotate_regions([([2], zero, 2 * eye, 'x', 10.)])
+        with self.assertRaises(ValueError):  # left-handed
+            model.rotate_regions([([2], zero, np.diag([1., 1., -1.]), 'x', 10.)])
+        with self.assertRaises(ValueError):  # region 2 is in 2 sets
+            model.rotate_regions([([2], zero, eye, 'x', 10.), ([2, 3], zero, eye, 'y', 5.)])
+        with self.assertRaises(ValueError):  # bad axis
+            model.rotate_regions([([2], zero, eye, 'w', 10.)])
+        with self.assertRaises(ValueError):  # bad angle
+            model.rotate_regions([([2], zero, eye, 'x', np.nan)])
+        with self.assertRaises(ValueError):  # missing axis/angle
+            model.rotate_regions([([2], zero, eye)])
+        # failed calls don't change the model
+        assert np.array_equal(model.xyz, xyz0)
+
+    def test_rotate_regions_split_shared_nodes(self):
+        """tri 5 (region 9) shares nodes 2/5/6 with quad 3 (region 7) -> split"""
+        model = _tri_quad_model()
+        xyz0 = model.xyz.copy()
+        model.rotate_regions([([9], np.zeros(3), np.eye(3), 'x', 180.)])
+
+        # new nodes 7/8/9 are copies of 2/5/6; tri 5 uses them
+        assert np.array_equal(model.node_id, [1, 2, 3, 4, 5, 6, 7, 8, 9]), model.node_id
+        assert np.array_equal(model.tris[2], [5, 9, 7, 8, 9]), model.tris
+        assert np.allclose(model.xyz[6:], xyz0[[1, 4, 5]] * [1., -1., -1.]), model.xyz
+        # the non-rotated elements are untouched
+        assert np.array_equal(model.xyz[:6], xyz0)
+        assert np.array_equal(model.quads, _tri_quad_model().quads)
+        assert np.array_equal(model.tris[:2], _tri_quad_model().tris[:2])
+        tri_area, quad_area, _, _ = model.get_area_centroid(model.tris, model.quads)
+        assert np.allclose(quad_area, 1.0) and np.allclose(tri_area, 0.5)
+
+    def test_rotate_regions_split_between_sets(self):
+        """regions 8 and 9 share node 2 -> each set ends up with its own copy"""
+        model = _tri_quad_model()
+        xyz0 = model.xyz.copy()
+        eye = np.eye(3)
+        model.rotate_regions([([8], np.zeros(3), eye, 'x', 180.),
+                              ([9], np.zeros(3), eye, 'z', 0.)])
+        # every node is used by exactly 1 set or the fixed region 7
+        tri_nodes = model.tris[:, 2:]
+        quad_nodes = model.quads[:, 2:]
+        set8 = np.unique(tri_nodes[model.tris[:, 1] == 8])
+        set9 = np.unique(tri_nodes[model.tris[:, 1] == 9])
+        assert len(np.intersect1d(set8, set9)) == 0
+        assert len(np.intersect1d(set8, quad_nodes)) == 0
+        assert len(np.intersect1d(set9, quad_nodes)) == 0
+        assert np.array_equal(model.xyz[:6], xyz0)  # originals stay with region 7
+
+    def test_rotate_regions_cf_warning(self):
+        messages = []
+        log = SimpleLogger(level='debug',
+                           log_func=lambda typ, filename, lineno, msg: messages.append((typ, msg)))
+        model = _three_region_model()
+        model.log = log
+        rotation = ([2], np.zeros(3), np.eye(3), 'z', 5.)
+        model.titles = np.array(['ElementID', 'Pressure Coefficient'])
+        model.rotate_regions([rotation])
+        assert not any(typ == 'WARNING' for typ, msg in messages), messages
+
+        model.titles = np.array(['ElementID', 'Cf Components X', 'Pressure Coefficient'])
+        model.rotate_regions([rotation])
+        warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
+        assert len(warnings_) == 1 and 'Cf Components X' in warnings_[0], messages
+
+
+def _three_region_model() -> Fluent:
+    """3 unit quads in regions 1/2/3 that don't share nodes"""
+    model = Fluent(auto_read_write_h5=False, log=SimpleLogger(level='warning'))
+    model.node_id = np.arange(1, 13)
+    square = np.array([[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 1., 0.]])
+    model.xyz = np.vstack([square, square + [2., 0., 0.], square + [4., 0., 1.]])
+    model.quads = np.array([
+        [1, 1, 1, 2, 3, 4],
+        [2, 2, 5, 6, 7, 8],
+        [3, 3, 9, 10, 11, 12],
+    ])
+    model.tris = np.zeros((0, 5), dtype='int32')
+    return model
+
 
 def _tri_quad_model() -> Fluent:
     """2 quads (1, 3) and 3 tris (2, 4, 5); results = [10*eid, -eid]"""
