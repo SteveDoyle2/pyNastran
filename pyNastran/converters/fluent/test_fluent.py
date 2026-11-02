@@ -327,7 +327,7 @@ class TestFluent(unittest.TestCase):
                            log_func=lambda typ, filename, lineno, msg: messages.append((typ, msg)))
         model = _three_region_model()
         model.log = log
-        rotation = ([2], np.zeros(3), np.eye(3), 'z', 5.)
+        rotation = ([2], [2., 0., 0.], np.eye(3), 'z', 5.)  # origin on region 2
         model.titles = np.array(['ElementID', 'Pressure Coefficient'])
         model.rotate_regions([rotation])
         assert not any(typ == 'WARNING' for typ, msg in messages), messages
@@ -336,6 +336,20 @@ class TestFluent(unittest.TestCase):
         model.rotate_regions([rotation])
         warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
         assert len(warnings_) == 1 and 'Cf Components X' in warnings_[0], messages
+
+    def test_rotate_regions_far_origin(self):
+        """region 2 is 1.4 across; an origin ~1000 away warns, the hinge edge doesn't"""
+        messages = []
+        log = SimpleLogger(level='debug',
+                           log_func=lambda typ, filename, lineno, msg: messages.append((typ, msg)))
+        model = _three_region_model()
+        model.log = log
+        model.rotate_regions([([2], [2., 0.5, 0.], np.eye(3), 'x', 5.)])  # on the edge
+        assert not any(typ == 'WARNING' for typ, msg in messages), messages
+
+        model.rotate_regions([([2], [916., 401., 0.], np.eye(3), 'z', 5.)])
+        warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
+        assert len(warnings_) == 1 and 'far away' in warnings_[0], messages
 
 
 def _three_region_model() -> Fluent:

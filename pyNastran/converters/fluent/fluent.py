@@ -9,7 +9,7 @@ from pyNastran.converters.fluent.utils import (
     filter_by_region,
 )
 from pyNastran.utils.convert import convert_length
-from pyNastran.converters.aero_common import validate_region_rotations
+from pyNastran.converters.aero_common import validate_region_rotations, check_rotation_origin
 
 from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
 if CPYLOG_VERSION > '1.6.0':
@@ -478,7 +478,9 @@ class Fluent:
 
         All sets are computed from the original xyz, so the order of the
         sets doesn't matter.  Only the geometry changes; results are not
-        rotated, so a warning is logged if there are Cf results.
+        rotated, so a warning is logged if there are Cf results.  A warning
+        is also logged if an origin is more than the set's bounding-box
+        diagonal away from the set (likely a typo or units mixup).
 
         Parameters
         ----------
@@ -539,6 +541,8 @@ class Fluent:
                 tris[itri, 2:].ravel(), quads[iquad, 2:].ravel()]))
             other_nids = np.unique(np.hstack([
                 tris[~itri, 2:].ravel(), quads[~iquad, 2:].ravel()]))
+            check_rotation_origin(self.log, iset, region_ids, origin,
+                                  xyz[np.searchsorted(node_id, set_nids), :])
 
             # split the shared nodes; the set gets the new copies
             shared_nids = np.intersect1d(set_nids, other_nids)

@@ -318,17 +318,40 @@ class TestCart3dRotateRegions(unittest.TestCase):
         assert len(warnings_) == 1 and 'rhoU' in warnings_[0], messages
         assert len(model.loads['rhoU']) == 8
 
+    def test_rotate_regions_far_origin(self):
+        """region 2 is 1.4 across; an origin ~1000 away warns, the hinge edge doesn't"""
+        messages = []
+        log = SimpleLogger(level='debug',
+                           log_func=lambda typ, filename, lineno, msg: messages.append((typ, msg)))
+        model = _two_region_model(log=log)
+        model.rotate_regions([([2], [1., 0., 0.], np.eye(3), 'y', 10.)])  # on the hinge
+        assert not any(typ == 'WARNING' for typ, msg in messages), messages
+
+        model = _two_region_model(log=log)
+        model.rotate_regions([([2], [916., 401., 0.], np.eye(3), 'z', 30.)])
+        warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
+        assert len(warnings_) == 1 and 'far away' in warnings_[0], messages
+
     def test_business_jet_rotate(self):
-        region = 3
-        origin = [916., 401., 0.]
+        """verifies the origin isn't shifted by a rotation"""
+        region = 3  # horizontal tail
+        origin = [27.3, 10.0, 0.]  # ~midpoint of region 3 (bJet is ~68 long; y is up)
+        # origin = [22.8, 10., 0.]
 
         cart3d_filename = MODEL_PATH / 'business_jet' / 'bJet.a.tri'
         cart3d_filename_out = MODEL_PATH / 'business_jet' / 'bJet2.tri'
         log = SimpleLogger(level='debug')
         model = read_cart3d(cart3d_filename, log=log)
         rotation = ([region], origin, np.eye(3), 'z', 30.)
+        nodes = np.unique(model.elements[model.regions == region])
+        center0 = model.points[nodes].mean(axis=0)
         model.rotate_regions([rotation])
+        # rotating about its own midpoint keeps the tail in place
+        nodes = np.unique(model.elements[model.regions == region])
+        center = model.points[nodes].mean(axis=0)
+        assert np.allclose(center, center0, atol=0.5), (center0, center)
         model.write_cart3d(cart3d_filename_out)
+        cart3d_filename_out.unlink()
 
 
 def _two_region_model(log=None) -> Cart3D:

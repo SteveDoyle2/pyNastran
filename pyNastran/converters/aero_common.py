@@ -63,6 +63,46 @@ def validate_region_rotations(rotations: list[tuple[list[int], np.ndarray, np.nd
         sets.append((region_ids, origin, rotation_matrix, axis, angle))
     return sets
 
+def check_rotation_origin(log, iset: int, region_ids: np.ndarray,
+                          origin: np.ndarray, xyz: np.ndarray) -> float:
+    """
+    Warns if the rotation origin is far from the rotated regions.
+
+    A hinge line normally lies on or inside the surface's bounding box,
+    so an origin more than one bounding-box diagonal away from the box
+    is likely a typo or a units mixup and would fling the surface away.
+
+    Parameters
+    ----------
+    log : SimpleLogger
+        the log
+    iset : int
+        the set index (for the message)
+    region_ids : (nregions,) int ndarray
+        the regions in the set (for the message)
+    origin : (3,) float ndarray
+        the rotation origin
+    xyz : (nnodes, 3) float ndarray
+        the nodes of the set before rotation
+
+    Returns
+    -------
+    distance : float
+        distance from the origin to the set's bounding box (0 if inside)
+    """
+    xyz_min = xyz.min(axis=0)
+    xyz_max = xyz.max(axis=0)
+    diagonal = np.linalg.norm(xyz_max - xyz_min)
+    # distance from the origin to the nearest point of the box
+    distance = np.linalg.norm(origin - np.clip(origin, xyz_min, xyz_max))
+    if distance > diagonal:
+        log.warning(f'set {iset}: regions={region_ids.tolist()} origin={origin.tolist()} '
+                    f'is {distance:g} from the regions, which are {diagonal:g} across '
+                    f'(bounding box min={xyz_min.tolist()} max={xyz_max.tolist()}); '
+                    f'the regions will rotate far away; is the origin correct?')
+    return distance
+
+
 def _axis_rotation_matrix(axis: str, angle_deg: float) -> np.ndarray:
     """right-hand rotation matrix about x, y, or z (active; v_new = R @ v)"""
     theta = np.radians(angle_deg)

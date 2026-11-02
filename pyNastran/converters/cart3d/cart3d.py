@@ -27,7 +27,7 @@ from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, is_binary_file
 from pyNastran.converters.cart3d.cart3d_reader_writer import (
     Cart3dReaderWriter, _write_cart3d_binary, _write_cart3d_ascii)
-from pyNastran.converters.aero_common import validate_region_rotations
+from pyNastran.converters.aero_common import validate_region_rotations, check_rotation_origin
 
 class Cart3D(Cart3dReaderWriter):
     """Cart3d interface class"""
@@ -340,7 +340,9 @@ class Cart3D(Cart3dReaderWriter):
         All sets are computed from the original points, so the order of
         the sets doesn't matter.  Only the geometry changes; loads are
         not rotated, so a warning is logged if there are velocity or
-        momentum components (U, V, W, rhoU, rhoV, rhoW).
+        momentum components (U, V, W, rhoU, rhoV, rhoW).  A warning is
+        also logged if an origin is more than the set's bounding-box
+        diagonal away from the set (likely a typo or units mixup).
 
         Parameters
         ----------
@@ -402,6 +404,7 @@ class Cart3D(Cart3dReaderWriter):
             ielement = np.isin(self.regions, region_ids)
             set_nodes = np.unique(elements[ielement, :])
             other_nodes = np.unique(elements[~ielement, :])
+            check_rotation_origin(self.log, iset, region_ids, origin, points[set_nodes, :])
 
             # split the shared nodes; the set gets the new copies
             shared_nodes = np.intersect1d(set_nodes, other_nodes)
