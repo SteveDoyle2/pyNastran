@@ -635,20 +635,8 @@ def _write_pressure_file(model: BDF,
     moments = []
     pressures = []
     write_header = True
-    if method == 'LCP':
-        msg += (
-            'SUBCASE 2\n'
-            '  SUBTITLE = Force\n'
-            f'  LOAD = {force_sid}\n'
-            'SUBCASE 3\n'
-            '  SUBTITLE = Moment\n'
-            f'  LOAD = {moment_sid}\n'
-            )
-        forces: list[PLOAD2] = model.loads[force_sid]
-        moments: list[PLOAD2] = model.loads[moment_sid]
-        write_header = False
 
-    elif map_type == 'force_moment':
+    if map_type == 'force_moment':
         msg += (
             'SUBCASE 1\n'
             '  SUBTITLE = Pressure\n'
@@ -2855,9 +2843,15 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
 
         fcomment = f'Force; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
         mcomment = f'Moment; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
+        total_structure_force = np.zeros(3, dtype=fdtype)
+        total_structure_moment = np.zeros(3, dtype=fdtype)
         for nid, xyz, force in zip(structure_nidsi, structure_xyzi, node_force):
             assert len(force) == 3, force
             moment = np.cross(xyz - reference_point, force)
+
+            total_structure_force += force
+            total_structure_moment += moment
+
             fmag = np.linalg.norm(force)
             mmag = np.linalg.norm(moment)
             fmag = 1. if fmag == 0. else fmag
@@ -2870,11 +2864,22 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
             bdf_model_out.add_moment(
                 moment_sid, nid, mmag, moment / mmag, cid=0, comment=mcomment)
             mcomment = ''
+
+        total_aero_force_dim = total_aero_force_coeff * qinf * sref
+        total_aero_moment_dim = total_aero_moment_coeff * qinf * sref * lref
+        _log_force_moment_balance(
+            log, 'Force/Moment Balance: Aero vs Mapped Structure (LCP)',
+            total_aero_force_dim, total_aero_moment_dim,
+            total_structure_force, total_structure_moment,
+            reference_point, qinf, sref, bref, cref,
+            xyz_units=xyz_units, pressure_units=pressure_units)
+
     #cc = model.case_control_deck
     #subcase = cc.add_subcase(1)
     #subcase.add_str
     #if check_force_moment:
     #    force, moment = sum_force_moment(bdf_model_out)
+
     return bdf_model_out
 
 def _simplify_load_control_nids(

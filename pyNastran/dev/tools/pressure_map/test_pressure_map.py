@@ -19,7 +19,7 @@ from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid, log_aero_force_moment)
 
 PKG_PATH = Path(pyNastran.__path__[0])
-MODEL_DIR = PKG_PATH / '..' / 'models'
+MODEL_DIR = (PKG_PATH / '..' / 'models').resolve()
 DIRNAME = Path(__file__).parent
 
 
@@ -277,16 +277,20 @@ class TestPressureMap(unittest.TestCase):
         bwb_dirname = MODEL_DIR / 'bwb'
         aero_format = 'fluent'
         log = SimpleLogger(level='warning')
+        #log = SimpleLogger(level='debug')
         #bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
 
         bdf_filename = bwb_dirname / 'bwb_saero.bdf'
         vrt_filename = bwb_dirname / 'bwb_saero.vrt'
         nastran_to_fluent(bdf_filename, vrt_filename, log=log)
 
+        reference_point = np.array([807, 0, 0], dtype='float64')
         aero_model, variables = get_aero_model(
             vrt_filename, aero_format,
                    aero_xyz_scale=1.0,
+                   xyz_units_in='in',
                    xyz_units_out='in',
+                   reference_point=reference_point,
                    stop_on_failure=True, log=log)
         aero_model.titles = aero_model.titles.tolist()
 
@@ -303,7 +307,7 @@ class TestPressureMap(unittest.TestCase):
         model = BDF(log=log)
         model.bdf_filename = bwb_dirname / 'bwb_lcp_nodes.bdf'
         nid0 = 1
-        x = np.linspace(0., 1000., num=21)
+        x = np.linspace(0., 1614., num=21)
         for inid, xi in enumerate(x):
             nid = nid0 + inid
             model.add_grid(nid, [xi, 0., 0.])
@@ -314,9 +318,11 @@ class TestPressureMap(unittest.TestCase):
             aero_model,
             model,
             eid_load_id=-1,
+            reference_point=reference_point,
             aero_format='fluent',
             map_type='force_moment',
             method='LCP',
+            xyz_units_in='in',
             xyz_units_out='in',
             pressure_units='psi',
             force_sid=2,
