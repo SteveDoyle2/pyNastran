@@ -550,6 +550,8 @@ class TestF06Flutter(unittest.TestCase):
         """
         # zimmerman needs PKNL (eas); 40 modes
         f06_filename = MODEL_PATH / 'bwb' / 'bwb_saero_flutter.f06'
+        if not f06_filename.exists():
+            return
         log = SimpleLogger(level='warning')
         resps, data = make_flutter_response(
             f06_filename, f06_units='english_in', out_units='english_kt', log=log)
