@@ -1,4 +1,5 @@
 from pathlib import Path
+import tempfile
 import unittest
 import numpy as np
 
@@ -14,7 +15,7 @@ from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag,
     map_panel_force_moment_centroid, pressure_map_to_panel_model,
-    pressure_map_to_structure_model)
+    pressure_map_to_structure_model, pressure_map_to_lcp_model)
 from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid, log_aero_force_moment)
 
@@ -276,8 +277,8 @@ class TestPressureMap(unittest.TestCase):
     def test_fluent_lcp(self):
         bwb_dirname = MODEL_DIR / 'bwb'
         aero_format = 'fluent'
-        # log = SimpleLogger(level='warning')
-        log = SimpleLogger(level='debug')
+        log = SimpleLogger(level='warning')
+        # log = SimpleLogger(level='debug')
         #bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
 
         bdf_filename = bwb_dirname / 'bwb_saero.bdf'
@@ -1505,6 +1506,214 @@ class TestAeroXyzScale(unittest.TestCase):
         self.assertEqual(sorted(values_in), sorted(values_m))
         for sid, value in values_in.items():
             self.assertAlmostEqual(values_m[sid], value, places=8, msg=f'sid={sid}')
+
+
+BALANCE_LCP = 'Force/Moment Balance: Aero vs Mapped Structure (LCP)'
+
+
+def _lcp_structure(log: SimpleLogger,
+                   xyzs: list[tuple[float, float, float]]) -> BDF:
+    """GRIDs only (no elements), nid = 1, 2, ..."""
+    model = BDF(log=log)
+    model.bdf_filename = 'lcp_nodes.bdf'
+    for nid, xyz in enumerate(xyzs, start=1):
+        model.add_grid(nid, list(xyz))
+    model.cross_reference()
+    return model
+
+
+class TestLCP(unittest.TestCase):
+    """
+    method='LCP': each aero tri/quad force qinf*Cp*A*n goes to the nearest
+    load collection point (node).  The node also gets a MOMENT card with the
+    transfer moment sum((c_i - x_node) x F_i), so FORCE + MOMENT reproduce
+    the aero force and moment exactly.
+
+    _two_tri_cart3d (qinf=PANEL_QINF=2):
+      flat tri:   c=(7/6, 5/6, 1/2),  F=(0, 0, 2)
+      tilted tri: c=(17/6, 5/6, 5/6), F=(-2, 0, 2)
+    """
+
+    def _map(self, structure_model, aero_model, qinf=PANEL_QINF,
+             reference_point=None):
+        log, msgs = _capture_log()
+        structure_model.log = log
+        if reference_point is None:
+            reference_point = np.zeros(3)
+        out_model = pressure_map_to_lcp_model(
+            aero_model, structure_model, np.array([], dtype='int32'),
+            reference_point, {}, qinf=qinf, force_sid=2, moment_sid=3)
+        text = '\n'.join(msgs)
+        self.assertEqual(text.count(BALANCE_LCP), 1)
+        return out_model, _parse_balance(msgs, BALANCE_LCP)
+
+    def _cards(self, out_model) -> tuple[dict[int, np.ndarray], dict[int, np.ndarray]]:
+        """({nid: force}, {nid: moment}); one FORCE and one MOMENT per node"""
+        self.assertEqual(sorted(out_model.loads), [2, 3])
+        forces = {}
+        moments = {}
+        for load in out_model.loads[2]:
+            self.assertEqual(load.type, 'FORCE')
+            self.assertNotIn(load.node, forces)
+            forces[load.node] = load.scaled_vector
+        for load in out_model.loads[3]:
+            self.assertEqual(load.type, 'MOMENT')
+            self.assertNotIn(load.node, moments)
+            moments[load.node] = load.scaled_vector
+        self.assertEqual(sorted(forces), sorted(moments))
+        return forces, moments
+
+    def _total_about(self, structure_model, forces, moments, point):
+        """total F and M about point from the FORCE/MOMENT cards"""
+        total_f = np.zeros(3)
+        total_m = np.zeros(3)
+        for nid, force in forces.items():
+            xyz = structure_model.nodes[nid].get_position()
+            total_f += force
+            total_m += moments[nid] + np.cross(xyz - point, force)
+        return total_f, total_m
+
+    def test_lcp_nearest_node_force_moment(self):
+        """each panel goes to its own nearest node; the far node gets nothing"""
+        log = SimpleLogger(level='warning')
+        # nid=1 is far away and listed first, so a node/force pairing
+        # mix-up would put a load on it
+        structure_model = _lcp_structure(
+            log, [(100., 100., 100.), (1., 1., 0.), (3., 1., 1.)])
+        out_model, bal = self._map(structure_model, _two_tri_cart3d(log))
+        forces, moments = self._cards(out_model)
+
+        self.assertEqual(sorted(forces), [2, 3])
+        # flat tri -> nid 2 (1,1,0); d=(1/6, -1/6, 1/2); d x (0,0,2)
+        np.testing.assert_allclose(forces[2], [0., 0., 2.], atol=1e-12)
+        np.testing.assert_allclose(moments[2], [-1/3, -1/3, 0.], atol=1e-12)
+        # tilted tri -> nid 3 (3,1,1); d=(-1/6, -1/6, -1/6); d x (-2,0,2)
+        np.testing.assert_allclose(forces[3], [-2., 0., 2.], atol=1e-12)
+        np.testing.assert_allclose(moments[3], [-1/3, 2/3, -1/3], atol=1e-12)
+
+        # aero about the origin: F=(-2,0,4), M=(10/3, -29/3, 5/3)
+        np.testing.assert_allclose(bal['aero_f'], [-2., 0., 4.], **LOG_TOL)
+        np.testing.assert_allclose(bal['aero_m'], [10/3, -29/3, 5/3], **LOG_TOL)
+        np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+        np.testing.assert_allclose(bal['struct_m'], bal['aero_m'], **LOG_TOL)
+
+    def test_lcp_all_panels_to_one_node(self):
+        """every panel is summed once (no duplicates) onto a single node"""
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(log, [(10., 0., 0.)])
+        out_model, bal = self._map(structure_model, _two_tri_cart3d(log))
+        forces, moments = self._cards(out_model)
+
+        self.assertEqual(sorted(forces), [1])
+        np.testing.assert_allclose(forces[1], [-2., 0., 4.], atol=1e-12)
+        # M about (10,0,0) = M_origin - (10,0,0) x F
+        #                  = (10/3, -29/3, 5/3) - (0, -40, 0)
+        np.testing.assert_allclose(moments[1], [10/3, 91/3, 5/3], atol=1e-12)
+        np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+        np.testing.assert_allclose(bal['struct_m'], bal['aero_m'], **LOG_TOL)
+
+    def test_lcp_quads(self):
+        """quad-only fluent model: F=(-4,0,8) at qinf=2"""
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(log, [(10., 0., 0.)])
+        out_model, bal = self._map(structure_model, _two_quad_fluent(log))
+        forces, moments = self._cards(out_model)
+        np.testing.assert_allclose(forces[1], [-4., 0., 8.], atol=1e-12)
+        np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+        np.testing.assert_allclose(bal['struct_m'], bal['aero_m'], **LOG_TOL)
+
+    def test_lcp_tri_and_quad(self):
+        """mixed fluent mesh: tri and quad both mapped, each once"""
+        log = SimpleLogger(level='warning')
+        # quad: c=(1, 0.5, 0), A=2, Cp=1;  tri: c=(1/3, 1/3, 5), A=0.5, Cp=3
+        structure_model = _lcp_structure(log, [(1., 0.5, 0.), (0., 0., 5.)])
+        out_model, bal = self._map(structure_model, _tri_quad_fluent(log))
+        forces, moments = self._cards(out_model)
+        self.assertEqual(sorted(forces), [1, 2])
+        np.testing.assert_allclose(forces[1], [0., 0., PANEL_QINF * 2.0], atol=1e-12)
+        np.testing.assert_allclose(forces[2], [0., 0., PANEL_QINF * 1.5], atol=1e-12)
+        np.testing.assert_allclose(moments[1], [0., 0., 0.], atol=1e-12)
+        np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+        np.testing.assert_allclose(bal['struct_m'], bal['aero_m'], **LOG_TOL)
+
+    def test_lcp_qinf_scaling(self):
+        """FORCE/MOMENT cards are linear in qinf"""
+        log = SimpleLogger(level='warning')
+        xyzs = [(1., 1., 0.), (3., 1., 1.)]
+        out1, unused_bal1 = self._map(_lcp_structure(log, xyzs), _two_tri_cart3d(log), qinf=1.0)
+        out5, unused_bal5 = self._map(_lcp_structure(log, xyzs), _two_tri_cart3d(log), qinf=5.0)
+        forces1, moments1 = self._cards(out1)
+        forces5, moments5 = self._cards(out5)
+        self.assertEqual(sorted(forces1), sorted(forces5))
+        for nid in forces1:
+            np.testing.assert_allclose(forces5[nid], 5.0 * forces1[nid], atol=1e-12)
+            np.testing.assert_allclose(moments5[nid], 5.0 * moments1[nid], atol=1e-12)
+
+    def test_lcp_reference_point(self):
+        """the cards don't depend on the reference point; the totals do"""
+        log = SimpleLogger(level='warning')
+        xyzs = [(0., 0., 0.), (2., 1., 0.), (4., 1., 1.)]
+        ref = np.array([1., -2., 3.])
+        structure_model = _lcp_structure(log, xyzs)
+        out0, unused_bal0 = self._map(_lcp_structure(log, xyzs), _two_tri_cart3d(log))
+        out_ref, bal_ref = self._map(structure_model, _two_tri_cart3d(log),
+                                     reference_point=ref)
+        forces0, moments0 = self._cards(out0)
+        forces_ref, moments_ref = self._cards(out_ref)
+        self.assertEqual(sorted(forces0), sorted(forces_ref))
+        for nid in forces0:
+            np.testing.assert_allclose(forces_ref[nid], forces0[nid], atol=1e-12)
+            np.testing.assert_allclose(moments_ref[nid], moments0[nid], atol=1e-12)
+
+        # aero about ref = M_origin - ref x F
+        aero_f = np.array([-2., 0., 4.])
+        aero_m = np.array([10/3, -29/3, 5/3]) - np.cross(ref, aero_f)
+        total_f, total_m = self._total_about(structure_model, forces_ref, moments_ref, ref)
+        np.testing.assert_allclose(total_f, aero_f, atol=1e-12)
+        np.testing.assert_allclose(total_m, aero_m, atol=1e-12)
+        np.testing.assert_allclose(bal_ref['aero_m'], aero_m, **LOG_TOL)
+        np.testing.assert_allclose(bal_ref['struct_m'], aero_m, **LOG_TOL)
+
+    def test_lcp_pressure_map_writes_files(self):
+        """pressure_map(method='LCP') writes the main deck, loads, and csv"""
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(
+            log, [(100., 100., 100.), (1., 1., 0.), (3., 1., 1.)])
+        with tempfile.TemporaryDirectory() as dirname:
+            dirname = Path(dirname)
+            structure_model.bdf_filename = str(dirname / 'lcp_nodes.bdf')
+            pressure_filename = dirname / 'lcp.bdf'
+            pressure_map(
+                _two_tri_cart3d(log), structure_model,
+                aero_format='cart3d',
+                map_type='force_moment',
+                method='LCP',
+                xyz_units_in='in', xyz_units_out='in', pressure_units='psi',
+                force_sid=2, moment_sid=3,
+                pressure_filename=str(pressure_filename),
+                qinf=PANEL_QINF,
+                log=log)
+            self.assertTrue((dirname / 'main_lcp.bdf').exists())
+            self.assertTrue(pressure_filename.exists())
+            csv_filename = dirname / 'lcp.force_moment.csv'
+            self.assertTrue(csv_filename.exists())
+
+            # Node,Fx,Fy,Fz,Mx,My,Mz (trailing comma, no header)
+            with open(csv_filename, 'r') as csv_file:
+                rows = [line.strip().rstrip(',').split(',')
+                        for line in csv_file if line.strip()]
+            data = np.array(rows, dtype='float64')
+
+            # the loads deck reads back with the same cards
+            loads_model = BDF(log=log)
+            loads_model.read_bdf(str(pressure_filename), xref=False, punch=True)
+            self.assertEqual(sorted(loads_model.loads), [2, 3])
+
+        np.testing.assert_array_equal(data[:, 0], [2, 3])
+        np.testing.assert_allclose(data[0, 1:], [0., 0., 2., -1/3, -1/3, 0.],
+                                   rtol=1e-6, atol=1e-9)
+        np.testing.assert_allclose(data[1, 1:], [-2., 0., 2., -1/3, 2/3, -1/3],
+                                   rtol=1e-6, atol=1e-9)
 
 
 if __name__ == '__main__':  # pragma: no cover
