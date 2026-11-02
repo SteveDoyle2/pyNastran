@@ -150,6 +150,7 @@ from pyNastran.bdf.mesh_utils.bdf_equivalence import _get_tree
 
 from pyNastran.converters.cart3d.cart3d import Cart3D
 #from pyNastran.converters.fluent.fluent import read_fluent
+from pyNastran.converters.fluent.fluent import Fluent
 from pyNastran.converters.tecplot.tecplot import Tecplot
 
 from pyNastran.dev.tools.pressure_map.setup_structure import (
@@ -598,7 +599,7 @@ def _check_model(structure_model: BDF, method: str) -> None:
 
     if nnodes > 0 and nelements > 0:
         return
-        
+
     msg = (
         f'BDF file={structure_model.bdf_filename} must have nodes (n={nnodes}) and elements (n={nelements})\n'
         f'{structure_model.get_bdf_stats()}')
@@ -2794,7 +2795,7 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
     bdf_model_out = BDF(log=structure_model.log)
 
     load_control_nids = _simplify_load_control_nids(
-        load_control_nids, uaero_region, structure_nodes)
+        load_control_nids, uaero_region, structure_nodes, log)
 
     for group_name, group in load_control_nids.items():
         aero_regionsi = group['regions']
@@ -2803,15 +2804,9 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
         structure_xyzi = structure_xyz[istructure_nidsi, :]
         nnode = len(structure_nidsi)
 
-        iregion_tri_list = []
-        iregion_quad_list = []
-        for region in aero_region:
-            itri = np.where(aero_tri_region == region)[0]
-            iquad = np.where(aero_quad_region == region)[0]
-            iregion_tri_list.append(itri)
-            iregion_quad_list.append(iquad)
-        itri = np.hstack(iregion_tri_list)
-        iquad = np.hstack(iregion_quad_list)
+        # aero elements in this group's regions (each element once)
+        itri = np.where(np.isin(aero_tri_region, aero_regionsi))[0]
+        iquad = np.where(np.isin(aero_quad_region, aero_regionsi))[0]
 
         local_aero_tri_centroid = aero_tri_centroid[itri, :]
         local_aero_tri_force = aero_tri_force_coeff_per_q[itri, :]
@@ -2820,37 +2815,41 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
         local_aero_quad_centroid = aero_quad_centroid[iquad, :]
         local_aero_quad_force = aero_quad_force_coeff_per_q[iquad, :]
         #local_aero_quad_moment = aero_quad_moment_coeff_per_q[iquad, :]
-        
+
         local_aero_centroid = np.vstack([local_aero_tri_centroid, local_aero_quad_centroid])
-        local_aero_force = np.vstack([local_aero_tri_force, local_aero_quad_force])
+        # dimensional force: F = qinf*Cp*A*n
+        local_aero_force = qinf * np.vstack([local_aero_tri_force, local_aero_quad_force])
         #local_aero_moment = np.vstack([local_aero_tri_moment, local_aero_quad_moment])
 
-        # get closest structure node for each aero centroid
-        nnodes_structure = len(structure_xyz)
-        tree = _get_tree(structure_xyz)
+        # get closest group node for each aero centroid
+        # (tree is on this group's nodes, so ieq indexes structure_nidsi/structure_xyzi)
+        tree = _get_tree(structure_xyzi)
         deq, ieq = tree.query(local_aero_centroid, k=1)
-        slots = np.where(ieq < nnodes_structure)
-        istructure = ieq[slots]
-        mapped_structure_nids = structure_nidsi[istructure]
-        istructure = np.searchsorted(structure_nodes, mapped_structure_nids)
+        assert ieq.max() < nnode, (ieq.max(), nnode)
 
         node_force_out = np.zeros((nnode, 3), dtype=local_aero_force.dtype)
-        np.add.at(node_force_out, istructure, local_aero_force)
+        np.add.at(node_force_out, ieq, local_aero_force)
 
-        iloaded = np.unique(istructure)
+        # transfer moment about the node: sum((c_i - x_node) x F_i)
+        # so FORCE + MOMENT at the node reproduce the aero F/M exactly
+        dr_node = local_aero_centroid - structure_xyzi[ieq, :]
+        node_moment_out = np.zeros((nnode, 3), dtype=local_aero_force.dtype)
+        np.add.at(node_moment_out, ieq, np.cross(dr_node, local_aero_force))
+
+        iloaded = np.unique(ieq)
         nids = structure_nidsi[iloaded]
+        xyzs = structure_xyzi[iloaded, :]
         node_force = node_force_out[iloaded, :]
+        node_moment = node_moment_out[iloaded, :]
 
         fcomment = f'Force; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
         mcomment = f'Moment; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
         total_structure_force = np.zeros(3, dtype=fdtype)
         total_structure_moment = np.zeros(3, dtype=fdtype)
-        for nid, xyz, force in zip(structure_nidsi, structure_xyzi, node_force):
+        for nid, xyz, force, moment in zip(nids, xyzs, node_force, node_moment):
             assert len(force) == 3, force
-            moment = np.cross(xyz - reference_point, force)
-
             total_structure_force += force
-            total_structure_moment += moment
+            total_structure_moment += moment + np.cross(xyz - reference_point, force)
 
             fmag = np.linalg.norm(force)
             mmag = np.linalg.norm(moment)
@@ -2885,8 +2884,10 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
 def _simplify_load_control_nids(
         load_control_nids: dict[str, dict[str, list[int]]],
         uaero_region: np.ndarray,
-        structure_nodes: np.ndarray) -> dict[str, dict[str, np.ndarray]]:
+        structure_nodes: np.ndarray,
+        log: SimpleLogger) -> dict[str, dict[str, np.ndarray]]:
     """remove missing nodes/regions and throw a warning"""
+    assert len(uaero_region), uaero_region
     if len(load_control_nids) == 0:
         load_control_nids2 = {'total': {
             'regions': uaero_region, 'nodes': structure_nodes}, }
@@ -2896,7 +2897,7 @@ def _simplify_load_control_nids(
     for group_name, group in load_control_nids.items():
         aero_regionsi = group['regions']
         structure_nidsi = group['nodes']
-        assert len(aero_regions), aero_regions
+        assert len(aero_regionsi), aero_regionsi
         assert len(structure_nidsi), structure_nidsi
 
         missing_regions = np.setdiff1d(aero_regionsi, uaero_region)

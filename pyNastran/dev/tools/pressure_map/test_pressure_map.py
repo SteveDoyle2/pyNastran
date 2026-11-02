@@ -276,8 +276,8 @@ class TestPressureMap(unittest.TestCase):
     def test_fluent_lcp(self):
         bwb_dirname = MODEL_DIR / 'bwb'
         aero_format = 'fluent'
-        log = SimpleLogger(level='warning')
-        #log = SimpleLogger(level='debug')
+        # log = SimpleLogger(level='warning')
+        log = SimpleLogger(level='debug')
         #bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
 
         bdf_filename = bwb_dirname / 'bwb_saero.bdf'
