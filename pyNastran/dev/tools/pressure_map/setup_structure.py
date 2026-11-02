@@ -41,19 +41,19 @@ def get_structural_eids_from_csv_load_id(structure_model: BDF,
     if not is_passed:
         raise RuntimeError(f'is_nelements={is_nelements}, is_csv={is_csv}, csv_filename={csv_filename!r} load_id={load_id}, is_load_id={is_load_id}')
 
-    assert nelements == '' or csv_filename == '' or load_id == 0, (nelements, csv_filename, load_id)
-    assert nelements or abs(load_id) > 0, (nelements, csv_filename, load_id)
+    assert nelements == '' or eid_csv_filename == '' or eid_load_id == 0, (nelements, eid_csv_filename, eid_load_id)
+    assert nelements or abs(eid_load_id) > 0, (nelements, eid_csv_filename, eid_load_id)
 
     if nelements:
         structural_eids_out = eids_structure
     elif eid_csv_filename:
         structural_eids_out = _load_structural_eids_from_csv(
             eid_csv_filename, idtype=idtype)
-    elif load_id == -1:
+    elif eid_load_id == -1:
         ids = list(structure_model.elements)
         structural_eids_out = np.array(ids, dtype=idtype)
         del ids
-    elif load_id > 0:
+    elif eid_load_id > 0:
         # load_id
         structural_eids_out = get_element_ids_by_sid(
             structure_model, eid_load_id, idtype=idtype)
@@ -63,9 +63,10 @@ def get_structural_eids_from_csv_load_id(structure_model: BDF,
     return structural_eids_out
 
 
-def _load_structural_eids_from_csv(csv_filename: PathLike, idtype: str='int32'):
-    assert os.path.exists(csv_filename), print_bad_path(csv_filename)
-    with open(csv_filename, 'r') as csv_file:
+def _load_structural_eids_from_csv(eid_csv_filename: PathLike,
+                                   idtype: str='int32'):
+    assert os.path.exists(eid_csv_filename), print_bad_path(eid_csv_filename)
+    with open(eid_csv_filename, 'r') as csv_file:
         lines = csv_file.readlines()
 
     structural_eids_set = set([])

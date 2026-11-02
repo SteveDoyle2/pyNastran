@@ -50,8 +50,7 @@ class TestPressureMap(unittest.TestCase):
         neids = len(aero_model.elements)
         eids = np.arange(neids)
         cp = np.sin(eids/neids)
-        aero_model.quads[:, 1] = 1
-        aero_model.tris[:, 1] = 2
+        aero_model.regions = np.ones(neids)
         aero_model.loads['Cp'] = cp
 
         pressure_map(
@@ -176,7 +175,7 @@ class TestPressureMap(unittest.TestCase):
         aero_format = 'fluent'
         # map_type = 'pressure'
         bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
-        vrt_filename = MODEL_DIR / 'bwb' / 'bwb-saero.vrt'
+        vrt_filename = MODEL_DIR / 'bwb' / 'bwb_saero.vrt'
         caero_bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.caero.bdf'
         # if not caero_bdf_filename.exists():  # pragma: no cover
         export_caero_mesh(
@@ -280,7 +279,10 @@ class TestPressureMap(unittest.TestCase):
         log = SimpleLogger(level='warning')
         #bdf_filename = MODEL_DIR / 'bwb' / 'bwb_saero.bdf'
 
-        vrt_filename = bwb_dirname / 'bwb-saero.vrt'
+        bdf_filename = bwb_dirname / 'bwb_saero.bdf'
+        vrt_filename = bwb_dirname / 'bwb_saero.vrt'
+        nastran_to_fluent(bdf_filename, vrt_filename, log=log)
+
         aero_model, variables = get_aero_model(
             vrt_filename, aero_format,
                    aero_xyz_scale=1.0,
@@ -288,7 +290,7 @@ class TestPressureMap(unittest.TestCase):
                    stop_on_failure=True, log=log)
         aero_model.titles = aero_model.titles.tolist()
 
-        from pyNastran.utils import object_stats
+        #from pyNastran.utils import object_stats
         #print(object_stats(aero_model))
         neid = len(aero_model.results)
         eids = np.arange(neid)

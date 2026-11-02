@@ -546,7 +546,6 @@ def pressure_map(aero_filename: PathLike,
         expected = ['panel_model', 'full_model']
         raise RuntimeError(f'method={method}; expected={list(expected)}')
 
-    assert method == 'LCP', method
     if method == 'LCP':
         _write_lcp_pressure_file(
             pressure_model, pressure_filename, pressure_str,
@@ -1001,7 +1000,7 @@ def _log_force_moment_balance(log: SimpleLogger,
     log.info('================================================================')
 
 
-def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot,
+def pressure_map_to_panel_model(aero_model: Cart3D | Tecplot | Fluent,
                                 structure_model: BDF,
                                 structure_eids: np.ndarray,
                                 reference_point: np.ndarray,
@@ -2434,7 +2433,7 @@ def map_panel_force_moment_centroid(
 #     del area
 
 
-def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
+def pressure_map_to_structure_model(aero_model: Cart3D | Fluent | Tecplot,
                                     structure_model: BDF,
                                     structure_eids: np.ndarray,
                                     reference_point: np.ndarray,
@@ -2673,7 +2672,7 @@ def pressure_map_to_structure_model(aero_model: Cart3D | Tecplot,
     return bdf_model_out
 
 
-def pressure_map_to_lcp_model(aero_model: Cart3D | Tecplot,
+def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
                               structure_model: BDF,
                               structure_eids: np.ndarray,
                               reference_point: np.ndarray,
@@ -2681,7 +2680,7 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Tecplot,
                               #structure_sid=0,
                               #map_type: str='force_moment',
                               map_directions: str='yz',
-                              scale: float=1.0,
+                              #scale: float=1.0,
                               qinf: float=1.0,
                               #pressure_sid: int=1,
                               force_sid: int=2,
@@ -2713,7 +2712,7 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Tecplot,
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
     assert map_type in {'force_moment'}, aero_format
-    assert isinstance(scale, float), scale
+    #assert isinstance(scale, float), scale
     assert isinstance(qinf, float), qinf
     if reference_point is None:
         reference_point = np.zeros(3, dtype=fdtype)
