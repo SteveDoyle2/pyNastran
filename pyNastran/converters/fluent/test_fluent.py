@@ -351,6 +351,25 @@ class TestFluent(unittest.TestCase):
         warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
         assert len(warnings_) == 1 and 'far away' in warnings_[0], messages
 
+    def test_write_fluent_interleaved_ids(self):
+        """quads 1/3 and tris 2/4/5 are interleaved; the daten must be written
+        in element id order or get_filtered_data reads the wrong rows"""
+        model = _tri_quad_model()
+        model.rotate_regions([([9], [2., 0., 0.], np.eye(3), 'x', 10.)])
+        fluent_filename = TEST_PATH / 'interleaved.cel'
+        model.write_fluent(fluent_filename)
+        try:
+            model2 = read_fluent(fluent_filename, auto_read_write_h5=False,
+                                 log=SimpleLogger(level='warning'))
+            assert np.array_equal(model2.result_element_id, [1, 2, 3, 4, 5])
+            element_id, tris, quads, region, results = model2.get_filtered_data()
+            # results are [quads, tris]; results[:, 0] = 10 * eid
+            assert np.array_equal(results[:, 0], [10., 30., 20., 40., 50.]), results
+            assert np.allclose(model2.xyz, model.xyz)
+        finally:
+            for ext in ('.cel', '.vrt', '.daten'):
+                os.remove(fluent_filename.with_suffix(ext))
+
 
 def _three_region_model() -> Fluent:
     """3 unit quads in regions 1/2/3 that don't share nodes"""

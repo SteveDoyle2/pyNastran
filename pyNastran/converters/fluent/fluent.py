@@ -242,19 +242,18 @@ class Fluent:
         write_cell(cell_filename, self.quads, self.tris)
         write_vrt(vrt_filename, self.node_id, self.xyz)
 
-        results_elements_list = []
-        results_list = []
-        if len(self.tris):
-            itri = np.searchsorted(self.result_element_id, self.tris[:, 0])
-            results_elements_list.append(self.result_element_id[itri])
-            results_list.append(self.results[itri, :])
-
-        if len(self.quads):
-            iquad = np.searchsorted(self.result_element_id, self.quads[:, 0])
-            results_elements_list.append(self.result_element_id[iquad])
-            results_list.append(self.results[iquad, :])
-        result_element_id = np.hstack(results_elements_list)
-        results = np.vstack(results_list)
+        # the daten must be sorted by element id (tris and quads interleaved),
+        # like Fluent writes it; get_filtered_data uses searchsorted on it
+        result_element_id = np.sort(np.hstack([self.tris[:, 0], self.quads[:, 0]]))
+        isort = np.argsort(self.result_element_id)  # self.results may be unsorted
+        sorted_ids = self.result_element_id[isort]
+        iresult = np.searchsorted(sorted_ids, result_element_id)
+        iresult_clip = np.minimum(iresult, len(sorted_ids) - 1)
+        is_missing = sorted_ids[iresult_clip] != result_element_id
+        if is_missing.any():
+            raise KeyError(f'{is_missing.sum()} elements have no results; e.g., '
+                           f'element_id={result_element_id[is_missing][:10].tolist()}')
+        results = self.results[isort[iresult], :]
         write_daten(daten_filename, result_element_id, self.titles, results)
 
     def get_area_centroid_normal(self, tris: np.ndarray,
