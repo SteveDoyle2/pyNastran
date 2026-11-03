@@ -24,8 +24,9 @@ from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_parameter import
 #from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_partition import load_h5_partition
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_properties import load_h5_property
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_materials import load_h5_material
+from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_constraint import load_h5_constraint
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_elements import load_h5_element, load_h5_table
-#from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_dynamic import load_h5_dynamic
+from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.h5_dynamic import load_h5_dynamic
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.utils import get_group_name
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -54,8 +55,8 @@ def read_geometry_from_h5(model: BDF, h5_file: File, input_path: str):
             name = get_group_name(h5_node_)
 
             if name in {'DYNAMIC', }:
-                log.warning(f' - name {name!r}')
-                #load_h5_dynamic(model, h5_node_)
+                #log.warning(f' - name {name!r}')
+                load_h5_dynamic(model, h5_node_)
                 continue
             elif name == 'ELEMENT':
                 load_h5_element(model, h5_node_)
@@ -64,7 +65,6 @@ def read_geometry_from_h5(model: BDF, h5_file: File, input_path: str):
                 load_h5_node(model, h5_node_)
                 continue
             elif name == 'PROPERTY':
-                #continue
                 load_h5_property(model, h5_node_)
                 continue
             elif name == 'MATERIAL':
@@ -74,7 +74,8 @@ def read_geometry_from_h5(model: BDF, h5_file: File, input_path: str):
                 load_h5_coord(model, h5_node_)
                 continue
             elif name == 'CONSTRAINT':
-                log.warning(f'skipping h5group name={name}')
+                load_h5_constraint(model, h5_node_)
+                #log.warning(f'skipping h5group name={name}')
                 continue
             elif name == 'DESIGN':
                 log.warning(f'skipping h5group name={name}')
@@ -84,6 +85,7 @@ def read_geometry_from_h5(model: BDF, h5_file: File, input_path: str):
                 continue
             elif name == 'TABLE':
                 load_h5_table(model, h5_node_)
+                continue
             elif name == 'PARAMETER':
                 load_h5_parameter(model, h5_node_)
                 continue

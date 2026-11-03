@@ -164,6 +164,9 @@ def load_h5_element(model: BDF, input_group: Group):
         elif element_name == 'CDAMP4':
             elem = model.cdamp4
             _read_cdamp4(name, data, elem)
+        elif element_name == 'CHBDYE':
+            elem = model.chbdye
+            _read_chbdye(name, data, elem)
         elif element_name == 'CVISC':
             elem = model.cvisc
             _read_cvisc(name, data, elem)
@@ -539,3 +542,21 @@ def _read_cvisc(name: str, group: h5py._hl.dataset.Dataset, elem: CVISC) -> None
         #obj = geom_model.add_celas1(eid, pid, nids, c1=c1, c2=c2, comment='')
         #obj.validate()
     elem._save(element_id, property_id, nodes, components)
+
+def _read_chbdye(name: str, group: h5py._hl.dataset.Dataset, elem: CHBDYE) -> None:
+    """
+    [('EID', '<i8'), ('EID2', '<i8'), ('SIDE', '<i8'), ('IVIEWF', '<i8'),
+    ('IVIEWB', '<i8'), ('RADMIDF', '<i8'), ('RADMIDB', '<i8'), ('DOMAIN_ID', '<i8')]
+    """
+    #print(group)
+    assert len(group.dtype) == 8, group.dtype
+    element_id = np.column_stack([group['EID'], group['EID2']])
+    side = group['SIDE']
+    iview = np.column_stack([group['IVIEWF'], group['IVIEWB']])
+    radmid = np.column_stack([group['RADMIDF'], group['RADMIDB']])
+
+    DOMAIN_ID = group['DOMAIN_ID']
+    #for eid, pid, nids, c1, c2 in zip(EID, PID, NIDS, C1, C2):
+        #obj = geom_model.add_celas1(eid, pid, nids, c1=c1, c2=c2, comment='')
+        #obj.validate()
+    elem._save(element_id, side, iview, radmid)

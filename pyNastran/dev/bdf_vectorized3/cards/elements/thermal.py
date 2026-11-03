@@ -261,6 +261,9 @@ class CHBDYE(ThermalElement):
 
     def _save(self, element_id, side, iview, rad_mid):
         assert len(self.element_id) == 0
+        assert element_id.ndim == 2, element_id.shape
+        assert iview.ndim == 2, iview.shape
+        assert rad_mid.ndim == 2, rad_mid.shape
         self.element_id = element_id
         self.side = side
         self.iview = iview
@@ -268,11 +271,12 @@ class CHBDYE(ThermalElement):
         self.n = len(element_id)
 
     def __apply_slice__(self, load: CHBDYE, i: np.ndarray) -> None:
-        load.element_id = self.element_id[i]
+        load.element_id = self.element_id[i, :]
         load.side = self.side[i]
         load.iview = self.iview[i, :]
         load.rad_mid = self.rad_mid[i, :]
         load.n = len(i)
+        assert load.element_id.ndim == 2, load.element_id.shape
 
     @property
     def iview_front(self) -> np.ndarray:
