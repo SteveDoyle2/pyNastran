@@ -24,6 +24,8 @@ class TestGUI(UsesQApplication):
         #super(MainWindow, self).tearDown()
 
     def test_real_gui(self):
+        #qt_qpa = os.environ.get('QT_QPA_PLATFORM')
+        #print(f'QT_QPA_PLATFORM = {qt_qpa!r}', flush=True)
         inputs = {
             'debug' : True,
             'is_groups' : True,

@@ -1,29 +1,28 @@
 # encoding: utf-8
-import os
-from typing import Any
-
+from pathlib import Path
 import numpy as np
 from qtpy import QtGui
 from qtpy.QtWidgets import (
-    QLabel, QPushButton, QGridLayout, QApplication, QHBoxLayout, QVBoxLayout,
-    QSpinBox, QDoubleSpinBox, QColorDialog, QLineEdit, QCheckBox,
-    QTabWidget, QWidget, QComboBox, QHBoxLayout, QVBoxLayout,
+    QLabel, QPushButton, QGridLayout, QApplication,
+    QLineEdit, QHBoxLayout, QVBoxLayout,
+    QWidget, QComboBox,
 )
 import pyNastran
 from pyNastran.gui.utils.qt.pydialog import PyDialog, make_font, check_color
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit, QIntEdit
 from pyNastran.gui.utils.qt.checks.qlineedit import (
-    check_int, check_float, check_name_str, check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
+    # check_int, check_float, check_name_str,
+    check_path, QLINEEDIT_GOOD, QLINEEDIT_ERROR)
 from pyNastran.utils import print_bad_path
-from pyNastran.converters.cart3d.cart3d import read_cart3d
-from pyNastran.converters.tecplot.tecplot import read_tecplot
-from pyNastran.dev.tools.pressure_map.pressure_map_aero_setup import get_aero_model
+# from pyNastran.converters.cart3d.cart3d import read_cart3d
+# from pyNastran.converters.tecplot.tecplot import read_tecplot
+from pyNastran.dev.tools.pressure_map.setup_aero import get_aero_model
 
 
-PKG_PATH = pyNastran.__path__[0]
-CART3D_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models', 'threePlugs.a.tri')
-TECPLOT_PATH = os.path.join(PKG_PATH, 'converters', 'tecplot', 'models', 'ascii', 'point_febrick_3d_02.dat')
-NASTRAN_PATH = os.path.join(PKG_PATH, '..', 'models', 'bwb', 'bwb_saero.bdf')
+PKG_PATH = Path(pyNastran.__path__[0])
+CART3D_PATH = PKG_PATH / 'converters' / 'cart3d' / 'models' / 'threePlugs.a.tri'
+TECPLOT_PATH = PKG_PATH / 'converters' / 'tecplot' / 'models' / 'ascii' / 'point_febrick_3d_02.dat'
+NASTRAN_PATH = PKG_PATH / '..' / 'models' / 'bwb' / 'bwb_saero.bdf'
 
 ELEMENT_ID_OPTIONS = ['CSV File', 'Load ID']
 #AERO_FORMATS = ['Cart3D', 'Fund3D', 'Fluent Vrt', 'Fluent Press', 'Tecplot']

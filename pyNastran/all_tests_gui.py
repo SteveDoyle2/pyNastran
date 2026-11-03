@@ -42,12 +42,27 @@ from pyNastran.gui.test.all_tests_gui import *
 def run_tests_cleanup():
     import os
     import unittest
+    # qt_qpa = os.environ.get('QT_QPA_PLATFORM')
+    # print(f'QT_QPA_PLATFORM = {qt_qpa!r}')
     with np.errstate(divide='raise', over='raise', under='raise', invalid='raise'):
         #standard - has CI core dump issue
         #unittest.main()
 
         # 1. Run unittest without letting it invoke sys.exit()
         res = unittest.main(exit=False)
+
+        # When there are issues with headless mode (gui testing),
+        # typically you'd use the following for more debugging:
+        #   >>> 'python -m unittest -v all_tests.py'
+        # -m unitest which prevents a segfault (bad)
+        #
+        # run this instead:
+        # >>> python -u -X faulthandler all_tests.py
+        # -u:              force the stdout and stderr streams to be unbuffered (to print)
+        # -X faulthandler: dump the Python traceback on fatal errors
+        #
+        # res = unittest.main(verbosity=2, exit=False)
+        # print(f'test res = {res}')
 
         # 2. Force coverage.py to save data before we kill the process
         try:
@@ -62,8 +77,10 @@ def run_tests_cleanup():
         # 3. Bypass VTK's crashing destructors using a hard exit
         if res.result.wasSuccessful():
             # Bypass VTK's crashing destructors and exit clean
+            #print('proper stopping')
             os._exit(0)
         else:
+            #print('failure')
             # Properly fail the CI pipeline if an actual test failed
             os._exit(1)
 

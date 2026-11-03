@@ -1,11 +1,12 @@
 """tests non-gui related Cart3d class/interface"""
 import os
+from pathlib import Path
 import unittest
 import numpy as np
-from cpylog import get_logger
+from cpylog import get_logger, SimpleLogger
 
 import pyNastran
-from pyNastran.converters.cart3d.cart3d import read_cart3d, comp2tri
+from pyNastran.converters.cart3d.cart3d import Cart3D, read_cart3d, comp2tri
 from pyNastran.converters.cart3d.cart3d_to_nastran import cart3d_to_nastran_filename, cart3d_to_nastran_model
 from pyNastran.converters.cart3d.cart3d_to_stl import cart3d_to_stl_filename
 from pyNastran.converters.cart3d.cart3d_to_tecplot import cart3d_to_tecplot
@@ -14,8 +15,8 @@ from pyNastran.converters.cart3d.input_cntl_reader import read_input_cntl
 from pyNastran.converters.format_converter import cmd_line_format_converter
 
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, 'converters', 'cart3d', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / 'converters' / 'cart3d' / 'models'
 
 class TestCart3d(unittest.TestCase):
 
@@ -256,6 +257,117 @@ class TestCart3d(unittest.TestCase):
         geometry_filename_half = os.path.join(MODEL_PATH, 'half_bjet.a.tri')
         model.write_cart3d(geometry_filename_half)
         read_cart3d(geometry_filename_half, log=log)
+
+class TestCart3dRotateRegions(unittest.TestCase):
+    def test_rotate_regions_split(self):
+        """region 2 shares nodes 1/2 with region 1 -> split; loads copied"""
+        model = _two_region_model()
+        points0 = model.points.copy()
+        model.rotate_regions([([2], [1., 0., 0.], np.eye(3), 'y', 90.)])
+
+        # new nodes 6/7 are copies of 1/2 (on the hinge, so they don't move)
+        assert model.points.shape == (8, 3), model.points.shape
+        assert np.array_equal(model.points[:4], points0[:4])  # region 1 doesn't move
+        assert np.allclose(model.points[6:], points0[[1, 2]]), model.points
+        # +90 about y: x -> -z
+        assert np.allclose(model.points[4:6], [[1., 0., -1.], [1., 1., -1.]]), model.points
+        assert np.array_equal(model.elements, [[0, 1, 2], [0, 2, 3],
+                                               [6, 4, 5], [6, 5, 7]]), model.elements
+        assert np.array_equal(model.loads['Cp'], [0., 1., 2., 3., 4., 5., 1., 2.])
+        # rigid: areas don't change
+        assert np.allclose(model.get_area(), 0.5), model.get_area()
+
+    def test_rotate_regions_local_axis(self):
+        """local x = basic y, so 'x' in the hinge frame == 'y' in basic"""
+        hinge_axes = np.array([[0., 1., 0.], [-1., 0., 0.], [0., 0., 1.]])
+        model1 = _two_region_model()
+        model1.rotate_regions([([2], [1., 0., 0.], np.eye(3), 'y', 30.)])
+        model2 = _two_region_model()
+        model2.rotate_regions([([2], [1., 0., 0.], hinge_axes, 'x', 30.)])
+        assert np.allclose(model1.points, model2.points), model2.points
+
+    def test_rotate_regions_errors(self):
+        model = _two_region_model()
+        points0 = model.points.copy()
+        eye = np.eye(3)
+        zero = np.zeros(3)
+        with self.assertRaises(KeyError):
+            model.rotate_regions([([99], zero, eye, 'x', 10.)])
+        with self.assertRaises(ValueError):  # left-handed
+            model.rotate_regions([([2], zero, np.diag([1., 1., -1.]), 'x', 10.)])
+        with self.assertRaises(ValueError):  # region 2 is in 2 sets
+            model.rotate_regions([([2], zero, eye, 'x', 10.), ([1, 2], zero, eye, 'y', 5.)])
+        with self.assertRaises(ValueError):  # bad axis
+            model.rotate_regions([([2], zero, eye, 'w', 10.)])
+        # failed calls don't change the model
+        assert np.array_equal(model.points, points0)
+
+    def test_rotate_regions_velocity_warning(self):
+        messages = []
+        log = SimpleLogger(level='debug',
+                           log_func=lambda typ, filename, lineno, msg: messages.append((typ, msg)))
+        rotation = ([2], np.zeros(3), np.eye(3), 'z', 5.)
+        model = _two_region_model(log=log)
+        model.rotate_regions([rotation])
+        assert not any(typ == 'WARNING' for typ, msg in messages), messages
+
+        model = _two_region_model(log=log)
+        model.loads['rhoU'] = np.zeros(6)
+        model.rotate_regions([rotation])
+        warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
+        assert len(warnings_) == 1 and 'rhoU' in warnings_[0], messages
+        assert len(model.loads['rhoU']) == 8
+
+    def test_rotate_regions_far_origin(self):
+        """region 2 is 1.4 across; an origin ~1000 away warns, the hinge edge doesn't"""
+        messages = []
+        log = SimpleLogger(level='debug',
+                           log_func=lambda typ, filename, lineno, msg: messages.append((typ, msg)))
+        model = _two_region_model(log=log)
+        model.rotate_regions([([2], [1., 0., 0.], np.eye(3), 'y', 10.)])  # on the hinge
+        assert not any(typ == 'WARNING' for typ, msg in messages), messages
+
+        model = _two_region_model(log=log)
+        model.rotate_regions([([2], [916., 401., 0.], np.eye(3), 'z', 30.)])
+        warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
+        assert len(warnings_) == 1 and 'far away' in warnings_[0], messages
+
+    def test_business_jet_rotate(self):
+        """verifies the origin isn't shifted by a rotation"""
+        region = 3  # horizontal tail
+        origin = [27.3, 10.0, 0.]  # ~midpoint of region 3 (bJet is ~68 long; y is up)
+        # origin = [22.8, 10., 0.]
+
+        cart3d_filename = MODEL_PATH / 'business_jet' / 'bJet.a.tri'
+        cart3d_filename_out = MODEL_PATH / 'business_jet' / 'bJet2.tri'
+        log = SimpleLogger(level='debug')
+        model = read_cart3d(cart3d_filename, log=log)
+        rotation = ([region], origin, np.eye(3), 'z', 30.)
+        nodes = np.unique(model.elements[model.regions == region])
+        center0 = model.points[nodes].mean(axis=0)
+        model.rotate_regions([rotation])
+        # rotating about its own midpoint keeps the tail in place
+        nodes = np.unique(model.elements[model.regions == region])
+        center = model.points[nodes].mean(axis=0)
+        assert np.allclose(center, center0, atol=0.5), (center0, center)
+        model.write_cart3d(cart3d_filename_out)
+        cart3d_filename_out.unlink()
+
+
+def _two_region_model(log=None) -> Cart3D:
+    """region 1: square in x=[0, 1]; region 2: square in x=[1, 2]; share nodes 1/2"""
+    if log is None:
+        log = SimpleLogger(level='warning')
+    model = Cart3D(log=log)
+    model.points = np.array([
+        [0., 0., 0.], [1., 0., 0.], [1., 1., 0.],
+        [0., 1., 0.], [2., 0., 0.], [2., 1., 0.],
+    ])
+    model.elements = np.array([[0, 1, 2], [0, 2, 3], [1, 4, 5], [1, 5, 2]], dtype='int32')
+    model.regions = np.array([1, 1, 2, 2], dtype='int32')
+    model.loads = {'Cp': np.arange(6, dtype='float64')}
+    return model
+
 
 def check_array(points, points2):
     nnodes = points.shape[0]

@@ -52,6 +52,7 @@ Changes by Chen Jintao, Aug. 2021
 Changes by Eric Larson and Guillaume Favelier, Apr. 2022
  Support for PyQt6
 """
+import sys
 from pyNastran.gui.qt_version import qt_int, qt_version
 
 # Check whether a specific PyQt implementation was chosen
@@ -278,22 +279,32 @@ class QVTKRenderWindowInteractor(QVTKRWIBaseClass):
         else:
             self._RenderWindow = vtkRenderWindow()
 
-        WId = self.winId()
+        # On Windows, Qt's 'offscreen' platform (used for headless CI) returns a
+        # winId that is not a real HWND.  Binding VTK to it fails the OpenGL
+        # pixel format and access-violates on the first Render(), so render
+        # VTK offscreen instead of into the widget.
+        is_win32_offscreen = (
+            sys.platform == 'win32' and
+            QApplication.platformName() == 'offscreen')
+        if is_win32_offscreen:
+            self._RenderWindow.SetOffScreenRendering(1)
+        else:
+            WId = self.winId()
 
-        if type(WId).__name__ == 'PyCapsule':
-            from ctypes import pythonapi, c_void_p, py_object, c_char_p
+            if type(WId).__name__ == 'PyCapsule':
+                from ctypes import pythonapi, c_void_p, py_object, c_char_p
 
-            pythonapi.PyCapsule_GetName.restype = c_char_p
-            pythonapi.PyCapsule_GetName.argtypes = [py_object]
+                pythonapi.PyCapsule_GetName.restype = c_char_p
+                pythonapi.PyCapsule_GetName.argtypes = [py_object]
 
-            name = pythonapi.PyCapsule_GetName(WId)
+                name = pythonapi.PyCapsule_GetName(WId)
 
-            pythonapi.PyCapsule_GetPointer.restype  = c_void_p
-            pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
+                pythonapi.PyCapsule_GetPointer.restype  = c_void_p
+                pythonapi.PyCapsule_GetPointer.argtypes = [py_object, c_char_p]
 
-            WId = pythonapi.PyCapsule_GetPointer(WId, name)
+                WId = pythonapi.PyCapsule_GetPointer(WId, name)
 
-        self._RenderWindow.SetWindowInfo(str(int(WId)))
+            self._RenderWindow.SetWindowInfo(str(int(WId)))
 
         if stereo: # stereo mode
             self._RenderWindow.StereoCapableWindowOn()

@@ -27,6 +27,7 @@ from cpylog import SimpleLogger, get_logger
 from pyNastran.utils import PathLike, is_binary_file
 from pyNastran.converters.cart3d.cart3d_reader_writer import (
     Cart3dReaderWriter, _write_cart3d_binary, _write_cart3d_ascii)
+from pyNastran.converters.aero_common import validate_region_rotations, check_rotation_origin
 
 class Cart3D(Cart3dReaderWriter):
     """Cart3d interface class"""
@@ -318,6 +319,118 @@ class Cart3D(Cart3dReaderWriter):
         self.keep_elements(ielements_to_keep,
                            remove_associated_nodes=remove_associated_nodes)
         return self.elements
+
+    def rotate_regions(self,
+                       rotations: list[tuple[list[int], np.ndarray, np.ndarray,
+                                             str, float]],
+                       ortho_tol: float=1e-6) -> None:
+        """
+        Rigidly rotates sets of regions (e.g., a flap and a horizontal
+        tail) in place, each about an axis of its own coordinate system.
+        Same interface as Fluent.rotate_regions.
+
+        Each coordinate system is an origin and its x/y/z axes, all in
+        the basic frame (e.g., a hinge frame with the origin on the
+        hinge line).  The set is rotated by angle about the coordinate
+        system's x, y, or z axis through the origin, using the right-hand
+        rule (+angle about y turns z toward x).  In the basic frame:
+            R = axes.T @ R_local @ axes
+            xyz_new = origin + (xyz - origin) @ R.T
+
+        All sets are computed from the original points, so the order of
+        the sets doesn't matter.  Only the geometry changes; loads are
+        not rotated, so a warning is logged if there are velocity or
+        momentum components (U, V, W, rhoU, rhoV, rhoW).  A warning is
+        also logged if an origin is more than the set's bounding-box
+        diagonal away from the set (likely a typo or units mixup).
+
+        Parameters
+        ----------
+        rotations : list[(region_ids, origin, axes, axis, angle)]
+            region_ids : list[int]
+                the regions (self.regions) to rotate together
+            origin : (3,) float array
+                the point the regions rotate about
+            axes : (3, 3) float array
+                rows are the coordinate system x, y, z axes (unit
+                vectors); must be orthonormal and right-handed
+            axis : str
+                'x', 'y', or 'z'; the coordinate system axis to rotate about
+            angle : float
+                the rotation angle in degrees
+        ortho_tol : float; default=1e-6
+            tolerance on axes @ axes.T == I and det(axes) == 1
+
+        Raises
+        ------
+        KeyError
+            a region id doesn't exist
+        ValueError
+            bad origin/axes/axis/angle, or a region is in more than one set
+
+        Shared nodes
+        ------------
+        A node used by a rotated set and by any element outside that set
+        (a non-rotated region or another set; e.g., a flap hinge edge
+        stitched to the wing) is split: the set's elements get a new
+        node (appended to points) that rotates with them and the other
+        elements keep the original.  This opens a seam instead of warping
+        the neighboring elements.  The new node's loads are copied from
+        the original node.  The model is no longer watertight, so it
+        isn't a valid Cart3D input surface without closing the seam.
+
+        Example
+        -------
+        >>> # flap hinge frame: y along the (swept) hinge line
+        >>> model.rotate_regions([
+        ...     ([10, 11], hinge_origin, hinge_axes, 'y', 10.),  # flap
+        ...     ([20], [12., 0., 1.], np.eye(3), 'y', -2.),      # horizontal tail
+        ... ])
+        """
+        # validate everything before changing the model
+        sets = validate_region_rotations(rotations, self.regions, ortho_tol=ortho_tol)
+
+        loads = {} if self.loads is None else self.loads
+        vector_keys = [key for key in ('U', 'V', 'W', 'rhoU', 'rhoV', 'rhoW')
+                       if key in loads]
+        if vector_keys:
+            self.log.warning(f'velocity/momentum loads are not rotated with the '
+                             f'geometry: {vector_keys}')
+
+        points = np.asarray(self.points, dtype='float64').copy()
+        elements = self.elements.copy()
+        loads2 = {key: np.asarray(load).copy() for key, load in loads.items()}
+        for iset, (region_ids, origin, rotation_matrix, axis, angle) in enumerate(sets):
+            ielement = np.isin(self.regions, region_ids)
+            set_nodes = np.unique(elements[ielement, :])
+            other_nodes = np.unique(elements[~ielement, :])
+            check_rotation_origin(self.log, iset, region_ids, origin, points[set_nodes, :])
+
+            # split the shared nodes; the set gets the new copies
+            shared_nodes = np.intersect1d(set_nodes, other_nodes)
+            nshared = len(shared_nodes)
+            if nshared:
+                new_nodes = len(points) + np.arange(nshared, dtype=elements.dtype)
+                points = np.vstack([points, points[shared_nodes, :]])
+                for key, load in loads2.items():
+                    loads2[key] = np.concatenate([load, load[shared_nodes]], axis=0)
+                nodes = elements[ielement, :]
+                is_shared = np.isin(nodes, shared_nodes)
+                nodes[is_shared] = new_nodes[np.searchsorted(shared_nodes, nodes[is_shared])]
+                elements[ielement, :] = nodes
+                set_nodes = np.union1d(np.setdiff1d(set_nodes, shared_nodes), new_nodes)
+
+            # set_nodes are now only used by this set, so they're still at
+            # their original location
+            points[set_nodes, :] = origin + (points[set_nodes, :] - origin) @ rotation_matrix.T
+            self.log.info(f'rotated set {iset}: regions={region_ids.tolist()} '
+                          f'{angle} deg about {axis}; nnodes={len(set_nodes)} '
+                          f'nsplit={nshared} origin={origin.tolist()}')
+
+        self.points = points
+        self.elements = elements
+        if self.loads is not None:
+            self.loads = loads2
 
     def get_free_edges(self, elements):
         """
