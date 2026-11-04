@@ -442,6 +442,9 @@ def pressure_map(aero_filename: PathLike,
     cref : float; default=1.0
         reference length for My in structure units (e.g. in);
         logged CM only
+    pressure_str : str; default=''
+        a really lousy name for a parameter that lets you write the
+        case control deck
 
     Both methods log a "Force/Moment Balance: Aero vs Mapped Structure"
     table about ``reference_point``: the aero total (qinf*Cp*A*n over
