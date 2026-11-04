@@ -15,7 +15,8 @@ from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag,
     map_panel_force_moment_centroid, pressure_map_to_panel_model,
-    pressure_map_to_structure_model, pressure_map_to_lcp_model)
+    pressure_map_to_structure_model, pressure_map_to_lcp_model,
+    _check_lcp_group_location)
 from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid, log_aero_force_moment)
 
@@ -1733,6 +1734,16 @@ class TestLCP(unittest.TestCase):
             loads_model.read_bdf(str(pressure_filename), xref=False, punch=True)
             self.assertEqual(sorted(loads_model.loads), [2, 3])
 
+            # total: LOAD 6 = 1.0*FORCE(2) + 1.0*MOMENT(3), and SUBCASE 4 uses it
+            self.assertEqual(sorted(loads_model.load_combinations), [6])
+            load = loads_model.load_combinations[6][0]
+            self.assertEqual(load.scale, 1.0)
+            self.assertEqual(list(load.scale_factors), [1.0, 1.0])
+            self.assertEqual(list(load.load_ids), [2, 3])
+            main_text = (dirname / 'main_lcp.bdf').read_text()
+            self.assertIn('SUBCASE 4\n  SUBTITLE = Total (Force + Moment)\n  LOAD = 6\n', main_text)
+            self.assertLess(main_text.index('SUBCASE 3'), main_text.index('SUBCASE 4'))
+
         np.testing.assert_array_equal(data[:, 0], [2, 3])
         np.testing.assert_allclose(data[0, 1:], [0., 0., 2., -1/3, -1/3, 0.],
                                    rtol=1e-6, atol=1e-9)
@@ -1762,6 +1773,16 @@ class TestLCP(unittest.TestCase):
         self.assertNotIn('LCP aero regions', text)
         forces, moments = self._cards(out_model)
         self.assertEqual(sorted(forces), [1, 2])
+
+        # the first FORCE/MOMENT card of each group is labeled with the group
+        with tempfile.TemporaryDirectory() as dirname:
+            bdf_filename = Path(dirname) / 'loads.bdf'
+            out_model.write_bdf(bdf_filename)
+            bdf_text = bdf_filename.read_text()
+        for word in ('Force', 'Moment'):
+            for group_name in groups:
+                self.assertEqual(bdf_text.count(f'${word}; group={group_name}; qinf='), 1,
+                                 (word, group_name))
 
         # flat tri -> node 1; d=(-11/6, -1/6, -1/2); d x (0,0,2)
         np.testing.assert_allclose(forces[1], [0., 0., 2.], atol=1e-12)
@@ -1870,16 +1891,166 @@ class TestLCP(unittest.TestCase):
     def test_lcp_groups_empty_raises(self):
         """a group with nothing left after the cleanup can't be mapped"""
         log = SimpleLogger(level='error')
-        bad_groups = [
+
+        # no regions left -> raises
+        bad_regions_groups = [
             {'wing': {'regions': [], 'nodes': [1]}},
-            {'wing': {'regions': [1], 'nodes': []}},
             {'wing': {'regions': [99], 'nodes': [1]}},
-            {'wing': {'regions': [1], 'nodes': [1000]}},
         ]
-        for groups in bad_groups:
+        for groups in bad_regions_groups:
             with self.assertRaises(ValueError, msg=str(groups)):
                 self._map_groups(_lcp_structure(log, [(1., 1., 0.)]),
                                  _two_region_cart3d(log), groups)
+
+        # no nodes left -> the group is skipped with a message (no raise);
+        # nothing is mapped, so there are no cards
+        bad_nodes_groups = [
+            {'wing': {'regions': [1], 'nodes': []}},
+            {'wing': {'regions': [1], 'nodes': [1000]}},
+        ]
+        for groups in bad_nodes_groups:
+            out_model, bals, text = self._map_groups(
+                _lcp_structure(log, [(1., 1., 0.)]),
+                _two_region_cart3d(log), groups)
+            self.assertIn('skipping group wing because nodes are empty', text, msg=str(groups))
+            self.assertEqual(out_model.loads, {}, msg=str(groups))
+            self.assertEqual(out_model.load_combinations, {}, msg=str(groups))
+            self.assertEqual(bals, {}, msg=str(groups))
+
+    def test_lcp_total_load_card(self):
+        """the LOAD card combines force_sid and moment_sid; load_sid must be unique"""
+        log = SimpleLogger(level='warning')
+        structure_model = _lcp_structure(log, [(10., 0., 0.)])
+        out_model, unused_bal = self._map(structure_model, _two_tri_cart3d(log))
+        self.assertEqual(sorted(out_model.load_combinations), [6])
+        load = out_model.load_combinations[6][0]
+        self.assertEqual(list(load.load_ids), [2, 3])
+        self.assertEqual(list(load.scale_factors), [1.0, 1.0])
+
+        for load_sid in [2, 3]:
+            with self.assertRaises(ValueError, msg=str(load_sid)):
+                pressure_map_to_lcp_model(
+                    _two_tri_cart3d(log), _lcp_structure(log, [(10., 0., 0.)]),
+                    np.array([], dtype='int32'), np.zeros(3), {},
+                    qinf=PANEL_QINF, force_sid=2, moment_sid=3, load_sid=load_sid)
+
+    # ------------------------------------------------------------------
+    # aero centroid vs average node location
+    # ------------------------------------------------------------------
+    def test_lcp_check_group_location(self):
+        """
+        aero: centroids (0,0,0) A=1 and (4,0,0) A=3
+          -> area-weighted centroid (3,0,0); size = bbox diagonal = 4
+        """
+        aero_centroid = np.array([[0., 0., 0.], [4., 0., 0.]])
+        aero_area = np.array([1., 3.])
+
+        # nodes average to (3,0,0) -> distance 0 -> PASS
+        log, msgs = _capture_log()
+        distance, size = _check_lcp_group_location(
+            log, 'fin', aero_centroid, aero_area,
+            np.array([[3., 1., 0.], [3., -1., 0.]]), 0.25)
+        self.assertEqual(distance, 0.)
+        self.assertEqual(size, 4.)
+        text = '\n'.join(msgs)
+        self.assertIn('PASS', text)
+        self.assertNotIn('FAIL', text)
+
+        # node on the other side of the body: distance 2 -> 0.5 sizes -> FAIL
+        log, msgs = _capture_log()
+        distance, size = _check_lcp_group_location(
+            log, 'fin', aero_centroid, aero_area,
+            np.array([[3., -2., 0.]]), 0.25)
+        self.assertAlmostEqual(distance, 2.)
+        self.assertEqual(size, 4.)
+        text = '\n'.join(msgs)
+        self.assertIn("LCP group='fin' location", text)
+        self.assertIn('FAIL: the nodes are 0.5 group sizes', text)
+
+        # same nodes with a looser tolerance -> PASS
+        log, msgs = _capture_log()
+        _check_lcp_group_location(
+            log, 'fin', aero_centroid, aero_area,
+            np.array([[3., -2., 0.]]), 0.6)
+        self.assertNotIn('FAIL', '\n'.join(msgs))
+
+    def test_lcp_check_group_location_single_panel(self):
+        """one panel has no bbox; the size falls back to sqrt(area)"""
+        log, msgs = _capture_log()
+        distance, size = _check_lcp_group_location(
+            log, 'tab', np.array([[1., 2., 3.]]), np.array([4.]),
+            np.array([[1., 2., 4.]]), 0.25)
+        self.assertAlmostEqual(distance, 1.)
+        self.assertEqual(size, 2.)
+        self.assertIn('FAIL', '\n'.join(msgs))
+
+    def test_lcp_groups_location_warns(self):
+        """
+        pressure_map_to_lcp_model logs the check per group; a group whose
+        nodes are on the far side of the model is flagged, the loads are
+        still mapped
+        """
+        log = SimpleLogger(level='warning')
+        # wing (region 1, flat tri) node is near; tail (region 2) node is far
+        structure_model = _lcp_structure(log, [(7/6, 5/6, 1/2), (17/6, -20., 5/6)])
+        groups = {
+            'wing': {'regions': [1], 'nodes': [1]},
+            'tail': {'regions': [2], 'nodes': [2]},
+        }
+        out_model, bals, text = self._map_groups(
+            structure_model, _two_region_cart3d(log), groups)
+        self.assertIn("LCP group='wing' location", text)
+        self.assertIn("LCP group='tail' location", text)
+        wing_line = text.split("LCP group='wing' location")[1].split('LCP group=')[0]
+        tail_line = text.split("LCP group='tail' location")[1].split('LCP group=')[0]
+        self.assertIn('PASS', wing_line)
+        self.assertIn('FAIL', tail_line)
+        forces, unused_moments = self._cards(out_model)
+        self.assertEqual(sorted(forces), [1, 2])
+        for bal in bals.values():
+            np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], **LOG_TOL)
+            np.testing.assert_allclose(bal['struct_m'], bal['aero_m'], **LOG_TOL)
+
+
+class TestLogAeroRegions(unittest.TestCase):
+    """
+    log_aero_force_moment / get_aero_model with regions_to_include/remove
+    (_two_region_cart3d at qinf=2: region 1 F=(0,0,2); region 2 F=(-2,0,2))
+    """
+    def test_log_aero_force_moment_regions(self):
+        log = SimpleLogger(level='error')
+        model = _two_region_cart3d(log)
+        force, unused_moment = log_aero_force_moment(model, 'cart3d', qinf=PANEL_QINF)
+        np.testing.assert_allclose(force, [-2., 0., 4.], atol=1e-12)
+
+        force, unused_moment = log_aero_force_moment(
+            model, 'cart3d', qinf=PANEL_QINF, regions_to_remove=[2])
+        np.testing.assert_allclose(force, [0., 0., 2.], atol=1e-12)
+
+        force, unused_moment = log_aero_force_moment(
+            model, 'cart3d', qinf=PANEL_QINF, regions_to_include=[2])
+        np.testing.assert_allclose(force, [-2., 0., 2.], atol=1e-12)
+
+        # include and remove the same region -> nothing left
+        log, msgs = _capture_log()
+        model = _two_region_cart3d(log)
+        out = log_aero_force_moment(
+            model, 'cart3d', qinf=PANEL_QINF,
+            regions_to_include=[2], regions_to_remove=[2])
+        self.assertIsNone(out)
+        self.assertIn('no aero elements left', '\n'.join(msgs))
+
+    def test_get_aero_model_logs_filtered_sum(self):
+        """get_aero_model's logged sum skips regions_to_remove; the model isn't filtered"""
+        log, msgs = _capture_log()
+        model = _two_region_cart3d(log)
+        model_out, unused_variables = get_aero_model(
+            model, 'cart3d', qinf=PANEL_QINF, regions_to_remove=[2], log=log)
+        text = '\n'.join(msgs)
+        self.assertIn('aero force/moment sum (1 of 2 aero elements; '
+                      'regions_to_include=None regions_to_remove=[2])', text)
+        self.assertIn('F = [0, 0, 2]', text)
+        self.assertEqual(len(model_out.elements), 2)
 
 
 def _two_region_cart3d(log: SimpleLogger, keep_region: int=0) -> Cart3D:

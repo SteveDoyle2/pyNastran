@@ -164,7 +164,8 @@ aero model and node set cut by hand), but in one call and one deck.
 Notes:
 
  - Region/node ids that aren't in the models are dropped with a warning.
-   A group with nothing left raises a ValueError.
+   A group with no regions left raises a ValueError; a group with no
+   nodes left is skipped with a warning (its load is not mapped).
  - An aero region in no group is NOT mapped (warning).  An aero region in
    more than one group is mapped once per group (warning).
  - A node may be in several groups.  It then gets one FORCE/MOMENT card
@@ -176,11 +177,12 @@ Notes:
 
 Output files (pressure_filename='lcp.bdf')
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
- - lcp.bdf: FORCE (force_sid) and MOMENT (moment_sid) cards
+ - lcp.bdf: FORCE (force_sid) and MOMENT (moment_sid) cards, plus a
+   LOAD card (load_sid=6) = 1.0*FORCE + 1.0*MOMENT, the total aero load
  - main_lcp.bdf: SOL 101 deck that INCLUDEs the structure
    (nastran_filename / BDF.bdf_filename) and lcp.bdf.  SUBCASE 2 is the
-   force and SUBCASE 3 is the moment; they're separate loads, so combine
-   them (e.g. a LOAD card) to apply the full aero load.
+   force only, SUBCASE 3 is the moment only, and SUBCASE 4 is the total
+   (LOAD = load_sid).
  - lcp.force_moment.csv: one row per card pair:
    ``nid,Fx,Fy,Fz,Mx,My,Mz,`` (no header, trailing comma)
 
@@ -193,7 +195,7 @@ Example::
         load_control_nids=load_control_nids,   # or None for 'total'
         qinf=21.79, reference_point=np.array([807., 0., 0.]),
         xyz_units_in='in', xyz_units_out='in', pressure_units='psi',
-        force_sid=2, moment_sid=3,
+        force_sid=2, moment_sid=3, load_sid=6,
         pressure_filename='lcp.bdf')
 """
 from __future__ import annotations
@@ -351,6 +353,7 @@ def pressure_map(aero_filename: PathLike,
                  moment_sid: int=3,
                  cp_sid: int=4,
                  cp_signed_sid: int=5,
+                 load_sid: int=6,
                  idtype: str='int32',
                  fdtype: str='float64',
                  pressure_filename: PathLike='pressure.bdf',
@@ -474,6 +477,11 @@ def pressure_map(aero_filename: PathLike,
         the output moment id
     cp_sid : int; default=4
         the output pressure coefficient id
+    load_sid : int; default=6
+        method='LCP' only: LOAD card id that combines force_sid and
+        moment_sid (1.0*FORCE + 1.0*MOMENT), i.e., the total aero load;
+        the main deck gets a SUBCASE for it.  Must differ from
+        force_sid and moment_sid.
     reference_point : (3,) float ndarray; default=None -> [0, 0, 0]
         moment reference point in STRUCTURE units, basic coordinates
     xyz_units_in / xyz_units_out : str; default='???'
@@ -551,8 +559,9 @@ def pressure_map(aero_filename: PathLike,
         qinf=qinf,
         reference_point=reference_point,
         pressure_units=pressure_units,
-        # regions_to_remove=regions_to_remove,
-        # regions_to_include=regions_to_include,
+        # log only: the logged aero sum matches what gets mapped
+        regions_to_remove=regions_to_remove,
+        regions_to_include=regions_to_include,
     )
     log = structure_model.log
     log.info(f'qinf ({pressure_units}) = {qinf:.3f}')
@@ -617,6 +626,7 @@ def pressure_map(aero_filename: PathLike,
             moment_sid=moment_sid,
             #cp_sid=cp_sid,
             #cp_signed_sid=cp_signed_sid,
+            load_sid=load_sid,
             #map_type=map_type,
             qinf=qinf, pressure_units=pressure_units,
             sref=sref, bref=bref, cref=cref,
@@ -634,7 +644,8 @@ def pressure_map(aero_filename: PathLike,
             pressure_model, pressure_filename, pressure_str,
             nastran_filename, map_type, method,
             cp_sid=cp_sid, pressure_sid=pressure_sid,
-            force_sid=force_sid, moment_sid=moment_sid, cp_signed_sid=cp_signed_sid)
+            force_sid=force_sid, moment_sid=moment_sid, cp_signed_sid=cp_signed_sid,
+            load_sid=load_sid)
     else:
         _write_pressure_file(
             pressure_model, pressure_filename, pressure_str,
@@ -880,6 +891,7 @@ def _write_lcp_pressure_file(model: BDF,
                              moment_sid: int=3,
                              cp_sid: int=4,
                              cp_signed_sid: int=5,
+                             load_sid: int=6,
                              idtype: str='int32') -> None:
     if len(str(pressure_filename)) == 0:
         print(f'skipping pressure_filename={pressure_filename}')
@@ -910,6 +922,14 @@ def _write_lcp_pressure_file(model: BDF,
         '  SUBTITLE = Moment\n'
         f'  LOAD = {moment_sid}\n'
         )
+    if load_sid in model.load_combinations:
+        # LOAD card = FORCE + MOMENT (pressure_map_to_lcp_model)
+        # SUBCASE 4: subcase ids must increase (2, 3 above)
+        msg += (
+            'SUBCASE 4\n'
+            '  SUBTITLE = Total (Force + Moment)\n'
+            f'  LOAD = {load_sid}\n'
+            )
     forces: list[PLOAD2] = model.loads[force_sid]
     moments: list[PLOAD2] = model.loads[moment_sid]
     write_header = False
@@ -2758,6 +2778,7 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
                               moment_sid: int=3,
                               #cp_sid: int=4,
                               #cp_signed_sid: int=5,
+                              load_sid: int=6,
                               sref: float=1.0,
                               cref: float=1.0,
                               bref: float=1.0,
@@ -2766,7 +2787,8 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
                               regions_to_remove=None,
                               pressure_units: str='',
                               #idtype: str='int32',
-                              fdtype: str='float64') -> BDF:
+                              fdtype: str='float64',
+                              location_tol: float=0.25) -> BDF:
     """
     Lumps each aero tri/quad onto the nearest load collection point (node).
 
@@ -2804,13 +2826,26 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
         dynamic pressure in structure pressure units
     sref, bref, cref : float
         logged CF/CM only
+    load_sid : int; default=6
+        LOAD card id: 1.0*force_sid + 1.0*moment_sid (the total aero
+        load); must differ from force_sid and moment_sid
+    location_tol : float; default=0.25
+        per group, warns if the distance between the area-weighted aero
+        centroid and the average node location is more than
+        location_tol * (diagonal of the aero group's bounding box);
+        catches swapped regions or nodes that are rotated about the body
+        (see _check_lcp_group_location)
 
     Returns
     -------
     bdf_model_out : BDF
         FORCE cards under force_sid and MOMENT cards under moment_sid;
-        one pair per loaded node per group
+        one pair per loaded node per group; LOAD card load_sid =
+        FORCE + MOMENT
     """
+    if load_sid in {force_sid, moment_sid}:
+        raise ValueError(f'load_sid={load_sid} must differ from '
+                         f'force_sid={force_sid} and moment_sid={moment_sid}')
     aero_format = aero_model.__class__.__name__.lower()
     map_type = 'force_moment'
     assert aero_format in {'cart3d', 'fluent', 'tecplot'}, aero_format
@@ -2935,6 +2970,11 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
         #local_aero_quad_moment = aero_quad_moment_coeff_per_q[iquad, :]
 
         local_aero_centroid = np.vstack([local_aero_tri_centroid, local_aero_quad_centroid])
+        local_aero_area = np.hstack([aero_tri_area[itri], aero_quad_area[iquad]])
+        _check_lcp_group_location(
+            log, group_name, local_aero_centroid, local_aero_area,
+            structure_xyzi, location_tol, xyz_units=xyz_units)
+
         # dimensional force: F = qinf*Cp*A*n
         local_aero_force = qinf * np.vstack([local_aero_tri_force, local_aero_quad_force])
         #local_aero_moment = np.vstack([local_aero_tri_moment, local_aero_quad_moment])
@@ -2960,8 +3000,8 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
         node_force = node_force_out[iloaded, :]
         node_moment = node_moment_out[iloaded, :]
 
-        fcomment = f'Force; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
-        mcomment = f'Moment; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
+        fcomment = f'Force; group={group_name}; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
+        mcomment = f'Moment; group={group_name}; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)'
         total_structure_force = np.zeros(3, dtype=fdtype)
         total_structure_moment = np.zeros(3, dtype=fdtype)
         for nid, xyz, force, moment in zip(nids, xyzs, node_force, node_moment):
@@ -2999,6 +3039,13 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
     #if check_force_moment:
     #    force, moment = sum_force_moment(bdf_model_out)
 
+    # total aero load = FORCE + MOMENT
+    if force_sid in bdf_model_out.loads and moment_sid in bdf_model_out.loads:
+        bdf_model_out.add_load(
+            load_sid, 1.0, [1.0, 1.0], [force_sid, moment_sid],
+            comment=f'Total = Force + Moment; qinf={qinf} {pressure_units} (pressure_map_to_lcp_model)')
+    else:
+        log.warning(f'no FORCE/MOMENT cards were written; skipping the total LOAD card (load_sid={load_sid})')
     return bdf_model_out
 
 def _simplify_load_control_nids(
@@ -3069,6 +3116,63 @@ def _simplify_load_control_nids(
     if len(multiple):
         log.warning(f'LCP aero regions={multiple} are in more than one group; their load is mapped more than once')
     return load_control_nids2
+
+
+def _check_lcp_group_location(log: SimpleLogger,
+                              group_name: str,
+                              aero_centroid: np.ndarray,
+                              aero_area: np.ndarray,
+                              structure_xyz: np.ndarray,
+                              location_tol: float,
+                              xyz_units: str='') -> tuple[float, float]:
+    """
+    Checks that an LCP group's nodes are near its aero panels.
+
+    Compares the area-weighted aero centroid to the average node
+    location.  The size of the group is the diagonal of the bounding box
+    of the aero panel centroids (at least sqrt(total area) so a single
+    panel still has a size).  If distance > location_tol * size, a warning
+    is logged.  Nothing is changed; the loads are still mapped (F/M are
+    conserved either way, but the nodes probably belong to another group).
+
+    Parameters
+    ----------
+    aero_centroid : (n, 3) float ndarray
+        the group's aero panel centroids
+    aero_area : (n,) float ndarray
+        the group's aero panel areas
+    structure_xyz : (m, 3) float ndarray
+        the group's node locations
+    location_tol : float
+        fraction of the group size
+
+    Returns
+    -------
+    distance : float
+    size : float
+    """
+    total_area = aero_area.sum()
+    if total_area > 0.:
+        aero_avg = (aero_centroid * aero_area[:, np.newaxis]).sum(axis=0) / total_area
+    else:
+        aero_avg = aero_centroid.mean(axis=0)
+    structure_avg = structure_xyz.mean(axis=0)
+    distance = float(np.linalg.norm(aero_avg - structure_avg))
+
+    diagonal = float(np.linalg.norm(aero_centroid.max(axis=0) - aero_centroid.min(axis=0)))
+    size = max(diagonal, float(np.sqrt(abs(total_area))))
+
+    msg = (f'LCP group={group_name!r} location: aero centroid={aero_avg.tolist()}; '
+           f'average node={structure_avg.tolist()}; '
+           f'distance={distance:g} {xyz_units}; group size={size:g} {xyz_units}')
+    if distance > location_tol * size:
+        log.warning(f'{msg}\n'
+                    f'  FAIL: the nodes are {distance/size:.3g} group sizes from the aero panels '
+                    f'(location_tol={location_tol:g}); check the regions/nodes for this group '
+                    f'(swapped or rotated?)')
+    else:
+        log.info(f'{msg}\n  PASS: ratio={distance/size:.3g} <= location_tol={location_tol:g}')
+    return distance, size
 
 
 #------------------------------------------------------------------------------
