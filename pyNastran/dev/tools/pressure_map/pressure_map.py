@@ -979,7 +979,7 @@ def savetxt_nid_fm(filename: PathLike, nids, force, moment, header=''):
     with open(filename, 'w') as file_obj:
         for nid, forcei, momenti in zip(nids, force, moment):
             file_obj.write(f'{nid:d},{forcei[0]:18e},{forcei[1]:18e},{forcei[2]:18e},{momenti[0]:18e},{momenti[1]:18e},{momenti[2]:18e},\n')
-                
+
 def _get_rel_filename(
         aero_panel_bdf_filename: PathLike | BDF,
         dirname: PathLike,
@@ -3063,4 +3063,101 @@ def _simplify_load_control_nids(
     if len(multiple):
         log.warning(f'LCP aero regions={multiple} are in more than one group; their load is mapped more than once')
     return load_control_nids2
+
+
+#------------------------------------------------------------------------------
+# shared LCP helpers (array interface; used by structural_lcp.py)
+# TODO: pressure_map_to_lcp_model still has its own copy of this logic
+
+def lump_loads_to_lcp(load_xyz: np.ndarray,
+                      load_force: np.ndarray,
+                      load_moment: np.ndarray,
+                      lcp_nids: np.ndarray,
+                      lcp_xyz: np.ndarray) -> tuple[np.ndarray, np.ndarray,
+                                                    np.ndarray, np.ndarray]:
+    """
+    Lumps point loads onto the nearest load collection point (LCP).
+
+    Each load i (applied at x_i) goes to its nearest LCP k:
+      F_k = sum(F_i)
+      M_k = sum((x_i - x_k) x F_i + M_i)   (transfer moment)
+    so the LCP loads reproduce the input F and M about any point.
+
+    Parameters
+    ----------
+    load_xyz : (n, 3) float ndarray
+        load application points (basic)
+    load_force : (n, 3) float ndarray
+        forces (basic)
+    load_moment : (n, 3) float ndarray
+        applied moments (basic); zeros if there are none
+    lcp_nids : (m,) int ndarray
+        LCP node ids
+    lcp_xyz : (m, 3) float ndarray
+        LCP locations (basic)
+
+    Returns
+    -------
+    nids : (k,) int ndarray
+        the loaded LCPs (in lcp_nids order)
+    xyz : (k, 3) float ndarray
+    force : (k, 3) float ndarray
+    moment : (k, 3) float ndarray
+        transfer moment about each LCP
+    """
+    load_xyz = np.asarray(load_xyz, dtype='float64').reshape(-1, 3)
+    load_force = np.asarray(load_force, dtype='float64').reshape(-1, 3)
+    load_moment = np.asarray(load_moment, dtype='float64').reshape(-1, 3)
+    lcp_nids = np.asarray(lcp_nids)
+    lcp_xyz = np.asarray(lcp_xyz, dtype='float64').reshape(-1, 3)
+    nload = len(load_xyz)
+    nlcp = len(lcp_nids)
+    assert load_force.shape == (nload, 3), (load_force.shape, nload)
+    assert load_moment.shape == (nload, 3), (load_moment.shape, nload)
+    assert lcp_xyz.shape == (nlcp, 3), (lcp_xyz.shape, nlcp)
+    if nlcp == 0:
+        raise ValueError('no LCP nodes')
+    if nload == 0:
+        empty = np.zeros((0, 3), dtype='float64')
+        return lcp_nids[:0], empty, empty.copy(), empty.copy()
+
+    tree = _get_tree(lcp_xyz)
+    unused_deq, ieq = tree.query(load_xyz, k=1)
+    assert ieq.max() < nlcp, (ieq.max(), nlcp)
+
+    node_force = np.zeros((nlcp, 3), dtype='float64')
+    node_moment = np.zeros((nlcp, 3), dtype='float64')
+    np.add.at(node_force, ieq, load_force)
+    dr = load_xyz - lcp_xyz[ieq, :]
+    np.add.at(node_moment, ieq, np.cross(dr, load_force) + load_moment)
+
+    iloaded = np.unique(ieq)
+    return (lcp_nids[iloaded], lcp_xyz[iloaded, :],
+            node_force[iloaded, :], node_moment[iloaded, :])
+
+
+def add_lcp_force_moment_cards(bdf_model_out: BDF,
+                               nids: np.ndarray,
+                               force: np.ndarray,
+                               moment: np.ndarray,
+                               force_sid: int,
+                               moment_sid: int,
+                               fcomment: str='',
+                               mcomment: str='') -> None:
+    """
+    Adds one FORCE (force_sid) and one MOMENT (moment_sid) per node in the
+    basic frame.  Zero loads are still written (mag=0), so the cards stay
+    paired (_write_lcp_pressure_file zips them).
+    """
+    for nid, forcei, momenti in zip(nids, force, moment):
+        fmag = np.linalg.norm(forcei)
+        mmag = np.linalg.norm(momenti)
+        fdir = forcei / fmag if fmag > 0. else np.array([1., 0., 0.])
+        mdir = momenti / mmag if mmag > 0. else np.array([1., 0., 0.])
+        bdf_model_out.add_force(
+            force_sid, int(nid), fmag, fdir, cid=0, comment=fcomment)
+        bdf_model_out.add_moment(
+            moment_sid, int(nid), mmag, mdir, cid=0, comment=mcomment)
+        fcomment = ''
+        mcomment = ''
 

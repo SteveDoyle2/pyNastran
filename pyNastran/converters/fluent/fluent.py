@@ -70,11 +70,17 @@ class Fluent:
         assert len(result_element_id) > 0
         model.node_id = node_id
         model.xyz = xyz
-        model.result_element_id = result_element_id
         model.quads = quads
         model.tris = tris
         model.titles = titles
-        model.results = np.vstack([quad_results, tri_results])
+
+        # results rows must line up with result_element_id (sorted by
+        # element id), not the [quads, tris] order they come in
+        eids = np.hstack([quads[:, 0], tris[:, 0]])
+        isort = np.argsort(eids)
+        assert np.array_equal(eids[isort], result_element_id), 'result_element_id mismatch'
+        model.result_element_id = eids[isort]
+        model.results = np.vstack([quad_results, tri_results])[isort, :]
 
         element_ids = np.unique(np.hstack([
             quads[:, 0], tris[:, 0],
@@ -166,15 +172,16 @@ class Fluent:
         assert os.path.exists(daten_filename), print_bad_path(daten_filename)
         assert os.path.exists(cell_filename), print_bad_path(cell_filename)
         self.fluent_filename = fluent_filename
-        if self.auto_read_write_h5 and os.path.exists(h5_filename):
+
+        fluent_filenames = [vrt_filename, cell_filename, daten_filename]
+        # the h5 is a cache of the vrt/cel/daten; only use it if it's current
+        # (a stale or unreadable h5 falls through and gets rewritten below)
+        if self.auto_read_write_h5 and is_h5_current(fluent_filenames, h5_filename, self.log):
             # fails if pytables isn't installed
             self.log.debug(f'reading fluent {h5_filename}')
             is_loaded = self.read_h5(h5_filename, require_load=False)
             if is_loaded:
                 return
-        assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
-        assert os.path.exists(daten_filename), print_bad_path(daten_filename)
-        assert os.path.exists(cell_filename), print_bad_path(cell_filename)
 
         (quads, tris), element_ids = read_cell(cell_filename, self.log)
         node, xyz = read_vrt(vrt_filename, self.log)
@@ -379,7 +386,9 @@ class Fluent:
             str(model2)
             assert len(model2.result_element_id) > 0
             region = model2.region
-            results = model2.results
+            # [quads, tris] order to match region; model2.results is in
+            # result_element_id order
+            results = np.vstack([quad_results, tri_results])
         else:
             self.log.debug('no filtering of regions')
             tris = self.tris
@@ -397,8 +406,9 @@ class Fluent:
             assert np.array_equal(result_element_id, np.unique(result_element_id))
 
             region = self.region
+            # [quads, tris] order to match region; don't store it on self,
+            # since self.results must stay in result_element_id order
             results = np.vstack([quad_results, tri_results])
-            self.results = results
             assert len(result_element_id) > 0, 'no elements remaining2'
             assert len(self.result_element_id) > 0
             model2 = self
@@ -675,7 +685,7 @@ def compute_cp_force_moment_coefficients(
         length_units = f' {units}' if units else ''
         log_info(f'Sref={sref}{area_units}; cref={cref}{length_units}; '
                  f'bref={bref}{length_units}; xyz_ref={xyz_ref.tolist()}{length_units}')
-        log_info(f'total: CFxyz={cf_total} CMxyz={cm_total}')
+        log_info(f'total 0: CFxyz={cf_total} CMxyz={cm_total}')
         for regioni, (cf_xyz, cm_xyz) in region_dict.items():
             log_info(f'  region {regioni}: CFxyz={cf_xyz} CMxyz={cm_xyz}')
     return cf_total, cm_total, region_dict
@@ -686,6 +696,30 @@ def _as_ids(ids: Optional[np.ndarray]) -> np.ndarray:
     if ids is None:
         return np.zeros(0, dtype='int64')
     return np.asarray(ids).ravel()
+
+
+def is_h5_current(source_filenames: PathLike | list[PathLike],
+                  h5_filename: PathLike,
+                  log: SimpleLogger) -> bool:
+    """
+    Is the h5 cache usable?
+
+    Returns True if h5_filename exists and is at least as new as every
+    source file.  Logs a warning (naming the newer files) if it's stale.
+    """
+    if isinstance(source_filenames, (str, os.PathLike)):
+        source_filenames = [source_filenames]
+    if not os.path.exists(h5_filename):
+        return False
+
+    h5_mtime = os.path.getmtime(h5_filename)
+    newer = [os.path.basename(fname) for fname in source_filenames
+             if os.path.getmtime(fname) > h5_mtime]
+    if newer:
+        log.warning(f'{h5_filename} is older than {", ".join(newer)}; '
+                    'rereading them and rewriting the h5')
+        return False
+    return True
 
 
 def read_fluent(fluent_filename: PathLike,

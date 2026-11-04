@@ -14,6 +14,12 @@ from pyNastran.converters.fluent.fluent_to_tecplot import fluent_to_tecplot
 from pyNastran.converters.tecplot.tecplot import read_tecplot
 from pyNastran.converters.fluent.ugrid_to_fluent import ugrid_to_fluent_filename
 
+try:
+    import tables  # noqa: F401
+    IS_TABLES = True
+except ImportError:  # pragma: no cover
+    IS_TABLES = False
+
 warnings.simplefilter('always')
 np.seterr(all='raise')
 
@@ -369,6 +375,69 @@ class TestFluent(unittest.TestCase):
         finally:
             for ext in ('.cel', '.vrt', '.daten'):
                 os.remove(fluent_filename.with_suffix(ext))
+
+    def test_get_filtered_data_twice(self):
+        """get_filtered_data must not reorder self.results; results[:, 0] = 10 * eid"""
+        model = _tri_quad_model()
+        results0 = model.results.copy()
+        out1 = model.get_filtered_data()
+        out2 = model.get_filtered_data()
+        assert np.array_equal(model.results, results0), model.results
+        for array1, array2 in zip(out1, out2):
+            assert np.array_equal(array1, array2)
+        # [quads, tris] order
+        assert np.array_equal(out2[4][:, 0], [10., 30., 20., 40., 50.]), out2[4]
+
+    def test_get_filtered_data_region_model(self):
+        """the filtered model's results line up with its result_element_id"""
+        model = _tri_quad_model()
+        element_id, tris, quads, region, results = model.get_filtered_data(
+            regions_to_include=[7, 9])
+        assert np.array_equal(element_id, [1, 3, 5]), element_id
+        assert np.array_equal(region, [7, 7, 9]), region
+        assert np.array_equal(results[:, 0], [10., 30., 50.]), results  # [quads, tris]
+
+        model2 = model.get_filtered_data(regions_to_include=[7, 9], return_model=True)
+        assert np.array_equal(model2.results[:, 0], 10. * model2.result_element_id), model2.results
+        # filtering the filtered model gives the same answer
+        out = model2.get_filtered_data()
+        assert np.array_equal(out[4][:, 0], [10., 30., 50.]), out[4]
+
+    @unittest.skipIf(not IS_TABLES, 'pytables is not installed')
+    def test_read_fluent_stale_h5(self):
+        """an h5 older than the vrt/cel/daten is ignored and rewritten"""
+        model = _tri_quad_model()
+        fluent_filename = TEST_PATH / 'stale_h5.cel'
+        h5_filename = fluent_filename.with_suffix('.h5')
+        messages = []
+        log = SimpleLogger(level='warning',
+                           log_func=lambda typ, filename, lineno, msg: messages.append((typ, msg)))
+        try:
+            model.write_fluent(fluent_filename)
+            read_fluent(fluent_filename, auto_read_write_h5=True, log=log)  # writes the h5
+            assert h5_filename.exists()
+
+            model.results[:, 0] *= 2.
+            model.write_fluent(fluent_filename)
+            # make the h5 older than the sources regardless of the clock resolution
+            old_mtime = os.path.getmtime(fluent_filename) - 100.
+            os.utime(h5_filename, (old_mtime, old_mtime))
+
+            model2 = read_fluent(fluent_filename, auto_read_write_h5=True, log=log)
+            assert np.array_equal(model2.results[:, 0], 20. * model2.result_element_id)
+            assert os.path.getmtime(h5_filename) > old_mtime  # rewritten
+            warnings_ = [msg for typ, msg in messages if typ == 'WARNING']
+            assert len(warnings_) == 1 and 'older than' in warnings_[0], messages
+
+            # the rewritten h5 is current, so it's used without a warning
+            model3 = read_fluent(fluent_filename, auto_read_write_h5=True, log=log)
+            assert np.array_equal(model3.results, model2.results)
+            assert len(messages) == 1, messages
+        finally:
+            for ext in ('.cel', '.vrt', '.daten', '.h5'):
+                filename = fluent_filename.with_suffix(ext)
+                if filename.exists():
+                    os.remove(filename)
 
 
 def _three_region_model() -> Fluent:
