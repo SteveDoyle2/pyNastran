@@ -2915,6 +2915,9 @@ def pressure_map_to_lcp_model(aero_model: Cart3D | Fluent | Tecplot,
     for group_name, group in load_control_nids.items():
         aero_regionsi = group['regions']
         structure_nidsi = group['nodes']
+        if len(structure_nidsi) == 0:
+            log.error(f'skipping group {group_name} because nodes are empty')
+            continue
         istructure_nidsi = np.searchsorted(structure_nodes, structure_nidsi)
         structure_xyzi = structure_xyz[istructure_nidsi, :]
         nnode = len(structure_nidsi)
@@ -3034,7 +3037,7 @@ def _simplify_load_control_nids(
         if len(aero_regionsi) == 0:
             raise ValueError(f'LCP group={group_name!r} has no regions')
         if len(structure_nidsi) == 0:
-            raise ValueError(f'LCP group={group_name!r} has no nodes')
+            log.warning(f'LCP group={group_name!r} has no nodes')
 
         missing_regions = np.setdiff1d(aero_regionsi, uaero_region)
         if len(missing_regions):
@@ -3052,7 +3055,7 @@ def _simplify_load_control_nids(
             raise ValueError(f'LCP group={group_name!r} has no aero regions in the aero model; '
                              f'aero regions={uaero_region}')
         if len(structure_nidsi) == 0:
-            raise ValueError(f'LCP group={group_name!r} has no nodes in the structure model')
+            log.warning(f'LCP group={group_name!r} has no nodes in the structure model')
 
         load_control_nids2[group_name] = {
             'regions': aero_regionsi, 'nodes': structure_nidsi}
