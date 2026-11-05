@@ -55,6 +55,7 @@ from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 from pyNastran.bdf.test.compare import compare
 #from pyNastran.bdf.mesh_utils.convert import convert
 #from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
+    from pyNastran.bdf.mesh_utils.breakdowns import get_mass_breakdown
 
 import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
@@ -328,6 +329,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
             run_mcid: bool=True,
             run_extract_bodies: bool=False,
             run_skin_solids: bool=True,
+            run_mass_breakdown: bool=True,
             run_export_caero: bool=True,
             save_file_structure: bool=False,
             nerrors: int=0, dev: bool=False,
@@ -480,6 +482,7 @@ def run_bdf(folder: str, bdf_filename: PathLike,
         limit_mesh_opt=limit_mesh_opt,
         run_extract_bodies=run_extract_bodies,
         run_skin_solids=run_skin_solids,
+        run_mass_breakdown=run_mass_breakdown,
         run_export_caero=run_export_caero,
         run_mass=run_mass,
         run_dependent_checks=run_dependent_checks,
@@ -535,6 +538,7 @@ def run_and_compare_fems(
         safe_xref: bool=True,
         run_extract_bodies: bool=False,
         run_skin_solids: bool=True,
+        run_mass_breakdown: bool=True,
         run_export_caero: bool=True,
         run_mass: bool=True,
         run_dependent_checks: bool=True,
@@ -595,6 +599,7 @@ def run_and_compare_fems(
         # In practice, we're just inclizip'ing the deck.
         run_extract_bodies = False
         run_skin_solids = False
+        run_mass_breakdown = False
         run_export_caero = False
         run_dependent_checks = False
         run_eid_checks = False
@@ -613,6 +618,7 @@ def run_and_compare_fems(
             size, is_double,
             run_extract_bodies=run_extract_bodies,
             run_skin_solids=run_skin_solids,
+            run_mass_breakdown=run_mass_breakdown,
             run_export_caero=run_export_caero,
             run_dependent_checks=run_dependent_checks,
             run_eid_checks=run_eid_checks, run_mcid=run_mcid,
@@ -878,7 +884,9 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
              xref: bool, punch: bool, sum_load: bool,
              size: int, is_double: bool,
              remove_cards: list[str] | None = None,
-             run_extract_bodies: bool=False, run_skin_solids: bool=True,
+             run_extract_bodies: bool=False,
+             run_skin_solids: bool=True,
+             run_mass_breakdown: bool=True,
              run_export_caero: bool=True,
              run_dependent_checks: bool=True,
              run_eid_checks: bool=True, run_mcid: bool=True,
@@ -1007,6 +1015,11 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                     read_bdf(skin_filename, log=fem1.log)
                     os.remove(skin_filename)
 
+            #if not stop and not xref and run_mass_breakdown:
+            #    log.info('fem1-run_mass_breakdown')
+            #    mass_filename = 'mass_breakdown.csv'
+            #    write_mass_breakdown(fem1, mass_filename)
+
             if limit_mesh_opt:
                 limit_mesh_optimization(fem1)
 
@@ -1051,6 +1064,11 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                 # fem1.geom_check(geom_check=True, xref=True)
                 # fem1.uncross_reference()
                 # fem1.cross_reference()
+
+                if not stop and run_mass_breakdown:
+                    log.info('fem1-run_mass_breakdown')
+                    mass_filename = 'mass_breakdown.csv'
+                    write_mass_breakdown(fem1, mass_filename)
     except Exception:
         print(f'failed reading {bdf_filename!r}')
         raise
@@ -1107,6 +1125,50 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
             fem1.get_mass_breakdown(stop_if_no_mass=False)
     return fem1
 
+
+def write_mass_breakdown(model: BDF, mass_filename: PathLike):
+    pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
+        model, property_ids=None,
+        stop_if_no_mass=True, detailed=True)
+
+    wtmass_param = model.params.get('WTMASS', None)
+    wtmass = wtmass_param.values[0] if wtmass_param is not None else 1.0
+
+    with open(mass_filename, 'w') as mass_file:
+        mass_file.write('Type,ID,Property Type,MID,Structural,NSM,Total\n')
+
+        total_structural = 0.0
+        total_nsm = 0.0
+        for pid in sorted(pids_to_mass.keys()):
+            structural = pids_to_mass[pid]
+            nsm = pids_to_mass_nonstructural.get(pid, 0.0)
+            total = structural + nsm
+            total_structural += structural
+            total_nsm += nsm
+
+            prop = model.properties[pid]
+            mid = prop.Mid() if hasattr(prop, 'Mid') else 0
+            mass_file.write(
+                f'Property,{pid},{prop.type},{mid},'
+                f'{structural},{nsm},{total}\n')
+
+        total_mass_elements = 0.0
+        for mass_type in sorted(mass_type_to_mass.keys()):
+            mass_val = mass_type_to_mass[mass_type]
+            total_mass_elements += mass_val
+            mass_file.write(
+                f'Mass Element,,,{mass_type},'
+                f'{mass_val},,{mass_val}\n')
+
+        grand_total = total_structural + total_nsm + total_mass_elements
+        mass_file.write(
+            f'Total,,,,{total_structural},{total_nsm},{grand_total}\n')
+
+        if wtmass != 1.0:
+            mass_file.write(
+                f'\nWTMASS,{wtmass}\n'
+                f'Total (mass units),,,,{total_structural * wtmass},'
+                f'{total_nsm * wtmass},{grand_total * wtmass}\n')
 
 def limit_mesh_optimization(model: BDF) -> None:
     is_mesh_opt = [card_name in model.card_count for card_name in MESH_OPT_CARDS]
@@ -2670,6 +2732,9 @@ def test_bdf_argparse(argv=None):
     parent_parser.add_argument(
         '--notabs', action='store_true',
         help='Dont allow tabs (default=False -> allow tabs)')
+    parent_parser.add_argument(
+        '--breakdown', action='store_false',
+        help='Run a mass breakdown (default=False -> no breakdown)')
 
     parent_parser.add_argument('--duplicate', action='store_true',
                                help='overwrite duplicates; takes the later card (default=False)')
@@ -2865,6 +2930,7 @@ def get_test_bdf_usage_args_examples(encoding):
         '                (pyNastran_dict.bdf)\n'
         '  --nosort      Dont sort the nodes, elements, ... (default=False -> sort)\n'
         '  --notabs      Dont allow tabs (default=False -> allow tabs)\n'
+        '  --breakdown   Run a rass breakdown (default=False -> no breakdown)\n'
         '  --profile     Profiles the code (default=False)\n'
         '  --pickle      Pickles the data objects (default=False)\n'
         '  --hdf5        Save/load the BDF in HDF5 format\n'
@@ -2972,6 +3038,7 @@ def main(argv=None):
     data['run_mass'] = not data['skip_mass'] and run_all
     data['run_export_caero'] = not data['skip_aero'] and run_all
     data['run_skin_solids'] = not data['skip_skin'] and run_all
+    data['run_mass_breakdown'] = not data['breakdown'] and run_all
     data['run_eid_checks'] = not data['skip_eid_checks'] and run_all
     data['run_mcid'] = not data['skip_mcid'] and run_all
     allow_similar_eid = not data['no_similar_eid']
@@ -2979,6 +3046,8 @@ def main(argv=None):
 
     remove_cards = _get_cards(data, 'remove_cards')
     skip_cards = _get_cards(data, 'skip_cards')
+
+    assert data['run_mass_breakdown'] is True, data['run_mass_breakdown']
 
     save_file_structure = data['ifile']
     sort_cards = not data['nosort']
@@ -3025,6 +3094,7 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_mass_breakdown=data['run_mass_breakdown'],
             run_dependent_checks=True,
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],
@@ -3089,6 +3159,7 @@ def main(argv=None):
             run_mass=data['run_mass'],
             run_export_caero=data['run_export_caero'],
             run_skin_solids=data['run_skin_solids'],
+            run_mass_breakdown=data['run_mass_breakdown'],
             run_dependent_checks=True,
             run_eid_checks=data['run_eid_checks'],
             run_mcid=data['run_mcid'],

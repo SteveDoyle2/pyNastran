@@ -827,13 +827,18 @@ class AddMethods:
         """adds an MAT1, MAT2, MAT8 object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
+
         model = self.model
-        if key in model.materials and not allow_overwrites:
-            if not material == model.materials[key]:
-                model._duplicate['materials'].append(material)
-        else:
-            model.materials[key] = material
-            model._type_to_id_map[material.type].append(key)
+        add_object_to_dict(
+            model, key, 'materials', material, model.materials,
+            allow_overwrites)
+
+        # if key in model.materials and not allow_overwrites:
+        #     if not material == model.materials[key]:
+        #         model._duplicate['materials'].append(material)
+        # else:
+        #     model.materials[key] = material
+        #     model._type_to_id_map[material.type].append(key)
 
     def add_thermal_material_object(self, material: ThermalMaterial,
                                     allow_overwrites: bool=False) -> None:
