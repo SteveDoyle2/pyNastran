@@ -1155,7 +1155,37 @@ def _get_card_name(card) -> str:
 
 
 def write_mass_breakdown(model: BDF, mass_filename: PathLike):
-    """Writes a CSV with per-PID and per-mass-element mass, CG, and inertia."""
+    """Writes a CSV mass breakdown by property and mass element.
+
+    Columns
+    -------
+    Type : 'Property', 'Mass Element', or 'Total'
+    ID : property ID or mass element ID
+    Name : extracted from the card's Femap comment (if present)
+    Property Type : PSHELL, PCOMP, CONM2, etc.
+    MID : material ID (properties only)
+    Structural : structural mass (weight units, scale=1.0)
+    NSM : non-structural mass (weight units)
+    Total : Structural + NSM
+    CG_X, CG_Y, CG_Z : center of gravity in basic coordinates
+    Ixx..Iyz : moments/products of inertia
+
+    Inertia reference
+    -----------------
+    Per-component rows: inertia is about that component's own CG.
+    Total row: inertia is about the global (all-mass) CG.
+    All values use scale=1.0 (weight units, WTMASS not applied).
+
+    When WTMASS != 1.0, an additional total row is written with
+    WTMASS applied (mass units). CG is unchanged; inertia is scaled.
+
+    Parameters
+    ----------
+    model : BDF
+        cross-referenced BDF model
+    mass_filename : PathLike
+        output CSV path
+    """
     pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
         model, property_ids=None,
         stop_if_no_mass=True, detailed=True)
@@ -1175,6 +1205,13 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike):
     )
 
     with open(mass_filename, 'w') as mass_file:
+        mass_file.write(
+            '# Mass Breakdown\n'
+            '# Mass/weight values use scale=1.0 (WTMASS not applied)\n'
+            '# CG is in basic coordinates\n'
+            '# Per-component inertia is about that component\'s own CG\n'
+            '# Total row inertia is about the global CG\n'
+        )
         mass_file.write(header)
 
         total_structural = 0.0
