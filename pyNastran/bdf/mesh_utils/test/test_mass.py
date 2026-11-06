@@ -5,7 +5,6 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
-from pyNastran.utils import object_methods
 
 PKG_PATH = pyNastran.__path__[0]
 mesh_utils_path = os.path.join(PKG_PATH, 'bdf', 'mesh_utils', 'test')
@@ -162,6 +161,106 @@ class TestMass(unittest.TestCase):
             sym_axis=None, scale=None)
         assert np.allclose(mass, 0.005311658333), 'mass=%s' % mass
         assert np.allclose(mass2, 2.050833333), 'mass2=%s' % mass2
+
+    def test_mass_properties_element_ids_mass_ids(self):
+        """Tests None='all' vs []='none' semantics for element_ids/mass_ids.
+
+        Uses test_mass.dat which has 9 elements (eids 1-9) and no mass
+        elements. WTMASS=0.00259.
+
+        Tolerances: mass to 6 decimal places (model masses are O(0.01-1.0)).
+        Tests: element filtering, mass_ids=[] with no model masses,
+               element_ids=[] returns zero mass, None=all behavior.
+        """
+        model = BDF(debug=False, log=None)
+        bdfname = os.path.join(mesh_utils_path, 'test_mass.dat')
+        model.read_bdf(bdfname, xref=True)
+        model.params['WTMASS'].values[0] = 1.0
+
+        mass_all, cg_all, I_all = mass_properties(
+            model, element_ids=None, mass_ids=None, scale=1.0)
+
+        # element_ids=None, mass_ids=None → all elements, all masses
+        # Same as the explicit all-eids list
+        all_eids = list(model.elements.keys())
+        mass_explicit, cg_explicit, I_explicit = mass_properties(
+            model, element_ids=all_eids, mass_ids=None, scale=1.0)
+        self.assertAlmostEqual(mass_all, mass_explicit, places=6)
+        np.testing.assert_allclose(cg_all, cg_explicit, atol=1e-10)
+        np.testing.assert_allclose(I_all, I_explicit, atol=1e-10)
+
+        # mass_ids=[] → no mass elements (model has none, should not crash)
+        mass_eids_empty, cg2, I2 = mass_properties(
+            model, element_ids=all_eids, mass_ids=[], scale=1.0)
+        self.assertAlmostEqual(mass_all, mass_eids_empty, places=6)
+
+        # element_ids=[] → no elements, mass_ids=None → all masses (none here)
+        mass_zero, cg_zero, I_zero = mass_properties(
+            model, element_ids=[], mass_ids=None, scale=1.0)
+        self.assertAlmostEqual(mass_zero, 0.0, places=6)
+
+        # element_ids=[], mass_ids=[] → nothing
+        mass_empty, cg_empty, I_empty = mass_properties(
+            model, element_ids=[], mass_ids=[], scale=1.0)
+        self.assertAlmostEqual(mass_empty, 0.0, places=6)
+
+        # Subset of elements: just the CHEXA (eid=7), mass=0.2
+        mass_hexa, cg_hexa, I_hexa = mass_properties(
+            model, element_ids=[7], mass_ids=[], scale=1.0)
+        self.assertAlmostEqual(mass_hexa, 0.2, places=6)
+
+        # element_ids=None with mass_ids=[] → all elements, no masses
+        mass_all_elems, cg3, I3 = mass_properties(
+            model, element_ids=None, mass_ids=[], scale=1.0)
+        self.assertAlmostEqual(mass_all, mass_all_elems, places=6)
+
+    def test_mass_properties_with_conm2(self):
+        """Tests mass_ids filtering on a model with CONM2 mass elements.
+
+        Builds a minimal model: one CQUAD4 (PID=1) + one CONM2 (mass=5.0).
+        Tolerances: mass to 6 decimal places.
+        Tests: mass_ids=[]/None/[eid] select correct mass contributions.
+        """
+        model = BDF(debug=False, log=None)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_mat1(1, 1.0e7, None, 0.3, rho=0.1)
+        model.add_pshell(1, mid1=1, t=0.1)
+        model.add_cquad4(1, 1, [1, 2, 3, 4])
+        model.add_conm2(100, 1, mass=5.0)
+        model.cross_reference()
+
+        # element mass: rho * t * area = 0.1 * 0.1 * 1.0 = 0.01
+        elem_mass = 0.01
+        conm2_mass = 5.0
+
+        # All
+        mass_all, _, _ = mass_properties(
+            model, element_ids=None, mass_ids=None, scale=1.0)
+        self.assertAlmostEqual(mass_all, elem_mass + conm2_mass, places=6)
+
+        # Elements only (mass_ids=[])
+        mass_elems, _, _ = mass_properties(
+            model, element_ids=None, mass_ids=[], scale=1.0)
+        self.assertAlmostEqual(mass_elems, elem_mass, places=6)
+
+        # Masses only (element_ids=[])
+        mass_masses, _, _ = mass_properties(
+            model, element_ids=[], mass_ids=None, scale=1.0)
+        self.assertAlmostEqual(mass_masses, conm2_mass, places=6)
+
+        # Specific mass_ids
+        mass_specific, _, _ = mass_properties(
+            model, element_ids=[], mass_ids=[100], scale=1.0)
+        self.assertAlmostEqual(mass_specific, conm2_mass, places=6)
+
+        # Neither
+        mass_empty, _, _ = mass_properties(
+            model, element_ids=[], mass_ids=[], scale=1.0)
+        self.assertAlmostEqual(mass_empty, 0.0, places=6)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

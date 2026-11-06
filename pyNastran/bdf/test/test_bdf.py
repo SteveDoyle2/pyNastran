@@ -55,7 +55,8 @@ from pyNastran.bdf.mesh_utils.aero.export_caero_mesh import export_caero_mesh
 from pyNastran.bdf.test.compare import compare
 #from pyNastran.bdf.mesh_utils.convert import convert
 #from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
-    from pyNastran.bdf.mesh_utils.breakdowns import get_mass_breakdown
+from pyNastran.bdf.mesh_utils.breakdowns import get_mass_breakdown
+from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 
 import pyNastran.bdf.test
 TEST_PATH = pyNastran.bdf.test.__path__[0]
@@ -1126,16 +1127,55 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
     return fem1
 
 
+def _get_card_name(card) -> str:
+    """Extracts a human-readable name from a card's comment.
+
+    Looks for Femap-style '$ Femap Property/CONM2/... ID : Name' first,
+    then falls back to the last non-empty comment line.
+    """
+    card_type = card.type
+    femap_prefixes = (
+        f'$ Femap {card_type}',
+        f'$ {card_type}',
+        '$ Femap Property',
+        '$ Femap Element',
+        '$ Property',
+    )
+    fallback = ''
+    for line in card.comment.split('\n'):
+        line = line.strip()
+        if not line or line == '$':
+            continue
+        for prefix in femap_prefixes:
+            if line.startswith(prefix) and ':' in line:
+                return line.split(':', 1)[1].strip()
+        if line.startswith('$'):
+            fallback = line.lstrip('$ ')
+    return fallback
+
+
 def write_mass_breakdown(model: BDF, mass_filename: PathLike):
+    """Writes a CSV with per-PID and per-mass-element mass, CG, and inertia."""
     pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
         model, property_ids=None,
         stop_if_no_mass=True, detailed=True)
 
+    pid_eids = model.get_element_ids_dict_with_pids(
+        pids=None, stop_if_no_eids=False,
+        msg=' which is required by write_mass_breakdown')
+
     wtmass_param = model.params.get('WTMASS', None)
     wtmass = wtmass_param.values[0] if wtmass_param is not None else 1.0
 
+    header = (
+        'Type,ID,Name,Property Type,MID,'
+        'Structural,NSM,Total,'
+        'CG_X,CG_Y,CG_Z,'
+        'Ixx,Iyy,Izz,Ixy,Ixz,Iyz\n'
+    )
+
     with open(mass_filename, 'w') as mass_file:
-        mass_file.write('Type,ID,Property Type,MID,Structural,NSM,Total\n')
+        mass_file.write(header)
 
         total_structural = 0.0
         total_nsm = 0.0
@@ -1148,27 +1188,63 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike):
 
             prop = model.properties[pid]
             mid = prop.Mid() if hasattr(prop, 'Mid') else 0
+            name = _get_card_name(prop)
+
+            eids = pid_eids.get(pid, [])
+            if eids and total > 0.0:
+                pmass, cg, I = mass_properties(
+                    model, element_ids=eids, mass_ids=[],
+                    scale=1.0, inertia_reference='cg')
+            else:
+                cg = np.zeros(3)
+                I = np.zeros(6)
+
             mass_file.write(
-                f'Property,{pid},{prop.type},{mid},'
-                f'{structural},{nsm},{total}\n')
+                f'Property,{pid},{name},{prop.type},{mid},'
+                f'{structural},{nsm},{total},'
+                f'{cg[0]},{cg[1]},{cg[2]},'
+                f'{I[0]},{I[1]},{I[2]},{I[3]},{I[4]},{I[5]}\n')
 
         total_mass_elements = 0.0
-        for mass_type in sorted(mass_type_to_mass.keys()):
-            mass_val = mass_type_to_mass[mass_type]
+        for eid in sorted(model.masses.keys()):
+            elem = model.masses[eid]
+            mass_val = elem.Mass()
             total_mass_elements += mass_val
+            name = _get_card_name(elem)
+
+            if mass_val > 0.0:
+                pmass, cg, I = mass_properties(
+                    model, element_ids=[], mass_ids=[eid],
+                    scale=1.0, inertia_reference='cg')
+            else:
+                cg = np.zeros(3)
+                I = np.zeros(6)
+
             mass_file.write(
-                f'Mass Element,,,{mass_type},'
-                f'{mass_val},,{mass_val}\n')
+                f'Mass Element,{eid},{name},{elem.type},,,'
+                f'{mass_val},'
+                f'{cg[0]},{cg[1]},{cg[2]},'
+                f'{I[0]},{I[1]},{I[2]},{I[3]},{I[4]},{I[5]}\n')
 
         grand_total = total_structural + total_nsm + total_mass_elements
+        total_mass, total_cg, total_I = mass_properties(
+            model, scale=1.0, inertia_reference='cg')
         mass_file.write(
-            f'Total,,,,{total_structural},{total_nsm},{grand_total}\n')
+            f'Total,,,,,{total_structural},{total_nsm},{grand_total},'
+            f'{total_cg[0]},{total_cg[1]},{total_cg[2]},'
+            f'{total_I[0]},{total_I[1]},{total_I[2]},'
+            f'{total_I[3]},{total_I[4]},{total_I[5]}\n')
 
         if wtmass != 1.0:
+            total_mass_w, total_cg_w, total_I_w = mass_properties(
+                model, inertia_reference='cg')
             mass_file.write(
                 f'\nWTMASS,{wtmass}\n'
-                f'Total (mass units),,,,{total_structural * wtmass},'
-                f'{total_nsm * wtmass},{grand_total * wtmass}\n')
+                f'Total (mass units),,,,,{total_structural * wtmass},'
+                f'{total_nsm * wtmass},{grand_total * wtmass},'
+                f'{total_cg_w[0]},{total_cg_w[1]},{total_cg_w[2]},'
+                f'{total_I_w[0]},{total_I_w[1]},{total_I_w[2]},'
+                f'{total_I_w[3]},{total_I_w[4]},{total_I_w[5]}\n')
 
 def limit_mesh_optimization(model: BDF) -> None:
     is_mesh_opt = [card_name in model.card_count for card_name in MESH_OPT_CARDS]
@@ -3046,8 +3122,6 @@ def main(argv=None):
 
     remove_cards = _get_cards(data, 'remove_cards')
     skip_cards = _get_cards(data, 'skip_cards')
-
-    assert data['run_mass_breakdown'] is True, data['run_mass_breakdown']
 
     save_file_structure = data['ifile']
     sort_cards = not data['nosort']

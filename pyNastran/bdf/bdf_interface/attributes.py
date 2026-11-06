@@ -656,7 +656,8 @@ class BDFAttributes:
         This would be in the init but doing it this way allows for better
         inheritance
 
-        References:
+        References
+        ----------
           1.  https://www.mscsoftware.com/support/library/conf/wuc87/p02387.pdf
         """
         self.xref_obj = CrossReference(self)
@@ -782,6 +783,7 @@ class BDFAttributes:
             'masses': [],
             'coords': [],
         }
+        self._duplicate_equivalents: list[tuple[str, int, str, int, int]] = []
         self.values_to_skip: dict[str, list[int]] = {}
 
         # ------------------------ structural defaults -----------------------

@@ -12,6 +12,8 @@ from .inclzip import cmd_line_inclzip
 from .convert import cmd_line_convert
 from .diff import cmd_line_diff, cmd_line_apply_diff
 from .delete import cmd_line_delete
+from .find_duplicates import cmd_line_find_duplicates
+from .remove_duplicates import cmd_line_remove_duplicates
 from .export_mcids import cmd_line_export_mcids
 from .equivalence import cmd_line_equivalence
 from .merge import cmd_line_merge
@@ -72,6 +74,8 @@ CMD_MAPS = {
     'nsm_split': cmd_line_nsm_split,
 
     'delete': cmd_line_delete,
+    'find_duplicates': cmd_line_find_duplicates,
+    'remove_duplicates': cmd_line_remove_duplicates,
     #'summary': cmd_line_summary,
 
     'export_caero_mesh': cmd_line_export_caero_mesh,
@@ -125,6 +129,8 @@ def cmd_line(argv=None, log=None, quiet: bool=False) -> Any:
         '  bdf export_caero_mesh           IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--aerobox] [--pid PID]\n'
         '  bdf split_cbars_by_pin_flags    IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [-p PIN_FLAGS_CSV_FILENAME]\n'
         '  bdf solid_dof                   IN_BDF_FILENAME [-o OUT_BDF_FILENAME] [--punch] [--lax] [--allow_dup]\n'
+        '  bdf find_duplicates              IN_BDF_FILENAME [-o OUT_JSON] [--csv] [--punch]\n'
+        '  bdf remove_duplicates            IN_BDF_FILENAME REPORT_JSON [-o OUT_BDF] [--punch]\n'
         '  bdf stats                       IN_BDF_FILENAME [--punch]\n'
         '  bdf rbe3_to_rbe2                IN_BDF_FILENAME [--infile INFILE] [--punch] [--lax]\n'
         '  bdf merge_rbe2                  IN_BDF_FILENAME [--infile INFILE] [--punch] [--lax]\n'
@@ -158,6 +164,9 @@ def cmd_line(argv=None, log=None, quiet: bool=False) -> Any:
         '  bdf export_caero_mesh  -h | --help\n'
         '  bdf split_cbars_by_pin_flags    -h | --help\n'
         '  bdf solid_dof                   -h | --help\n'
+        'Duplicate Tools:\n'
+        '  bdf find_duplicates    -h | --help\n'
+        '  bdf remove_duplicates  -h | --help\n'
         'Comparision Tools:\n'
         '  bdf diff               -h | --help\n'
         '  bdf stats              -h | --help\n'
