@@ -586,5 +586,66 @@ class TestWarnOnEquivalentDuplicate(unittest.TestCase):
         assert model._warn_on_equivalent_duplicate is True
 
 
+class TestWarnOnRejectCards(unittest.TestCase):
+    """tests for BDF._warn_on_reject_cards flag"""
+
+    def test_default_flag_is_true(self) -> None:
+        """_warn_on_reject_cards defaults to True"""
+        model = BDF(log=LOG)
+        assert model._warn_on_reject_cards is True
+
+    def test_reject_warn_off(self) -> None:
+        """with _warn_on_reject_cards=False, reject messages are silenced"""
+        bdf_filename = str(TEST_DIR / "tmp_reject.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+            f.write("FAKCARD,1,2,3\n")
+        try:
+            model = BDF(log=LOG)
+            model._warn_on_reject_cards = False
+            model.read_bdf(bdf_filename, xref=False)
+            assert len(model.nodes) == 1
+            assert "FAKCARD" in model.card_count
+            assert len(model.reject_lines) == 1
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_reject_warn_on(self) -> None:
+        """with _warn_on_reject_cards=True (default), cards still rejected"""
+        bdf_filename = str(TEST_DIR / "tmp_reject_on.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+            f.write("FAKCARD,1,2,3\n")
+        try:
+            model = BDF(log=LOG)
+            model._warn_on_reject_cards = True
+            model.read_bdf(bdf_filename, xref=False)
+            assert len(model.nodes) == 1
+            assert "FAKCARD" in model.card_count
+            assert len(model.reject_lines) == 1
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_reject_cards_still_stored(self) -> None:
+        """rejected cards are stored in reject_lines regardless of flag"""
+        bdf_filename = str(TEST_DIR / "tmp_reject_stored.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+            f.write("BOGUS1,10,20\n")
+            f.write("BOGUS2,30,40\n")
+        try:
+            model = BDF(log=LOG)
+            model._warn_on_reject_cards = False
+            model.read_bdf(bdf_filename, xref=False)
+            assert len(model.reject_lines) == 2
+            assert model.card_count["BOGUS1"] == 1
+            assert model.card_count["BOGUS2"] == 1
+        finally:
+            _cleanup([bdf_filename])
+
+
 if __name__ == "__main__":  # pragma: no cover
     unittest.main()

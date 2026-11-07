@@ -772,6 +772,7 @@ class BDFAttributes:
         self._stop_on_parsing_error = True
         self._stop_on_duplicate_error = True
         self._warn_on_equivalent_duplicate = True
+        self._warn_on_reject_cards = True
         self._stored_parse_errors: list[str] = []
 
         self._duplicate: dict[str, list[str]] = {

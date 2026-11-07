@@ -23,7 +23,7 @@ from pyNastran.bdf.mesh_utils.test.test_run_host_jobs import TestRunHostJobs
 from pyNastran.bdf.mesh_utils.test.test_sum_loads import TestLoadSum
 from pyNastran.bdf.mesh_utils.test.test_find_remove_duplicates import (
     TestFindDuplicates, TestRemoveDuplicates, TestRoundTrip,
-    TestWarnOnEquivalentDuplicate,)
+    TestWarnOnEquivalentDuplicate, TestWarnOnRejectCards)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -130,6 +130,7 @@ scalar_keys: list[str] = [
     '_is_dynamic_syntax', '_is_long_ids', '_ixref_errors', '_nastran_format', '_nparse_errors',
     '_nxref_errors', '_sol', '_stop_on_duplicate_error',
     '_stop_on_parsing_error', '_warn_on_equivalent_duplicate',
+    '_warn_on_reject_cards',
     #'_stop_on_xref_error',
     '_xref', 'active_filename',
     'dumplines', 'echo', 'force_echo_off', 'include_dir',

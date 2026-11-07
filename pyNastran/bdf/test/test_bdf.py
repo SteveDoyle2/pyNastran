@@ -557,6 +557,7 @@ def run_and_compare_fems(
     fem1.allow_tabs = allow_tabs
     if quiet:
         fem1._warn_on_equivalent_duplicate = False
+        fem1._warn_on_reject_cards = False
     # fem1.log.warning(f'allow_similar_eid={allow_similar_eid}')
     if not allow_similar_eid:
         fem1.allow_duplicate_element_rbe_mass = allow_similar_eid
@@ -1602,6 +1603,7 @@ def run_fem2(bdf_model: str, out_model: str, xref: bool, punch: bool,
     fem2 = BDF(debug=debug, log=log)
     if quiet:
         fem2._warn_on_equivalent_duplicate = False
+        fem2._warn_on_reject_cards = False
     #fem2.use_new_deck_parser = True
     if not quiet:
         fem2.log.info('starting fem2')

@@ -3078,7 +3078,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                 self.log.warning('    lines:\n')
                 for line in card_lines:
                     print(line)
-            elif show_log:
+            elif show_log and self._warn_on_reject_cards:
                 self.log.info(f'    rejecting card_name = {card_name} (reject_lines)')
                 if len(card_name) <= 3 and card_name not in {'DMI'}:
                     self.log.error(f'    card_name={card_name!r}; card_lines = {card_lines}')
@@ -3088,7 +3088,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
     def _write_reject_message(self, card_name: str, unused_card_obj, comment: str=''):
         """common method to not write duplicate reject card names"""
-        if card_name not in self.card_count:
+        if card_name not in self.card_count and self._warn_on_reject_cards:
             # if ' ' in card_name:
             #     _check_for_spaces(card_name, card_lines, comment, self.log)
             self.log.info(f'    rejecting card_name = {card_name}')
