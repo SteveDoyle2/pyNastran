@@ -1197,7 +1197,7 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike) -> None:
 
     wtmass = 1.0
     if 'WTMASS' in model.params:
-        wtmass = wtmass_param.values[0]
+        wtmass = model.params['WTMASS'].values[0]
 
     header = (
         'Type,ID,Name,Property Type,MID,'
@@ -1226,7 +1226,17 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike) -> None:
             total_nsm += nsm
 
             prop = model.properties[pid]
-            mid = prop.Mid() if hasattr(prop, 'Mid') else 0
+            prop_type = prop.type
+            if prop_type in {'PCOMP', 'PCOMPG'}:
+                mids = prop.mids
+            else:
+                try:
+                    mid = prop.Mid() if hasattr(prop, 'Mid') else 0
+                except TypeError:
+                    print(prop)
+                    raise
+                mids = [mid]
+                del mid
             name = _get_card_name(prop)
 
             eids = pid_eids.get(pid, [])
@@ -1238,8 +1248,9 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike) -> None:
                 cg = np.zeros(3)
                 I = np.zeros(6)
 
+            mids_str = ','.join(str(mid) for mid in mids)
             mass_file.write(
-                f'Property,{pid},{name},{prop.type},{mid},'
+                f'Property,{pid},{name},{prop.type},{mids_str!r},'
                 f'{structural},{nsm},{total},'
                 f'{cg[0]},{cg[1]},{cg[2]},'
                 f'{I[0]},{I[1]},{I[2]},{I[3]},{I[4]},{I[5]}\n')
