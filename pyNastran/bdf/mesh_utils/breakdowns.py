@@ -696,9 +696,14 @@ def get_mass_breakdown(model: BDF,
 
     ..note:: WTMASS is not considered
     """
+    log = model.log
+    #print(model.elements)
+    #print(model.properties)
+    #print(model.masses)
     pid_eids = model.get_element_ids_dict_with_pids(
         property_ids, stop_if_no_eids=False,
         msg=' which is required by get_mass_breakdown')
+    #print(f'pid_eids = {pid_eids}')
 
     mass_type_to_mass = {}
     pids_to_mass = {}
@@ -724,6 +729,7 @@ def get_mass_breakdown(model: BDF,
         'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
     }
     bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE'}
+    log.level = 'debug'
 
     nid_to_pos = _build_nid_to_position(model)
     for pid, eids in pid_eids.items():
@@ -775,6 +781,8 @@ def get_mass_breakdown(model: BDF,
                     pids_to_mass_nonstructural[pid] = total_area * nsm
                 else:
                     pids_to_mass[pid] = total_area * mpa
+            else:  # pragma: no cover
+                log.error(f'pid={pid} area={total_area}')
 
         elif prop_type in bar_properties:
             nsm = prop.Nsm()  # per unit length (scalar)
@@ -794,6 +802,8 @@ def get_mass_breakdown(model: BDF,
                     pids_to_mass_nonstructural[pid] = total_length * nsm
                 else:
                     pids_to_mass[pid] = total_length * (rho * area + nsm)
+            else:  # pragma: no cover
+                log.error(f'pid={pid} length={total_length}')
 
         elif prop_type in {'PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID'}:
             rho = prop.Rho()
@@ -816,14 +826,15 @@ def get_mass_breakdown(model: BDF,
                     key = (etype, prop.type)
                     if key not in skipped_eid_pid:
                         skipped_eid_pid.add(key)
-                        model.log.debug(f'skipping mass for axisymmetric {key}')
+                        log.debug(f'skipping mass for axisymmetric {key}')
                 else:
                     key = (etype, prop.type)
                     if key not in skipped_eid_pid:
                         skipped_eid_pid.add(key)
-                        model.log.debug('skipping mass %s' % str(key))
-            if total_volume > 0.0:
-                pids_to_mass[pid] = rho * total_volume
+                        log.debug('skipping mass %s' % str(key))
+            pids_to_mass[pid] = rho * total_volume
+            if total_volume < 0.0:
+                log.warning(f'pid={pid} mass=rho*V={rho:g}*{total_volume:g}')
 
         elif prop_type in properties_to_skip:
             skipped_eid_pid.add(('*', prop_type))
@@ -847,7 +858,7 @@ def get_mass_breakdown(model: BDF,
                     pids_to_mass[pid] = total_area * (rho * thickness + nsm)
         elif prop_type in {'PBRSECT', 'PBMSECT', 'PWELD'}:
             skipped_eid_pid.add(('*', prop_type))
-            model.log.warning('skipping:\n%s' % prop)
+            log.warning('skipping:\n%s' % prop)
             continue
         elif prop_type == 'PGPLSN':
             pids_to_mass[pid] = 0.
@@ -856,8 +867,8 @@ def get_mass_breakdown(model: BDF,
             type_to_eids = _split_eids_by_type(eids, model)
             model.log.warning(prop.get_stats())
             for etype, typed_eids in type_to_eids.items():
-                model.log.warning(etype)
-                model.log.warning(typed_eids)
+                log.warning(etype)
+                log.warning(typed_eids)
         else:  # pragma: no cover
             raise NotImplementedError(prop)
 
