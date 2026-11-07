@@ -1754,7 +1754,16 @@ def check_for_optional_param(keys: list[str] | tuple[str, ...], subcase: Subcase
                              ierror: int, nerrors: int) -> int:
     """one or more must be True"""
     if not any(subcase.has_parameter(*keys)):
-        msg = 'Must have one of %s\n%s' % (str(keys), msg)
+        keys_str = ' or '.join(repr(k) for k in keys)
+        subcase_label = (
+            'the global case control (no SUBCASE defined)'
+            if subcase.id == 0 else f'Subcase {subcase.id}'
+        )
+        msg = (
+            f'{subcase_label} is missing a required case control entry.\n'
+            f'  At least one of the following is required: {keys_str}\n'
+            f'{msg}'
+        )
         log.error(msg)
         if ierror == nerrors:
             raise error(msg)
