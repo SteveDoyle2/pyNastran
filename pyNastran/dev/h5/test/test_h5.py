@@ -1,12 +1,13 @@
 import os
+from pathlib import Path
 import unittest
 import vtk
 
 import pyNastran
 from pyNastran.utils import print_bad_path
 
-PKG_PATH = pyNastran.__path__[0]
-MODEL_PATH = os.path.join(PKG_PATH, '..', 'models')
+PKG_PATH = Path(pyNastran.__path__[0])
+MODEL_PATH = PKG_PATH / '..' / 'models'
 _VTK_VERSION = vtk.vtkVersion.GetVTKVersion()
 VTK_VERSION_MAJOR = [int(val) for val in _VTK_VERSION.split('.')][0]
 if VTK_VERSION_MAJOR >= 9:
@@ -15,7 +16,7 @@ if VTK_VERSION_MAJOR >= 9:
 class TestH5(unittest.TestCase):
     @unittest.skipIf(VTK_VERSION_MAJOR < 9, "skipping because test requires VTK >= 9")
     def test_static_elements_h5(self):
-        h5_filename = os.path.join(MODEL_PATH, 'elements', 'static_elements.h5')
+        h5_filename = MODEL_PATH / 'elements' / 'static_elements.h5'
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         model = pyNastranH5(add_aero=True, add_constraints=True,
                             add_results=True, subcases=None)
@@ -23,7 +24,7 @@ class TestH5(unittest.TestCase):
 
     @unittest.skipIf(VTK_VERSION_MAJOR < 9, "skipping because test requires VTK >= 9")
     def test_modes_elements_h5(self):
-        h5_filename = os.path.join(MODEL_PATH, 'elements', 'modes_elements.h5')
+        h5_filename = MODEL_PATH / 'elements' / 'modes_elements.h5'
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         model = pyNastranH5(add_aero=True, add_constraints=True,
                             add_results=True, subcases=None)
@@ -31,7 +32,7 @@ class TestH5(unittest.TestCase):
 
     @unittest.skipIf(VTK_VERSION_MAJOR < 9, "skipping because test requires VTK >= 9")
     def test_time_elements_h5(self):
-        h5_filename = os.path.join(MODEL_PATH, 'elements', 'time_elements.h5')
+        h5_filename = MODEL_PATH / 'elements' / 'time_elements.h5'
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         model = pyNastranH5(add_aero=True, add_constraints=True,
                             add_results=True, subcases=None)
@@ -39,7 +40,7 @@ class TestH5(unittest.TestCase):
 
     @unittest.skipIf(VTK_VERSION_MAJOR < 9, "skipping because test requires VTK >= 9")
     def test_modes_complex_elements_h5(self):
-        h5_filename = os.path.join(MODEL_PATH, 'elements', 'modes_complex_elements.h5')
+        h5_filename = MODEL_PATH / 'elements' / 'modes_complex_elements.h5'
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         model = pyNastranH5(add_aero=True, add_constraints=True,
                             add_results=True, subcases=None)
@@ -47,7 +48,7 @@ class TestH5(unittest.TestCase):
 
     @unittest.skipIf(VTK_VERSION_MAJOR < 9, "skipping because test requires VTK >= 9")
     def test_freq_elements_h5(self):
-        h5_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements.h5')
+        h5_filename = MODEL_PATH / 'elements' / 'freq_elements.h5'
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         model = pyNastranH5(add_aero=True, add_constraints=True,
                             add_results=True, subcases=None)
@@ -55,7 +56,7 @@ class TestH5(unittest.TestCase):
 
     @unittest.skipIf(VTK_VERSION_MAJOR < 9, "skipping because test requires VTK >= 9")
     def test_freq_elements2_h5(self):
-        h5_filename = os.path.join(MODEL_PATH, 'elements', 'freq_elements2.h5')
+        h5_filename = MODEL_PATH / 'elements' / 'freq_elements2.h5'
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         model = pyNastranH5(add_aero=True, add_constraints=True,
                             add_results=True, subcases=None)
@@ -63,7 +64,7 @@ class TestH5(unittest.TestCase):
 
     @unittest.skipIf(VTK_VERSION_MAJOR < 9, "skipping because test requires VTK >= 9")
     def test_time_thermal_elements_h5(self):
-        h5_filename = os.path.join(MODEL_PATH, 'elements', 'time_thermal_elements.h5')
+        h5_filename = MODEL_PATH / 'elements' / 'time_thermal_elements.h5'
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
         model = pyNastranH5(add_aero=True, add_constraints=True,
                             add_results=True, subcases=None)

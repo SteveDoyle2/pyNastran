@@ -728,7 +728,8 @@ def get_mass_breakdown(model: BDF,
     nid_to_pos = _build_nid_to_position(model)
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
-        if prop.type == 'PSHELL':
+        prop_type = prop.type
+        if prop_type == 'PSHELL':
             # TODO: doesn't support PSHELL differential thicknesses
             thickness = prop.t
             nsm = prop.nsm  # per area
@@ -752,7 +753,7 @@ def get_mass_breakdown(model: BDF,
                 else:
                     pids_to_mass[pid] = total_area * (rho * thickness + nsm)
 
-        elif prop.type in {'PCOMP', 'PCOMPG'}:
+        elif prop_type in {'PCOMP', 'PCOMPG'}:
             # PCOMP mass_per_area is constant for all elements under same pid
             mpa = prop.MassPerArea()
             if detailed:
@@ -775,7 +776,7 @@ def get_mass_breakdown(model: BDF,
                 else:
                     pids_to_mass[pid] = total_area * mpa
 
-        elif prop.type in bar_properties:
+        elif prop_type in bar_properties:
             nsm = prop.Nsm()  # per unit length (scalar)
             rho = prop.Rho()
             area = prop.Area()
@@ -794,7 +795,7 @@ def get_mass_breakdown(model: BDF,
                 else:
                     pids_to_mass[pid] = total_length * (rho * area + nsm)
 
-        elif prop.type in {'PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID'}:
+        elif prop_type in {'PSOLID', 'PCOMPS', 'PCOMPLS', 'PLSOLID'}:
             rho = prop.Rho()
             type_to_eids = _split_eids_by_type(eids, model)
             total_volume = 0.0
@@ -814,9 +815,9 @@ def get_mass_breakdown(model: BDF,
             if total_volume > 0.0:
                 pids_to_mass[pid] = rho * total_volume
 
-        elif prop.type in properties_to_skip:
+        elif prop_type in properties_to_skip:
             pass
-        elif prop.type == 'PSHEAR':
+        elif prop_type == 'PSHEAR':
             thickness = prop.t
             nsm = prop.nsm  # per area
             rho = prop.Rho()
@@ -834,9 +835,12 @@ def get_mass_breakdown(model: BDF,
                     pids_to_mass_nonstructural[pid] = total_area * nsm
                 else:
                     pids_to_mass[pid] = total_area * (rho * thickness + nsm)
-        elif prop.type in {'PBRSECT', 'PBMSECT', 'PWELD'}:
+        elif prop_type in {'PBRSECT', 'PBMSECT', 'PWELD'}:
             model.log.warning('skipping:\n%s' % prop)
             continue
+        elif prop_type == 'PGPLSN':
+            #type_to_eids = _split_eids_by_type(eids, model)
+            model.log.warning(prop.get_stats())
         else:  # pragma: no cover
             raise NotImplementedError(prop)
 

@@ -1016,11 +1016,6 @@ def run_fem1(fem1: BDF, bdf_filename: str, out_model: str, mesh_form: str,
                     read_bdf(skin_filename, log=fem1.log)
                     os.remove(skin_filename)
 
-            #if not stop and not xref and run_mass_breakdown:
-            #    log.info('fem1-run_mass_breakdown')
-            #    mass_filename = 'mass_breakdown.csv'
-            #    write_mass_breakdown(fem1, mass_filename)
-
             if limit_mesh_opt:
                 limit_mesh_optimization(fem1)
 
@@ -1154,7 +1149,7 @@ def _get_card_name(card) -> str:
     return fallback
 
 
-def write_mass_breakdown(model: BDF, mass_filename: PathLike):
+def write_mass_breakdown(model: BDF, mass_filename: PathLike) -> None:
     """Writes a CSV mass breakdown by property and mass element.
 
     Columns
@@ -1186,6 +1181,9 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike):
     mass_filename : PathLike
         output CSV path
     """
+    if len(model.elements) == 0 and len(model.masses) == 0:
+        model.log.warning('requested breakdown, but no elements/masses found')
+        return
     pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
         model, property_ids=None,
         stop_if_no_mass=True, detailed=True)
@@ -1194,8 +1192,9 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike):
         pids=None, stop_if_no_eids=False,
         msg=' which is required by write_mass_breakdown')
 
-    wtmass_param = model.params.get('WTMASS', None)
-    wtmass = wtmass_param.values[0] if wtmass_param is not None else 1.0
+    wtmass = 1.0
+    if 'WTMASS' in model.params:
+        wtmass = wtmass_param.values[0]
 
     header = (
         'Type,ID,Name,Property Type,MID,'
@@ -1216,7 +1215,7 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike):
 
         total_structural = 0.0
         total_nsm = 0.0
-        for pid in sorted(pids_to_mass.keys()):
+        for pid in sorted(pids_to_mass):
             structural = pids_to_mass[pid]
             nsm = pids_to_mass_nonstructural.get(pid, 0.0)
             total = structural + nsm

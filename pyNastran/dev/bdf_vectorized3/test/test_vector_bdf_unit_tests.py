@@ -17,6 +17,35 @@ PKG_PATH = pathlib.Path(pyNastran.__path__[0])
 TEST_PATH = PKG_PATH / 'bdf' / 'test'
 MODEL_PATH = PKG_PATH / '..' / 'models'
 
+class TestBdfVectorizedH5(unittest.TestCase):
+    def test_h5(self):
+        dirname = MODEL_PATH / 'elements'
+        h5_filenames = [
+            dirname / 'freq_elements.h5',
+            dirname / 'freq_elements2.h5',
+            dirname / 'time_thermal_elements.h5',
+            dirname / 'static_elements.h5',
+            dirname / 'modes_elements.h5',
+            dirname / 'time_elements.h5',
+            dirname / 'modes_complex_elements.h5',
+            dirname / 'time_thermal_elements.h5',
+            dirname / 'static_elements.h5',
+            dirname / 'modes_elements.h5',
+            dirname / 'time_elements.h5',
+            dirname / 'modes_complex_elements.h5',
+            dirname / 'freq_elements.h5',
+            dirname / 'freq_elements2.h5',
+            #dirname / 'loadstep_elements.h5',  # no nonlinear examples
+        ]
+        #log = SimpleLogger(level='warning')
+        log = SimpleLogger(level='debug')
+        for h5_filename in h5_filenames:
+            log.warning(str(h5_filename))
+            model = BDFv(log=log)
+            model.read_h5(h5_filename)
+            #break
+
+
 class TestBdfVectorized3(unittest.TestCase):
     @unittest.skipIf(not IS_PYTABLES, 'no hdf5')
     def test_static_solid_shell_bar_h5(self):
