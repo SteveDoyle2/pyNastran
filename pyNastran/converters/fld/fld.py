@@ -77,6 +77,30 @@ class FLD:
         self.log.info(f'---writing FLD...{stop_on_failure!r}---')
         raise RuntimeError('write-fld')
 
+    def read_csv(self, csv_filename: str):
+        self.infilename = csv_filename
+        self.log.info(f'---reading CSV...{self.infilename}---')
+
+        import pandas as pd
+        df = pd.read_csv(csv_filename)
+        titles = list(df.columns)
+        # 'X (in)    Y (in)    Z (in)   Pressure (psi)'
+        # OG = ['# X (in)', ' Y (in)', ' Z (in)', ' Pressure (psi)']
+        # split1 = ['X (in)', ' Y (in)', ' Z (in)', ' Pressure (psi)']
+        # split2 + ['x', 'y', 'z', 'pressure']
+        # print(titles)
+        titles = [title.lower().split('#')[1].strip() if '#' in title else title.lower().strip()
+                  for title in titles]
+        # print(titles)
+        titles = [title.split(' ')[0] for title in titles]
+        print(titles)
+        df.columns = titles
+        x = df['x']
+        y = df['y']
+        z = df['z']
+        p = df['pressure']
+        self.xyzp = np.column_stack([x, y, z, p])
+
     def read_fld(self, fld_filename: str) -> None:
         """
         Reads an FLD file
@@ -110,7 +134,9 @@ class FLD:
         1.50000, 1.50000, 0.00000, 3.0
         END DATA
         """
-
+        if fld_filename.lower().endswith('.csv'):
+            self.read_csv(fld_filename)
+            return
         self.infilename = fld_filename
         self.log.info(f'---reading FLD...{self.infilename}---')
 

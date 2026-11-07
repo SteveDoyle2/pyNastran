@@ -4,23 +4,27 @@ from typing import Optional
 import numpy as np
 from pyNastran.utils import PathLike, print_bad_path
 from pyNastran.converters.fluent.utils import (
-    read_vrt, read_cell, read_daten,
-    write_vrt, write_cell, write_daten,
+    read_vrt,
+    read_cell,
+    read_daten,
+    write_vrt,
+    write_cell,
+    write_daten,
     filter_by_region,
 )
 from pyNastran.utils.convert import convert_length
 from pyNastran.converters.aero_common import validate_region_rotations, check_rotation_origin
 
 from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
-if CPYLOG_VERSION > '1.6.0':
+
+if CPYLOG_VERSION > "1.6.0":
     from cpylog import get_logger
 else:  # pragma: no cover
     from cpylog import get_logger2 as get_logger
 
 
 class Fluent:
-    def __init__(self, auto_read_write_h5: bool=True,
-                 log=None, debug: bool=True):
+    def __init__(self, auto_read_write_h5: bool = True, log=None, debug: bool = True):
         """
         Parameters
         ----------
@@ -36,60 +40,75 @@ class Fluent:
         self.log = get_logger(log, debug)
 
         # vrt
-        self.node_id = np.array([], dtype='int32')
-        self.xyz = np.zeros((0, 3), dtype='int32')
+        self.node_id = np.array([], dtype="int32")
+        self.xyz = np.zeros((0, 3), dtype="int32")
 
         # cel
-        self.quads = np.zeros((0, 6), dtype='int32')
-        self.tris = np.zeros((0, 5), dtype='int32')
+        self.quads = np.zeros((0, 6), dtype="int32")
+        self.tris = np.zeros((0, 5), dtype="int32")
 
         # daten
-        self.titles = np.zeros((0, ), dtype='|U8')
-        self.result_element_id = np.array([], dtype='int32')
-        self.results = np.zeros((0, 0), dtype='float64')
+        self.titles = np.zeros((0,), dtype="|U8")
+        self.result_element_id = np.array([], dtype="int32")
+        self.results = np.zeros((0, 0), dtype="float64")
 
         # TODO: may be removed
-        self.element_ids = np.array([], dtype='int32')
+        self.element_ids = np.array([], dtype="int32")
 
     @property
     def element_id(self) -> np.ndarray:
         return self.result_element_id
 
     @classmethod
-    def from_data(self,
-                  node_id: np.ndarray, xyz: np.ndarray,
-                  tris: np.ndarray, quads: np.ndarray,
-                  result_element_id: np.ndarray, titles: np.ndarray,
-                  quad_results: np.ndarray, tri_results: np.ndarray,
-                  auto_read_write_h5: bool=True,
-                  log=None, debug: bool=True):
-        model = Fluent(
-            auto_read_write_h5=auto_read_write_h5,
-            log=log, debug=debug)
+    def from_data(
+        self,
+        node_id: np.ndarray,
+        xyz: np.ndarray,
+        tris: np.ndarray,
+        quads: np.ndarray,
+        result_element_id: np.ndarray,
+        titles: np.ndarray,
+        quad_results: np.ndarray,
+        tri_results: np.ndarray,
+        auto_read_write_h5: bool = True,
+        log=None,
+        debug: bool = True,
+    ):
+        model = Fluent(auto_read_write_h5=auto_read_write_h5, log=log, debug=debug)
         assert len(node_id) > 0
         assert len(result_element_id) > 0
         model.node_id = node_id
         model.xyz = xyz
-        model.result_element_id = result_element_id
         model.quads = quads
         model.tris = tris
         model.titles = titles
-        model.results = np.vstack([quad_results, tri_results])
 
-        element_ids = np.unique(np.hstack([
-            quads[:, 0], tris[:, 0],
-        ]))
+        # results rows must line up with result_element_id (sorted by
+        # element id), not the [quads, tris] order they come in
+        eids = np.hstack([quads[:, 0], tris[:, 0]])
+        isort = np.argsort(eids)
+        assert np.array_equal(eids[isort], result_element_id), "result_element_id mismatch"
+        model.result_element_id = eids[isort]
+        model.results = np.vstack([quad_results, tri_results])[isort, :]
+
+        element_ids = np.unique(
+            np.hstack(
+                [
+                    quads[:, 0],
+                    tris[:, 0],
+                ]
+            )
+        )
         model.element_ids = element_ids  # TODO: consider removing
         return model
 
     def _get_h5_filename(self, h5_filename: PathLike) -> str:
-        if h5_filename == '':
+        if h5_filename == "":
             base, ext = os.path.splitext(self.fluent_filename)
-            h5_filename = base + '.h5'
+            h5_filename = base + ".h5"
         return h5_filename
 
-    def write_h5(self, h5_filename: PathLike='',
-                 require_write: bool=True) -> bool:
+    def write_h5(self, h5_filename: PathLike = "", require_write: bool = True) -> bool:
         is_written = False
         try:
             import tables
@@ -99,11 +118,18 @@ class Fluent:
             return is_written
         h5_filename = self._get_h5_filename(h5_filename)
 
-        h5file = tables.open_file(h5_filename, 'w', driver='H5FD_CORE')
-        names = ['node_id', 'xyz',
-                 'titles', 'results', 'result_element_id', #'element_id',
-                 'quads', 'tris', 'element_ids']
-        h5file.create_array(h5file.root, 'format', ['fluent'])
+        h5file = tables.open_file(h5_filename, "w", driver="H5FD_CORE")
+        names = [
+            "node_id",
+            "xyz",
+            "titles",
+            "results",
+            "result_element_id",  #'element_id',
+            "quads",
+            "tris",
+            "element_ids",
+        ]
+        h5file.create_array(h5file.root, "format", ["fluent"])
         for name in names:
             datai = getattr(self, name)
             h5file.create_array(h5file.root, name, datai)
@@ -113,8 +139,7 @@ class Fluent:
         is_written = True
         return is_written
 
-    def read_h5(self, h5_filename: PathLike='',
-                require_load: bool=True) -> bool:
+    def read_h5(self, h5_filename: PathLike = "", require_load: bool = True) -> bool:
         is_loaded = False
         try:
             import tables
@@ -123,29 +148,34 @@ class Fluent:
                 raise
             return is_loaded
         names = [
-            'node_id', 'xyz',
-            'titles', 'results', 'result_element_id', #'element_id',
-            'quads', 'tris', 'element_ids',
+            "node_id",
+            "xyz",
+            "titles",
+            "results",
+            "result_element_id",  #'element_id',
+            "quads",
+            "tris",
+            "element_ids",
         ]
         h5_filename = self._get_h5_filename(h5_filename)
 
         assert os.path.exists(h5_filename), print_bad_path(h5_filename)
-        h5file = tables.open_file(h5_filename, 'r', driver='H5FD_CORE')
+        h5file = tables.open_file(h5_filename, "r", driver="H5FD_CORE")
 
         try:
-            table = h5file.get_node('/format')
+            table = h5file.get_node("/format")
             formati = table.read()
-            assert formati == [b'fluent'], f'format={formati!r}'
+            assert formati == [b"fluent"], f"format={formati!r}"
         except Exception:
-            print('---error no format?---')
+            print("---error no format?---")
             print(h5file)
 
         for name in names:
-            table = h5file.get_node(f'/{name}')
+            table = h5file.get_node(f"/{name}")
             datai = table.read()
-            if name == 'titles':
+            if name == "titles":
                 # strings are stored as bytes so cast them back to strings
-                data_list = [title.decode('latin1') for title in datai]
+                data_list = [title.decode("latin1") for title in datai]
                 data_array = np.array(data_list)
                 setattr(self, name, data_array)
             else:
@@ -158,23 +188,24 @@ class Fluent:
 
     def read_fluent(self, fluent_filename: PathLike) -> None:
         base, ext = os.path.splitext(fluent_filename)
-        vrt_filename = base + '.vrt'
-        daten_filename = base + '.daten'
-        cell_filename = base + '.cel'
-        h5_filename = base + '.h5'
+        vrt_filename = base + ".vrt"
+        daten_filename = base + ".daten"
+        cell_filename = base + ".cel"
+        h5_filename = base + ".h5"
         assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
         assert os.path.exists(daten_filename), print_bad_path(daten_filename)
         assert os.path.exists(cell_filename), print_bad_path(cell_filename)
         self.fluent_filename = fluent_filename
-        if self.auto_read_write_h5 and os.path.exists(h5_filename):
+
+        fluent_filenames = [vrt_filename, cell_filename, daten_filename]
+        # the h5 is a cache of the vrt/cel/daten; only use it if it's current
+        # (a stale or unreadable h5 falls through and gets rewritten below)
+        if self.auto_read_write_h5 and is_h5_current(fluent_filenames, h5_filename, self.log):
             # fails if pytables isn't installed
-            self.log.debug(f'reading fluent {h5_filename}')
+            self.log.debug(f"reading fluent {h5_filename}")
             is_loaded = self.read_h5(h5_filename, require_load=False)
             if is_loaded:
                 return
-        assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
-        assert os.path.exists(daten_filename), print_bad_path(daten_filename)
-        assert os.path.exists(cell_filename), print_bad_path(cell_filename)
 
         (quads, tris), element_ids = read_cell(cell_filename, self.log)
         node, xyz = read_vrt(vrt_filename, self.log)
@@ -187,8 +218,8 @@ class Fluent:
         self.titles = titles
         self.results = results
 
-        self.quads = np.zeros((0, 6), dtype='int32')
-        self.tris = np.zeros((0, 5), dtype='int32')
+        self.quads = np.zeros((0, 6), dtype="int32")
+        self.tris = np.zeros((0, 5), dtype="int32")
         if len(quads):
             self.quads = quads
         if len(tris):
@@ -204,25 +235,37 @@ class Fluent:
             # fails if pytables isn't installed
             self.write_h5(h5_filename, require_write=False)
 
-    def write_csv(self, csv_filename: PathLike, qscale: float=1.0, pressure_units: str='',
-                  delimiter=',') -> None:
+    def write_csv(
+        self,
+        csv_filename: PathLike,
+        xyz_scale: float = 1.0,
+        xyz_units: str = "",
+        q_scale: float = 1.0,
+        pressure_units: str = "",
+        delimiter=",",
+    ) -> None:
         """['Shell Id', 'Pressure Coefficient']"""
         titles_list = self.titles[1:].tolist()
-        icp = titles_list.index('Pressure Coefficient')
+        icp = titles_list.index("Pressure Coefficient")
 
         unused_eid, tris, quads, region, results = self.get_filtered_data(return_model=False)
         assert len(titles_list) == results.shape[1], (titles_list, results.shape)
 
         # region/results are [quad, tri]; match that order
-        (tri_area, quad_area, tri_centroid, quad_centroid,
-         tri_normal, quad_normal) = self.get_area_centroid_normal(tris, quads)
+        (tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal) = (
+            self.get_area_centroid_normal(tris, quads)
+        )
         centroid = np.vstack([quad_centroid, tri_centroid])
 
-        pressure = results[:, icp] * qscale
-        xyz_p = np.column_stack([centroid, pressure])
-        np.savetxt(csv_filename, xyz_p,
-                   header=f'X, Y, Z, Pressure ({pressure_units})',
-                   delimiter=delimiter)
+        pressure = results[:, icp] * q_scale
+        xyz_p = np.column_stack([centroid * xyz_scale, pressure])
+        self.log.info(f"writing fluent {str(csv_filename)!r}...")
+        np.savetxt(
+            csv_filename,
+            xyz_p,
+            header=f"X ({xyz_units}), Y ({xyz_units}), Z ({xyz_units}), Pressure ({pressure_units})",
+            delimiter=delimiter,
+        )
 
     def write_fluent(self, fluent_filename: str) -> None:
         assert len(self.node_id) > 0, self.node_id
@@ -232,53 +275,54 @@ class Fluent:
         assert len(self.result_element_id) > 0, self.result_element_id
 
         base, ext = os.path.splitext(fluent_filename)
-        vrt_filename = base + '.vrt'
-        daten_filename = base + '.daten'
-        cell_filename = base + '.cel'
+        vrt_filename = base + ".vrt"
+        daten_filename = base + ".daten"
+        cell_filename = base + ".cel"
 
-        #(quads, tris), (element_ids, region)
+        self.log.info(f"writing fluent {str(vrt_filename)!r}...")
+
+        # (quads, tris), (element_ids, region)
         # node, xyz = read_vrt(vrt_filename)
         # result_element_id, titles, results = read_daten(daten_filename, scale=1.0)
         write_cell(cell_filename, self.quads, self.tris)
         write_vrt(vrt_filename, self.node_id, self.xyz)
 
-        results_elements_list = []
-        results_list = []
-        if len(self.tris):
-            itri = np.searchsorted(self.result_element_id, self.tris[:, 0])
-            results_elements_list.append(self.result_element_id[itri])
-            results_list.append(self.results[itri, :])
-
-        if len(self.quads):
-            iquad = np.searchsorted(self.result_element_id, self.quads[:, 0])
-            results_elements_list.append(self.result_element_id[iquad])
-            results_list.append(self.results[iquad, :])
-        result_element_id = np.hstack(results_elements_list)
-        results = np.vstack(results_list)
+        # the daten must be sorted by element id (tris and quads interleaved),
+        # like Fluent writes it; get_filtered_data uses searchsorted on it
+        result_element_id = np.sort(np.hstack([self.tris[:, 0], self.quads[:, 0]]))
+        isort = np.argsort(self.result_element_id)  # self.results may be unsorted
+        sorted_ids = self.result_element_id[isort]
+        iresult = np.searchsorted(sorted_ids, result_element_id)
+        iresult_clip = np.minimum(iresult, len(sorted_ids) - 1)
+        is_missing = sorted_ids[iresult_clip] != result_element_id
+        if is_missing.any():
+            raise KeyError(
+                f"{is_missing.sum()} elements have no results; e.g., "
+                f"element_id={result_element_id[is_missing][:10].tolist()}"
+            )
+        results = self.results[isort[iresult], :]
         write_daten(daten_filename, result_element_id, self.titles, results)
 
-    def get_area_centroid_normal(self, tris: np.ndarray,
-                                 quads: np.ndarray) -> tuple[np.ndarray, np.ndarray,
-                                                             np.ndarray, np.ndarray,
-                                                             np.ndarray, np.ndarray]:
+    def get_area_centroid_normal(
+        self, tris: np.ndarray, quads: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         tri_nodes = tris[:, 2:]
         quad_nodes = quads[:, 2:]
         out = self.get_area_centroid_normal_from_nodes(tri_nodes, quad_nodes)
         (
-            tri_area, quad_area,
-            tri_centroid, quad_centroid,
-            tri_normal, quad_normal,
+            tri_area,
+            quad_area,
+            tri_centroid,
+            quad_centroid,
+            tri_normal,
+            quad_normal,
         ) = out
-        return (
-            tri_area, quad_area,
-            tri_centroid, quad_centroid,
-            tri_normal, quad_normal)
+        return (tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal)
         return
 
-    def get_area_centroid_normal_from_nodes(self, tri_nodes: np.ndarray,
-                                            quad_nodes: np.ndarray) -> tuple[np.ndarray, np.ndarray,
-                                                                             np.ndarray, np.ndarray,
-                                                                             np.ndarray, np.ndarray]:
+    def get_area_centroid_normal_from_nodes(
+        self, tri_nodes: np.ndarray, quad_nodes: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         assert tri_nodes.shape[1] == 3, tri_nodes.shape
         assert quad_nodes.shape[1] == 4, quad_nodes.shape
 
@@ -300,9 +344,9 @@ class Fluent:
             tri_normal /= tri_areai[:, np.newaxis]
             assert np.abs(tri_normal).max() <= 1.001, (tri_normal.min(), tri_normal.max())
         else:
-            tri_centroid = np.zeros((0, 3), dtype='float64')
-            tri_normal = np.zeros((0, 3), dtype='float64')
-            tri_area = np.zeros(0, dtype='float64')
+            tri_centroid = np.zeros((0, 3), dtype="float64")
+            tri_normal = np.zeros((0, 3), dtype="float64")
+            tri_area = np.zeros(0, dtype="float64")
 
         if len(quad_nodes):
             iquad = np.searchsorted(self.node_id, quad_nodes)
@@ -318,36 +362,39 @@ class Fluent:
             quad_normal /= quad_areai[:, np.newaxis]
             assert np.abs(quad_normal).max() <= 1.001, (quad_normal.min(), quad_normal.max())
         else:
-            quad_centroid = np.zeros((0, 3), dtype='float64')
-            quad_normal = np.zeros((0, 3), dtype='float64')
-            quad_area = np.zeros(0, dtype='float64')
+            quad_centroid = np.zeros((0, 3), dtype="float64")
+            quad_normal = np.zeros((0, 3), dtype="float64")
+            quad_area = np.zeros(0, dtype="float64")
 
         assert len(tri_centroid) == len(tri_area)
         assert len(quad_centroid) == len(quad_area)
         out = (
-            tri_area, quad_area,
-            tri_centroid, quad_centroid,
-            tri_normal, quad_normal,
+            tri_area,
+            quad_area,
+            tri_centroid,
+            quad_centroid,
+            tri_normal,
+            quad_normal,
         )
         return out
 
-    def get_area_centroid(self, tris: np.ndarray,
-                          quads: np.ndarray) -> tuple[np.ndarray, np.ndarray,
-                                                      np.ndarray, np.ndarray]:
+    def get_area_centroid(
+        self, tris: np.ndarray, quads: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         out = self.get_area_centroid_normal(tris, quads)
         tri_area, quad_area, tri_centroid, quad_centroid, tri_normal, quad_normal = out
         del tri_normal, quad_normal
         return tri_area, quad_area, tri_centroid, quad_centroid
 
-    def get_filtered_data(self,
-                          regions_to_remove: Optional[list[int]]=None,
-                          regions_to_include: Optional[list[int]]=None,
-                          return_model: bool=False,
-                          #deepcopy: bool=True,
-                          ) -> tuple[np.ndarray, np.ndarray, np.ndarray,
-                                     np.ndarray, np.ndarray]:
+    def get_filtered_data(
+        self,
+        regions_to_remove: Optional[list[int]] = None,
+        regions_to_include: Optional[list[int]] = None,
+        return_model: bool = False,
+        # deepcopy: bool=True,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         # False
-        #assert np.array_equal(self.result_element_id, np.unique(self.result_element_id))
+        # assert np.array_equal(self.result_element_id, np.unique(self.result_element_id))
         if regions_to_remove is None:
             regions_to_remove = []
         if regions_to_include is None:
@@ -355,34 +402,43 @@ class Fluent:
         region_split = bool(len(regions_to_remove) + len(regions_to_include))
         assert len(self.result_element_id) > 0
         if region_split:
-            self.log.info(f'regions_to_remove={regions_to_remove}; '
-                          f'regions_to_include={regions_to_include}')
+            self.log.info(
+                f"regions_to_remove={regions_to_remove}; regions_to_include={regions_to_include}"
+            )
             result_element_id, tris, quads, quad_results, tri_results = filter_by_region(
-                self, regions_to_remove, regions_to_include)
+                self, regions_to_remove, regions_to_include
+            )
             assert np.array_equal(result_element_id, np.unique(result_element_id))
             if len(result_element_id) == 0 and 0:
                 # error state to not crash gui
                 region_id = self.region[0]
-                self.log.warning(f'no elements remaining; including region_id={region_id}')
+                self.log.warning(f"no elements remaining; including region_id={region_id}")
                 return self.get_filtered_data(
-                    regions_to_include=[region_id],
-                    return_model=return_model)
-            assert len(result_element_id) > 0, 'no elements remaining'
+                    regions_to_include=[region_id], return_model=return_model
+                )
+            assert len(result_element_id) > 0, "no elements remaining"
 
             model2 = self.from_data(
-                self.node_id, self.xyz,
-                tris, quads,
-                result_element_id, self.titles,
-                quad_results, tri_results,
+                self.node_id,
+                self.xyz,
+                tris,
+                quads,
+                result_element_id,
+                self.titles,
+                quad_results,
+                tri_results,
                 auto_read_write_h5=True,
-                log=self.log)
+                log=self.log,
+            )
             assert isinstance(model2, Fluent)
             str(model2)
             assert len(model2.result_element_id) > 0
             region = model2.region
-            results = model2.results
+            # [quads, tris] order to match region; model2.results is in
+            # result_element_id order
+            results = np.vstack([quad_results, tri_results])
         else:
-            self.log.debug('no filtering of regions')
+            self.log.debug("no filtering of regions")
             tris = self.tris
             quads = self.quads
 
@@ -398,18 +454,19 @@ class Fluent:
             assert np.array_equal(result_element_id, np.unique(result_element_id))
 
             region = self.region
+            # [quads, tris] order to match region; don't store it on self,
+            # since self.results must stay in result_element_id order
             results = np.vstack([quad_results, tri_results])
-            self.results = results
-            assert len(result_element_id) > 0, 'no elements remaining2'
+            assert len(result_element_id) > 0, "no elements remaining2"
             assert len(self.result_element_id) > 0
             model2 = self
         if return_model:
             return model2
         return result_element_id, tris, quads, region, results
 
-    def slice_by_element_id(self,
-                            tri_ids: Optional[np.ndarray]=None,
-                            quad_ids: Optional[np.ndarray]=None) -> None:
+    def slice_by_element_id(
+        self, tri_ids: Optional[np.ndarray] = None, quad_ids: Optional[np.ndarray] = None
+    ) -> None:
         """
         Keeps only the given tris/quads, in place.
 
@@ -437,10 +494,12 @@ class Fluent:
         missing_tris = np.setdiff1d(tri_ids, self.tris[:, 0])
         missing_quads = np.setdiff1d(quad_ids, self.quads[:, 0])
         if len(missing_tris) or len(missing_quads):
-            raise KeyError(f'tri ids not found: {missing_tris.tolist()}; '
-                           f'quad ids not found: {missing_quads.tolist()}')
+            raise KeyError(
+                f"tri ids not found: {missing_tris.tolist()}; "
+                f"quad ids not found: {missing_quads.tolist()}"
+            )
         if len(tri_ids) + len(quad_ids) == 0:
-            raise ValueError('no elements would remain; pass tri_ids and/or quad_ids')
+            raise ValueError("no elements would remain; pass tri_ids and/or quad_ids")
 
         self.tris = self.tris[np.isin(self.tris[:, 0], tri_ids), :]
         self.quads = self.quads[np.isin(self.quads[:, 0], quad_ids), :]
@@ -451,19 +510,128 @@ class Fluent:
         self.results = self.results[iresult, :]
         self.element_ids = self.element_ids[np.isin(self.element_ids, kept_ids)]
 
-        used_nodes = np.unique(np.hstack([
-            self.tris[:, 2:].ravel(), self.quads[:, 2:].ravel()]))
+        used_nodes = np.unique(np.hstack([self.tris[:, 2:].ravel(), self.quads[:, 2:].ravel()]))
         inode = np.isin(self.node_id, used_nodes)
         self.node_id = self.node_id[inode]
         self.xyz = self.xyz[inode, :]
-        self.log.debug(f'sliced fluent model: ntris={len(self.tris)} '
-                       f'nquads={len(self.quads)} nnodes={len(self.node_id)} '
-                       f'nresults={len(self.result_element_id)}')
+        self.log.debug(
+            f"sliced fluent model: ntris={len(self.tris)} "
+            f"nquads={len(self.quads)} nnodes={len(self.node_id)} "
+            f"nresults={len(self.result_element_id)}"
+        )
 
-    def rotate_regions(self,
-                       rotations: list[tuple[list[int], np.ndarray, np.ndarray,
-                                             str, float]],
-                       ortho_tol: float=1e-6) -> None:
+    def element_bbox(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+        """Compute per-element axis-aligned bounding boxes from node coordinates.
+
+        Returns
+        -------
+        quad_eids : (nquad,) int array
+        tri_eids : (ntri,) int array
+        quad_bbox : (nquad, 2, 3) float array
+            [:, 0, :] is min xyz, [:, 1, :] is max xyz
+        tri_bbox : (ntri, 2, 3) float array
+            [:, 0, :] is min xyz, [:, 1, :] is max xyz
+        """
+        node_id = self.node_id
+        xyz = self.xyz.astype("float64")
+
+        quad_eids = self.quads[:, 0]
+        tri_eids = self.tris[:, 0]
+
+        nquad = len(self.quads)
+        ntri = len(self.tris)
+
+        quad_bbox = np.zeros((nquad, 2, 3), dtype="float64")
+        tri_bbox = np.zeros((ntri, 2, 3), dtype="float64")
+
+        if nquad:
+            iquad = np.searchsorted(node_id, self.quads[:, 2:])
+            quad_xyz = xyz[iquad, :]  # (nquad, 4, 3)
+            quad_bbox[:, 0, :] = quad_xyz.min(axis=1)
+            quad_bbox[:, 1, :] = quad_xyz.max(axis=1)
+
+        if ntri:
+            itri = np.searchsorted(node_id, self.tris[:, 2:])
+            tri_xyz = xyz[itri, :]  # (ntri, 3, 3)
+            tri_bbox[:, 0, :] = tri_xyz.min(axis=1)
+            tri_bbox[:, 1, :] = tri_xyz.max(axis=1)
+
+        return quad_eids, tri_eids, quad_bbox, tri_bbox
+
+    def filter_elements_by_xyz(
+        self,
+        xmin: Optional[float] = None,
+        xmax: Optional[float] = None,
+        ymin: Optional[float] = None,
+        ymax: Optional[float] = None,
+        zmin: Optional[float] = None,
+        zmax: Optional[float] = None,
+    ) -> None:
+        """Remove elements outside the xyz bounding box, in place.
+
+        An element is kept only if ALL of its nodes satisfy
+        xmin <= x <= xmax, ymin <= y <= ymax, zmin <= z <= zmax
+        (i.e., the element bounding box lies entirely within the range).
+
+        Parameters
+        ----------
+        xmin / xmax : float or None; default=None (no restriction)
+        ymin / ymax : float or None; default=None (no restriction)
+        zmin / zmax : float or None; default=None (no restriction)
+        """
+        quad_eids, tri_eids, quad_bbox, tri_bbox = self.element_bbox()
+        bbox_min = np.array(
+            [
+                xmin if xmin is not None else -np.inf,
+                ymin if ymin is not None else -np.inf,
+                zmin if zmin is not None else -np.inf,
+            ]
+        )
+        bbox_max = np.array(
+            [
+                xmax if xmax is not None else np.inf,
+                ymax if ymax is not None else np.inf,
+                zmax if zmax is not None else np.inf,
+            ]
+        )
+
+        empty = np.zeros(0, dtype="int64")
+        if len(quad_eids):
+            keep_q = np.all(quad_bbox[:, 0, :] >= bbox_min, axis=1) & np.all(
+                quad_bbox[:, 1, :] <= bbox_max, axis=1
+            )
+            keep_quads = quad_eids[keep_q]
+        else:
+            keep_quads = empty
+        if len(tri_eids):
+            keep_t = np.all(tri_bbox[:, 0, :] >= bbox_min, axis=1) & np.all(
+                tri_bbox[:, 1, :] <= bbox_max, axis=1
+            )
+            keep_tris = tri_eids[keep_t]
+        else:
+            keep_tris = empty
+
+        if len(keep_quads) + len(keep_tris) == 0:
+            raise ValueError(
+                f"no elements remain after bbox "
+                f"x=[{xmin}, {xmax}] y=[{ymin}, {ymax}] "
+                f"z=[{zmin}, {zmax}]"
+            )
+
+        n_removed = (len(quad_eids) + len(tri_eids)) - (len(keep_quads) + len(keep_tris))
+        self.log.info(
+            f"bbox filter x=[{xmin}, {xmax}] y=[{ymin}, {ymax}] "
+            f"z=[{zmin}, {zmax}]: keeping "
+            f"{len(keep_quads)} quads + {len(keep_tris)} tris, "
+            f"removed {n_removed} elements"
+        )
+        self.slice_by_element_id(tri_ids=keep_tris, quad_ids=keep_quads)
+
+    def rotate_regions(
+        self,
+        rotations: list[tuple[list[int], np.ndarray, np.ndarray, str, float]],
+        ortho_tol: float = 1e-6,
+    ) -> None:
         """
         Rigidly rotates sets of regions (e.g., a flap and a horizontal
         tail) in place, each about an axis of its own coordinate system.
@@ -526,23 +694,22 @@ class Fluent:
         # validate everything before changing the model
         sets = validate_region_rotations(rotations, self.region, ortho_tol=ortho_tol)
 
-        cf_titles = [title for title in self.titles.tolist() if 'Cf' in title]
+        cf_titles = [title for title in self.titles.tolist() if "Cf" in title]
         if cf_titles:
-            self.log.warning(f'Cf results are not rotated with the geometry: {cf_titles}')
+            self.log.warning(f"Cf results are not rotated with the geometry: {cf_titles}")
 
         node_id = np.asarray(self.node_id).copy()
-        xyz = np.asarray(self.xyz, dtype='float64').copy()
+        xyz = np.asarray(self.xyz, dtype="float64").copy()
         tris = self.tris.copy()
         quads = self.quads.copy()
         for iset, (region_ids, origin, rotation_matrix, axis, angle) in enumerate(sets):
             itri = np.isin(tris[:, 1], region_ids)
             iquad = np.isin(quads[:, 1], region_ids)
-            set_nids = np.unique(np.hstack([
-                tris[itri, 2:].ravel(), quads[iquad, 2:].ravel()]))
-            other_nids = np.unique(np.hstack([
-                tris[~itri, 2:].ravel(), quads[~iquad, 2:].ravel()]))
-            check_rotation_origin(self.log, iset, region_ids, origin,
-                                  xyz[np.searchsorted(node_id, set_nids), :])
+            set_nids = np.unique(np.hstack([tris[itri, 2:].ravel(), quads[iquad, 2:].ravel()]))
+            other_nids = np.unique(np.hstack([tris[~itri, 2:].ravel(), quads[~iquad, 2:].ravel()]))
+            check_rotation_origin(
+                self.log, iset, region_ids, origin, xyz[np.searchsorted(node_id, set_nids), :]
+            )
 
             # split the shared nodes; the set gets the new copies
             shared_nids = np.intersect1d(set_nids, other_nids)
@@ -563,9 +730,11 @@ class Fluent:
             # their original location
             inode = np.searchsorted(node_id, set_nids)
             xyz[inode, :] = origin + (xyz[inode, :] - origin) @ rotation_matrix.T
-            self.log.info(f'rotated set {iset}: regions={region_ids.tolist()} '
-                          f'{angle} deg about {axis}; nnodes={len(set_nids)} '
-                          f'nsplit={nshared} origin={origin.tolist()}')
+            self.log.info(
+                f"rotated set {iset}: regions={region_ids.tolist()} "
+                f"{angle} deg about {axis}; nnodes={len(set_nids)} "
+                f"nsplit={nshared} origin={origin.tolist()}"
+            )
 
         self.node_id = node_id
         self.xyz = xyz
@@ -576,35 +745,40 @@ class Fluent:
     def region(self) -> np.ndarray:
         return np.hstack([self.quads[:, 1], self.tris[:, 1]])
 
-    #@property
-    #def results(self) -> np.ndarray:
-        #return np.vstack([self.quad_results, self.tri_results])
+    # @property
+    # def results(self) -> np.ndarray:
+    # return np.vstack([self.quad_results, self.tri_results])
 
     def __repr__(self) -> str:
         msg = (
-            'Fluent:\n'
-            f' - node_id = {self.node_id}\n'
-            f' - xyz =\n{self.xyz}\n'
-            f' - result_element_id = {self.result_element_id}\n'
-            f' - quads = {self.quads}\n'
-            f' - tris  = {self.tris}\n'
-            f' - titles = {self.titles}\n'
-            f' - results =\n{self.results}\n'
-            f' - element_ids = {self.element_ids}\n'
-            f' - region = {self.region}\n'
+            "Fluent:\n"
+            f" - node_id = {self.node_id}\n"
+            f" - xyz =\n{self.xyz}\n"
+            f" - result_element_id = {self.result_element_id}\n"
+            f" - quads = {self.quads}\n"
+            f" - tris  = {self.tris}\n"
+            f" - titles = {self.titles}\n"
+            f" - results =\n{self.results}\n"
+            f" - element_ids = {self.element_ids}\n"
+            f" - region = {self.region}\n"
         )
         return msg
 
+
 def compute_cp_force_moment_coefficients(
-        cp: np.ndarray, area: np.ndarray,
-        centroid: np.ndarray, normal: np.ndarray,
-        region: np.ndarray,
-        sref: float=1.0, cref: float=1.0, bref: float=1.0,
-        xyz_ref=None,
-        units_length_in: str='unitless',
-        units_length_out: str='in',
-        log_info=None) -> tuple[np.ndarray, np.ndarray,
-                                dict[int, tuple[np.ndarray, np.ndarray]]]:
+    cp: np.ndarray,
+    area: np.ndarray,
+    centroid: np.ndarray,
+    normal: np.ndarray,
+    region: np.ndarray,
+    sref: float = 1.0,
+    cref: float = 1.0,
+    bref: float = 1.0,
+    xyz_ref=None,
+    units_length_in: str = "unitless",
+    units_length_out: str = "in",
+    log_info=None,
+) -> tuple[np.ndarray, np.ndarray, dict[int, tuple[np.ndarray, np.ndarray]]]:
     """
     Integrates the pressure coefficient into force/moment coefficients
 
@@ -644,20 +818,20 @@ def compute_cp_force_moment_coefficients(
 
     """
     if xyz_ref is None:
-        xyz_ref = np.zeros(3, dtype='float64')
-    xyz_ref = np.asarray(xyz_ref, dtype='float64')
+        xyz_ref = np.zeros(3, dtype="float64")
+    xyz_ref = np.asarray(xyz_ref, dtype="float64")
     assert xyz_ref.shape == (3,), xyz_ref.shape
-    assert sref > 0. and cref > 0. and bref > 0., (sref, cref, bref)
+    assert sref > 0.0 and cref > 0.0 and bref > 0.0, (sref, cref, bref)
 
     # put the geometry in the same units as the reference quantities
-    centroid = np.asarray(centroid, dtype='float64')
-    area = np.asarray(area, dtype='float64')
-    if units_length_in not in {'', 'unitless'}:
+    centroid = np.asarray(centroid, dtype="float64")
+    area = np.asarray(area, dtype="float64")
+    if units_length_in not in {"", "unitless"}:
         centroid = convert_length(centroid, units_length_in, units_length_out)
         length_factor = convert_length(1.0, units_length_in, units_length_out)
-        area = area * length_factor ** 2
+        area = area * length_factor**2
 
-    lref = np.array([bref, cref, bref], dtype='float64')
+    lref = np.array([bref, cref, bref], dtype="float64")
     cfs = (cp * area / sref)[:, np.newaxis] * normal
     cms = np.cross(centroid - xyz_ref, cfs) / lref
 
@@ -671,28 +845,55 @@ def compute_cp_force_moment_coefficients(
         region_dict[regioni] = (cf_xyz, cm_xyz)
 
     if log_info is not None:
-        units = '' if units_length_in in {'', 'unitless'} else units_length_out
-        area_units = f' {units}^2' if units else ''
-        length_units = f' {units}' if units else ''
-        log_info(f'Sref={sref}{area_units}; cref={cref}{length_units}; '
-                 f'bref={bref}{length_units}; xyz_ref={xyz_ref.tolist()}{length_units}')
-        log_info(f'total: CFxyz={cf_total} CMxyz={cm_total}')
+        units = "" if units_length_in in {"", "unitless"} else units_length_out
+        area_units = f" {units}^2" if units else ""
+        length_units = f" {units}" if units else ""
+        log_info(
+            f"Sref={sref}{area_units}; cref={cref}{length_units}; "
+            f"bref={bref}{length_units}; xyz_ref={xyz_ref.tolist()}{length_units}"
+        )
+        log_info(f"total 0: CFxyz={cf_total} CMxyz={cm_total}")
         for regioni, (cf_xyz, cm_xyz) in region_dict.items():
-            log_info(f'  region {regioni}: CFxyz={cf_xyz} CMxyz={cm_xyz}')
+            log_info(f"  region {regioni}: CFxyz={cf_xyz} CMxyz={cm_xyz}")
     return cf_total, cm_total, region_dict
 
 
 def _as_ids(ids: Optional[np.ndarray]) -> np.ndarray:
     """None -> empty; else a flat int array"""
     if ids is None:
-        return np.zeros(0, dtype='int64')
+        return np.zeros(0, dtype="int64")
     return np.asarray(ids).ravel()
 
 
-def read_fluent(fluent_filename: PathLike,
-                auto_read_write_h5: bool=True,
-                log=None, debug: bool=False) -> Fluent:
-    model = Fluent(auto_read_write_h5=auto_read_write_h5,
-                   log=log, debug=debug)
+def is_h5_current(
+    source_filenames: PathLike | list[PathLike], h5_filename: PathLike, log: SimpleLogger
+) -> bool:
+    """
+    Is the h5 cache usable?
+
+    Returns True if h5_filename exists and is at least as new as every
+    source file.  Logs a warning (naming the newer files) if it's stale.
+    """
+    if isinstance(source_filenames, (str, os.PathLike)):
+        source_filenames = [source_filenames]
+    if not os.path.exists(h5_filename):
+        return False
+
+    h5_mtime = os.path.getmtime(h5_filename)
+    newer = [
+        os.path.basename(fname) for fname in source_filenames if os.path.getmtime(fname) > h5_mtime
+    ]
+    if newer:
+        log.warning(
+            f"{h5_filename} is older than {', '.join(newer)}; rereading them and rewriting the h5"
+        )
+        return False
+    return True
+
+
+def read_fluent(
+    fluent_filename: PathLike, auto_read_write_h5: bool = True, log=None, debug: bool = False
+) -> Fluent:
+    model = Fluent(auto_read_write_h5=auto_read_write_h5, log=log, debug=debug)
     model.read_fluent(fluent_filename)
     return model

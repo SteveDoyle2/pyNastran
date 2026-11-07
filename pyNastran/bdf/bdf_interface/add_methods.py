@@ -827,13 +827,18 @@ class AddMethods:
         """adds an MAT1, MAT2, MAT8 object"""
         key = material.mid
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
+
         model = self.model
-        if key in model.materials and not allow_overwrites:
-            if not material == model.materials[key]:
-                model._duplicate['materials'].append(material)
-        else:
-            model.materials[key] = material
-            model._type_to_id_map[material.type].append(key)
+        add_object_to_dict(
+            model, key, 'materials', material, model.materials,
+            allow_overwrites)
+
+        # if key in model.materials and not allow_overwrites:
+        #     if not material == model.materials[key]:
+        #         model._duplicate['materials'].append(material)
+        # else:
+        #     model.materials[key] = material
+        #     model._type_to_id_map[material.type].append(key)
 
     def add_thermal_material_object(self, material: ThermalMaterial,
                                     allow_overwrites: bool=False) -> None:
@@ -946,6 +951,9 @@ class AddMethods:
         tag = _get_add_tag(model, coord, model.coords[key])
         if coord == model.coords[key]:
             model.log.warning(f'replacing equivalent coord {key}:{tag}\n{coord}')
+            if model.save_file_structure:
+                model._duplicate_equivalents.append(
+                    ('coord', key, coord.type, model.coords[key].ifile, coord.ifile))
         elif allow_overwrites:
             model.log.warning(f'replacing coord{key}:{tag}\n{model.coords[key]}with:\n{coord}')
             model.coords[key] = coord
@@ -1918,6 +1926,9 @@ def add_object_to_dict(model: BDF, key: int,
     tag = _get_add_tag(model, obj, obj_dict[key])
     if obj == obj_dict[key]:
         model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
+        if model.save_file_structure:
+            model._duplicate_equivalents.append(
+                (obj_name, key, obj.type, obj_dict[key].ifile, obj.ifile))
     elif allow_overwrites:
         model.log.warning(f'replacing {obj_name} {key}:{tag}\n{obj_dict[key]}with:\n{obj}')
         obj_dict[key] = obj
@@ -1977,6 +1988,9 @@ def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
     tag = _get_add_tag(model, obj, obj_dict[key])
     if obj == obj_dict[key]:
         model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
+        if model.save_file_structure:
+            model._duplicate_equivalents.append(
+                (obj_name, key, obj.type, obj_dict[key].ifile, obj.ifile))
     elif allow_overwrites:
         model.log.warning(f'replacing {obj_name} {key}:{tag}\n{obj_dict[key]}\nwith:\n{obj}')
         obj_dict[key] = obj

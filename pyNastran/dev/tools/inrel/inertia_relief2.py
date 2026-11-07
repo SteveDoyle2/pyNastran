@@ -11,7 +11,7 @@ constraints.  The caller adds the returned deltas to the applied loads::
     force_out  = force  + dforce
     moment_out = moment + dmoment
     sum(force_out) == 0
-    sum(moment_out about the cg) == 0
+    sum(moment_out) + sum(r × force_out, about any point) == 0
 
 Method
 ------
@@ -139,14 +139,16 @@ Remaining limitations
   as exactly zero.
 
 """
+
 from __future__ import annotations
 import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
+
 if TYPE_CHECKING:
-    from pyNastran.bdf.bdf import read_bdf, BDF
+    from pyNastran.bdf.bdf import BDF
 
 
 def get_mass_properties_array(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -185,20 +187,22 @@ def get_mass_properties_array(model: BDF) -> tuple[np.ndarray, np.ndarray, np.nd
     # from pyNastran.bdf.bdf import read_bdf
     mass, cg, inertia = mass_properties(model)
     nnode = 5
-    mass = np.array([1., 2., 3., 4., 5])
-    cg = np.array([
-        [0., 0., 0.],
-        [1., 0., 0.],
-        [3., 0., 0.],
-        [2., 1., 0.],
-        [2., 0., 0.],
-    ])
+    mass = np.array([1.0, 2.0, 3.0, 4.0, 5])
+    cg = np.array(
+        [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [3.0, 0.0, 0.0],
+            [2.0, 1.0, 0.0],
+            [2.0, 0.0, 0.0],
+        ]
+    )
     # Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
-    inertia = np.zeros((nnode, 6), dtype='float64')
+    inertia = np.zeros((nnode, 6), dtype="float64")
     return mass, cg, inertia
 
-def get_eigenvalues(imat: np.ndarray,
-                    debug: bool=False):  # pragma: no cover
+
+def get_eigenvalues(imat: np.ndarray, debug: bool = False):  # pragma: no cover
     """
     Finds the principal inertias by numerical optimization rather than by
     eigendecomposition.
@@ -226,9 +230,9 @@ def get_eigenvalues(imat: np.ndarray,
       parts.
 
     """
-    x0 = [1., 0., 0.,
-          0., 1., 0.]
+    x0 = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
     import scipy
+
     def func(values):
         i = values[:3]
         j = values[3:]
@@ -241,12 +245,17 @@ def get_eigenvalues(imat: np.ndarray,
         T = np.vstack([i, j, k])
         imat2 = T @ imat @ T.T
         # imat2 = T.T @ imat @ T
-        obj = imat2[0, 1]**2 + imat2[0, 2]**2 + imat2[1, 2]**2
-        obj -= imat2[0, 0]**2 + imat2[1, 1]**2 + imat2[2, 2]**2
+        obj = imat2[0, 1] ** 2 + imat2[0, 2] ** 2 + imat2[1, 2] ** 2
+        obj -= imat2[0, 0] ** 2 + imat2[1, 1] ** 2 + imat2[2, 2] ** 2
         return obj
+
     bounds = [
-        [-1., 1.], [-1., 1.], [-1., 1.],
-        [-1., 1.], [-1., 1.], [-1., 1.],
+        [-1.0, 1.0],
+        [-1.0, 1.0],
+        [-1.0, 1.0],
+        [-1.0, 1.0],
+        [-1.0, 1.0],
+        [-1.0, 1.0],
     ]
     out = scipy.optimize.minimize(func, x0, bounds=bounds)
     # out = scipy.optimize.fmin(func, out)
@@ -262,20 +271,18 @@ def get_eigenvalues(imat: np.ndarray,
     T = np.vstack([i, j, k])
     imat2 = T @ imat @ T.T
     # imat2 = T.T @ imat @ T
-    T2 = T ** 2
+    T2 = T**2
     if debug:  # pragma: no cover
         print(T2.sum(axis=0), T2.sum(axis=1))
-        print(f'T:\n{T}')
-        print(f'imat2:\n{imat2}')
+        print(f"T:\n{T}")
+        print(f"imat2:\n{imat2}")
     return np.linalg.eigvals(imat2)
     # return np.diag(imat2)
 
 
-def _mass_properties_total(mass: np.ndarray,
-                           xyz: np.ndarray,
-                           inertia: np.ndarray,
-                           debug: bool=False) -> tuple[float, np.ndarray, np.ndarray,
-                                      np.ndarray, np.ndarray]:
+def _mass_properties_total(
+    mass: np.ndarray, xyz: np.ndarray, inertia: np.ndarray, debug: bool = False
+) -> tuple[float, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Assembles the total mass, cg, and inertia tensor about the cg, and finds
     the rotation into the principal axis frame.
@@ -355,29 +362,40 @@ def _mass_properties_total(mass: np.ndarray,
     ixy = inertia_totali[3] + (mass * (dx * dy)).sum()
     ixz = inertia_totali[4] + (mass * (dx * dz)).sum()
     iyz = inertia_totali[5] + (mass * (dy * dz)).sum()
-    inertia_mat = np.array([
-        [ixx, -ixy, -ixz],
-        [-ixy, iyy, -iyz],
-        [-ixz, -iyz, izz],
-    ])
+    inertia_mat = np.array(
+        [
+            [ixx, -ixy, -ixz],
+            [-ixy, iyy, -iyz],
+            [-ixz, -iyz, izz],
+        ]
+    )
     eigenvalues = np.linalg.eigvals(inertia_mat)
     if debug and 0:
-        print(f'inertia_mat:\n{str(inertia_mat)}')
+        print(f"inertia_mat:\n{str(inertia_mat)}")
         eigenvalues_opt = get_eigenvalues(inertia_mat)
-        print(f'eigenvalues_opt = {eigenvalues_opt}')
-        print(f'eigenvalues = {eigenvalues}')
+        print(f"eigenvalues_opt = {eigenvalues_opt}")
+        print(f"eigenvalues = {eigenvalues}")
     Mtt_ = inertia_mat
     Mtd = np.diag(Mtt_)
     delta = np.linalg.norm(Mtd)
     e_ = [Mtt_[0, 1], Mtt_[0, 2], Mtt_[1, 2]]
     epsilon = np.linalg.norm(e_)
-    if epsilon/delta > 0.001:
+    if epsilon / delta > 0.001:
         unused_eigvals, S = np.linalg.eigh(Mtt_)
-        # S = S.T
-        # [Mtt_] = [phi] * [lambda] * [phi.T]  # mabye phi=phi.T?
+        # eigh returns an orthogonal matrix but not necessarily a proper
+        # rotation (det may be -1).  Cross products are pseudovectors, so
+        # (S.T a) × (S.T b) = det(S) · S.T(a × b).  An improper rotation
+        # silently flips the sign of all moment-arm cross products, which
+        # breaks callers that compute moments about different reference
+        # points.  Flipping one column makes det(S) = +1 without changing
+        # the eigenvalue decomposition (the eigenvector is still valid, just
+        # with the opposite sign).
+        if np.linalg.det(S) < 0:
+            S[:, 0] = -S[:, 0]
         msg = (
-            '*** USER WARNING MESSAGE 3042 MODULE = GPWG\n'
-            f'INCONSISTENT SCALAR MASSES HAVE BEEN USED. EPSILON/DELTA = {epsilon/delta:.7E}\n')
+            "*** USER WARNING MESSAGE 3042 MODULE = GPWG\n"
+            f"INCONSISTENT SCALAR MASSES HAVE BEEN USED. EPSILON/DELTA = {epsilon / delta:.7E}\n"
+        )
         # model.log.warning(msg)
         print(msg)
         Mtt = S.T @ Mtt_ @ S  # Mt
@@ -391,11 +409,17 @@ def _mass_properties_total(mass: np.ndarray,
     #     [-ixy, iyy, -iyz],
     #     [-ixz, -iyz, izz],
     # ])
-    inertia_total = np.array([
-        Mtt[0, 0], Mtt[1, 1], Mtt[2, 2],
-        -Mtt[0, 1], -Mtt[0, 2], -Mtt[1, 2],
-    ])
-    assert Mtt.shape == (3,3), Mtt.shape
+    inertia_total = np.array(
+        [
+            Mtt[0, 0],
+            Mtt[1, 1],
+            Mtt[2, 2],
+            -Mtt[0, 1],
+            -Mtt[0, 2],
+            -Mtt[1, 2],
+        ]
+    )
+    assert Mtt.shape == (3, 3), Mtt.shape
     assert inertia_total.shape == (6,), inertia_total.shape
     return mass_total, cg_total, inertia_total, Mtt, S
 
@@ -432,14 +456,11 @@ def inertia_relief_from_model(model: BDF) -> tuple[np.ndarray, np.ndarray]:
     nnode = len(mass)
     force = np.ones((nnode, 3))
     moment = np.ones((nnode, 3)) * 0
-    dforce, dmoment = inertia_relief(
-        mass, xyz, inertia,
-        force, moment)
+    dforce, dmoment = inertia_relief(mass, xyz, inertia, force, moment)
     return dforce, dmoment
 
 
-def _get_transformed_self_inertia(inertia: np.ndarray,
-                                  S: np.ndarray) -> np.ndarray:
+def _get_transformed_self_inertia(inertia: np.ndarray, S: np.ndarray) -> np.ndarray:
     """
     Sums the per-node self-inertia and rotates it into the principal frame.
 
@@ -473,26 +494,34 @@ def _get_transformed_self_inertia(inertia: np.ndarray,
     """
     inertia_self = inertia.sum(axis=0)
     ixx, iyy, izz, ixy, ixz, iyz = inertia_self
-    imat = np.array([
-        [ixx, -ixy, -ixz],
-        [-ixy, iyy, -iyz],
-        [-ixz, -iyz, izz],
-    ])
+    imat = np.array(
+        [
+            [ixx, -ixy, -ixz],
+            [-ixy, iyy, -iyz],
+            [-ixz, -iyz, izz],
+        ]
+    )
     ximat = S.T @ imat @ S  # is this backwards?
-    inertia_xform = np.array([
-        ximat[0, 0], ximat[1, 1], ximat[2, 2],
-        # -ximat[0, 1], -ximat[0, 2], -ximat[1, 2],
-    ])
+    inertia_xform = np.array(
+        [
+            ximat[0, 0],
+            ximat[1, 1],
+            ximat[2, 2],
+            # -ximat[0, 1], -ximat[0, 2], -ximat[1, 2],
+        ]
+    )
     return inertia_xform
 
 
-def inertia_relief(weight: np.ndarray,
-                   xyz: np.ndarray,
-                   inertia: np.ndarray,
-                   force: np.ndarray,
-                   moment: np.ndarray,
-                   wtmass: float=1.0,
-                   debug: bool=False) -> tuple[np.ndarray, np.ndarray]:
+def inertia_relief(
+    weight: np.ndarray,
+    xyz: np.ndarray,
+    inertia: np.ndarray,
+    force: np.ndarray,
+    moment: np.ndarray,
+    wtmass: float = 1.0,
+    debug: bool = False,
+) -> tuple[np.ndarray, np.ndarray]:
     """
     Computes the d'Alembert inertial loads that balance an unbalanced set of
     applied loads on a free-free body.
@@ -534,8 +563,18 @@ def inertia_relief(weight: np.ndarray,
 
     The caller is expected to sum these onto the applied loads::
 
-        force_out  = force  + dforce      # sums to ~0
-        moment_out = moment + dmoment     # sums to ~0
+        force_out  = force  + dforce      # sum(force_out) ~= 0
+        moment_out = moment + dmoment     # pure nodal moments
+
+    Equilibrium check (about any reference point ``p``)::
+
+        sum(force_out) ~= 0
+        sum(moment_out) + sum(r_p × force_out) ~= 0
+
+    where ``r_p = xyz - p``.  ``dmoment`` is the pure d'Alembert angular-
+    acceleration correction; it does **not** include ``r × dforce`` couples,
+    so callers compute force-arm moments themselves (as section cuts and
+    monitor stations naturally do).
 
     Assumptions and limitations
     ---------------------------
@@ -553,18 +592,14 @@ def inertia_relief(weight: np.ndarray,
       moment is left in the residual rather than being silently absorbed.
     - ``mxyzt_delta_self`` is still multiplied by ``0.`` and is inert; the
       self-inertia contribution is applied in the ``mxyzt_dm`` term instead.
-    - The returned increments are referenced to the cg: ``dmoment`` already
-      includes the ``r x F`` couple from the balanced forces, so the caller
-      checks equilibrium as ``sum(moment + dmoment) == 0`` directly and must
-      **not** add ``r x (force + dforce)`` again.
 
     """
     mass = weight * wtmass
     inertia = inertia * wtmass
     mass_total, cg_total, inertia_total, Mtt, S = _mass_properties_total(
-        mass, xyz, inertia, debug=debug)
-    inertia_self = _get_transformed_self_inertia(
-        inertia, S)
+        mass, xyz, inertia, debug=debug
+    )
+    inertia_self = _get_transformed_self_inertia(inertia, S)
     assert inertia_total.shape == (6,), inertia_total.shape
 
     # TODO: Should this be S.T?
@@ -582,9 +617,9 @@ def inertia_relief(weight: np.ndarray,
     # (Using S in and S.T out -- the opposite pairing -- silently gives the
     # wrong alpha whenever the body is not already aligned with the global
     # axes; that is why the rotated-bar test used to fail.)
-    fxyzt = np.einsum('nij,nj->ni',S.T[np.newaxis,:], force)
-    mxyzt = np.einsum('nij,nj->ni',S.T[np.newaxis,:], moment)
-    dxyzt = np.einsum('nij,nj->ni',S.T[np.newaxis,:], dxyz)
+    fxyzt = np.einsum("nij,nj->ni", S.T[np.newaxis, :], force)
+    mxyzt = np.einsum("nij,nj->ni", S.T[np.newaxis, :], moment)
+    dxyzt = np.einsum("nij,nj->ni", S.T[np.newaxis, :], dxyz)
 
     shape = fxyzt.shape
     dtype = fxyzt.dtype
@@ -647,13 +682,13 @@ def inertia_relief(weight: np.ndarray,
 
         # you should re-transform to get
         # the principal inertias, but mehhh...
-        alphat_self = np.zeros(3, dtype='float64')
+        alphat_self = np.zeros(3, dtype="float64")
         alphat_self[ipos] = mxyzt1_total[ipos] / inertia_final[ipos]
         # print(f'alphat (rad/s^2) = {alphat_self}')
 
         # TODO: should distribute better to nodes
         #       this isn't biased by mass or anything...
-        mxyzt_delta_self = -(alphat_self * inertia_final * 0.)[np.newaxis, :]
+        mxyzt_delta_self = -(alphat_self * inertia_final * 0.0)[np.newaxis, :]
         # print(f'mxyzt_delta_self:\n{mxyzt_delta_self}')
     else:
         mxyzt_delta_self = np.zeros(shape, dtype=dtype)
@@ -674,7 +709,7 @@ def inertia_relief(weight: np.ndarray,
     # M = I * alpha, one scalar divide per principal axis (this is the whole
     # point of working in the principal frame). Axes with no inertia get no
     # rotational relief.
-    alphat_moment = np.zeros(3, dtype='float64')
+    alphat_moment = np.zeros(3, dtype="float64")
     alphat_moment[ipos] = mxyzt2_total[ipos] / inertia_final[ipos]
 
     # A skipped axis that still carries a moment is not physically solvable:
@@ -683,13 +718,16 @@ def inertia_relief(weight: np.ndarray,
     # rather than raise -- the other two axes are still perfectly valid.
     izero = np.setdiff1d(np.arange(3), ipos)
     if len(izero) and np.abs(mxyzt2_total[izero]).max() > 1e-8 * max(
-            np.abs(mxyzt2_total).max(), 1e-300):
+        np.abs(mxyzt2_total).max(), 1e-300
+    ):
         warnings.warn(
-            f'degenerate mass distribution: principal inertia(s) {izero} are '
-            f'~0 (inertia={inertia_final}), but the applied moment about them '
-            f'is {mxyzt2_total[izero]}. No rotational relief is possible about '
-            'a zero-inertia axis, so that moment is left unbalanced.',
-            RuntimeWarning, stacklevel=2)
+            f"degenerate mass distribution: principal inertia(s) {izero} are "
+            f"~0 (inertia={inertia_final}), but the applied moment about them "
+            f"is {mxyzt2_total[izero]}. No rotational relief is possible about "
+            "a zero-inertia axis, so that moment is left unbalanced.",
+            RuntimeWarning,
+            stacklevel=2,
+        )
 
     # d'Alembert moment from the rigid-body angular acceleration.
     #
@@ -700,8 +738,7 @@ def inertia_relief(weight: np.ndarray,
     # is just the diagonal of the inertia tensor and drops the products of
     # inertia, so it only balances when the body already lies along the
     # global axes. On the rotated bar it left a residual of ~4.8.
-    mxyzt_dm = -mass[:, np.newaxis] * np.cross(
-        np.cross(dxyzt, alphat_moment[np.newaxis, :]), dxyzt)
+    mxyzt_dm = -mass[:, np.newaxis] * np.cross(np.cross(dxyzt, alphat_moment[np.newaxis, :]), dxyzt)
 
     # Self-inertia of each lumped mass (its own I0*alpha, no parallel axis).
     #
@@ -710,10 +747,10 @@ def inertia_relief(weight: np.ndarray,
     # it can be contracted with alpha. Applying the raw diagonal
     # (inertia[:, :3] * alpha) mixes frames and leaves a residual whenever the
     # self-inertia is non-zero and S is not the identity.
-    if np.abs(inertia).max() > 0.:
+    if np.abs(inertia).max() > 0.0:
         ixx_n, iyy_n, izz_n, ixy_n, ixz_n, iyz_n = inertia.T
         # assemble (nnode,3,3) with the negative-off-diagonal tensor convention
-        imat_n = np.empty((len(mass), 3, 3), dtype='float64')
+        imat_n = np.empty((len(mass), 3, 3), dtype="float64")
         imat_n[:, 0, 0] = ixx_n
         imat_n[:, 1, 1] = iyy_n
         imat_n[:, 2, 2] = izz_n
@@ -721,18 +758,26 @@ def inertia_relief(weight: np.ndarray,
         imat_n[:, 0, 2] = imat_n[:, 2, 0] = -ixz_n
         imat_n[:, 1, 2] = imat_n[:, 2, 1] = -iyz_n
         # rotate into the principal frame: I_t = S.T @ I @ S
-        imat_t = np.einsum('ij,njk,kl->nil', S.T, imat_n, S)
-        mxyzt_dm = mxyzt_dm - np.einsum('nij,j->ni', imat_t, alphat_moment)
+        imat_t = np.einsum("ij,njk,kl->nil", S.T, imat_n, S)
+        mxyzt_dm = mxyzt_dm - np.einsum("nij,j->ni", imat_t, alphat_moment)
     # print(f'mxyzt_dm_total = {mxyzt_dm.sum(axis=0)}')
 
-    mxyzt_delta = mxyzt_df + mxyzt_delta_self + mxyzt_dm
-    # mxyzt_out = mxyzt2 + mxyzt_delta
+    # mxyzt_df is the per-node r×F couple about the CG — needed internally
+    # to solve for alpha, but NOT part of the returned dmoment.  Including
+    # it would bake force-arm moments into the nodal moment correction,
+    # which forces every caller that computes moments about a different
+    # point (section cuts, monitor stations) to reverse-engineer and
+    # subtract it.  Returning only the pure d'Alembert angular-acceleration
+    # correction (mxyzt_dm) keeps the output physically clean:
+    #   sum(moment + dmoment) + sum(r × (force + dforce)) == 0
+    # about any reference point.
+    mxyzt_delta = mxyzt_delta_self + mxyzt_dm
 
     # Transform back out of the principal frame.
     # Forward was v_t = S.T @ v, so the inverse is v = S @ v_t.
     St = S
-    fxyz_delta_out = np.einsum('nij,nj->ni',St[np.newaxis,:], fxyzt_delta)
-    mxyz_delta_out = np.einsum('nij,nj->ni',St[np.newaxis,:], mxyzt_delta)
+    fxyz_delta_out = np.einsum("nij,nj->ni", St[np.newaxis, :], fxyzt_delta)
+    mxyz_delta_out = np.einsum("nij,nj->ni", St[np.newaxis, :], mxyzt_delta)
 
     # St = S.T  # also tried S instead of S.T
     # fxyz_delta_out = np.einsum('nij,ni->nj',St[np.newaxis,:], fxyzt_delta)
@@ -741,5 +786,5 @@ def inertia_relief(weight: np.ndarray,
     return fxyz_delta_out, mxyz_delta_out
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     inertia_relief_from_model(None)

@@ -456,6 +456,8 @@ def _mass_properties_elements_init(
 ) -> tuple[list[int], list[int], list[int], list[int]]:
     """helper method
 
+    For both element_ids and mass_ids: None means "all", [] means "none".
+
     Returns element_ids, elements, mass_ids, masses
     """
     # if neither element_id nor mass_ids are specified, use everything
@@ -470,21 +472,22 @@ def _mass_properties_elements_init(
         element_ids = [elem.eid for elem in elements]
         mass_ids = [elem.eid for elem in masses]
 
-    # if either element_id or mass_ids are specified and the other is not, use only the
-    # specified ids
-    #
-    # TODO: If eids are requested, but don't exist, no warning is thrown.
-    #       Decide if this is the desired behavior.
+    # if either element_id or mass_ids are specified and the other is not,
+    # None means "all" for that category, [] means "none"
     else:
         if element_ids is None:
-            element_ids = []
+            elements = list(model.elements.values())
+            element_ids = [elem.eid for elem in elements]
+        elif len(element_ids) == 0:
             elements = []
         else:
             assert len(model.elements) > 0
             elements = [element for eid, element in model.elements.items() if eid in element_ids]
 
         if mass_ids is None:
-            mass_ids = []
+            masses = list(model.masses.values())
+            mass_ids = [mass.eid for mass in masses]
+        elif len(mass_ids) == 0:
             masses = []
         else:
             assert len(model.masses) > 0

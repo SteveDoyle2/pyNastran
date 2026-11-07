@@ -18,6 +18,7 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
                    reference_point: Optional[np.ndarray]=None,
                    pressure_units: str='',
                    regions_to_include=None,
+                   regions_to_remove=None,
                    log: Optional[SimpleLogger]=None) -> tuple[Any, list[str]]:
     """
     Loads (or accepts) an aero surface model and scales its xyz to
@@ -49,9 +50,12 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
         moment reference point in the SCALED (structure) units, basic
     pressure_units : str; default=''
         label for qinf; log only
+    regions_to_include / regions_to_remove : list[int]; default=None
+        log only; limits the logged force/moment sum to these regions
+        (same meaning as in pressure_map).  The model isn't filtered.
 
-    Before returning, logs the aero force/moment sum over every aero
-    element (F = sum(qinf*Cp*A*n), M = sum((c - reference_point) x F))
+    Before returning, logs the aero force/moment sum over the aero
+    elements (F = sum(qinf*Cp*A*n), M = sum((c - reference_point) x F))
     using the scaled xyz.  It's skipped with a warning if the model has
     no Cp ('Cp' for Cart3D, 'Pressure Coefficient' for Fluent) or is
     Tecplot.  Log only; the model isn't changed.
@@ -86,7 +90,9 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
             # xyz = model.xyz
             log_aero_force_moment(
                 model, 'fluent', qinf=qinf, reference_point=reference_point,
-                xyz_units=xyz_units_out, pressure_units=pressure_units)
+                xyz_units=xyz_units_out, pressure_units=pressure_units,
+                regions_to_include=regions_to_include,
+                regions_to_remove=regions_to_remove)
             return model, variables
 
     aero_format = aero_format.lower()
@@ -133,7 +139,9 @@ def get_aero_model(aero_filename: PathLike, aero_format: str,
     log_range(log.debug, xyz, xyz_units_out)
     log_aero_force_moment(
         model, aero_format, qinf=qinf, reference_point=reference_point,
-        xyz_units=xyz_units_out, pressure_units=pressure_units)
+        xyz_units=xyz_units_out, pressure_units=pressure_units,
+        regions_to_include=regions_to_include,
+        regions_to_remove=regions_to_remove)
     return model, variables
 
 
@@ -142,14 +150,21 @@ def log_aero_force_moment(model: Cart3D | Tecplot | Fluent,
                           qinf: float=1.0,
                           reference_point: Optional[np.ndarray]=None,
                           xyz_units: str='',
-                          pressure_units: str='') -> Optional[tuple[np.ndarray, np.ndarray]]:
+                          pressure_units: str='',
+                          regions_to_include=None,
+                          regions_to_remove=None) -> Optional[tuple[np.ndarray, np.ndarray]]:
     """
-    Logs the aero force/moment over every aero element.
+    Logs the aero force/moment over the aero elements.
 
     F = sum(qinf*Cp_i*A_i*n_i);  M = sum((c_i - reference_point) x F_i)
 
     Uses the model's current xyz (so the scaled units) and the element
     normals as the mesh defines them (no flipping).
+
+    regions_to_include : list[int]; default=None -> all regions
+        only sum elements in these regions
+    regions_to_remove : list[int]; default=None -> none
+        skip elements in these regions (applied after regions_to_include)
 
     Returns
     -------
@@ -175,13 +190,33 @@ def log_aero_force_moment(model: Cart3D | Tecplot | Fluent,
         return None
 
     aero_dict = get_aero_pressure_centroid(model, aero_format, 'pressure')
-    force_i = (qinf * aero_dict['Cp_centroid'] * aero_dict['area'])[:, np.newaxis] * aero_dict['normal']
-    moment_i = np.cross(aero_dict['centroid'] - reference_point, force_i)
+    # Cp/area/normal/centroid are stacked [tri, quad]
+    region = np.hstack([aero_dict['tri_region'], aero_dict['quad_region']])
+    ikeep = np.ones(len(region), dtype='bool')
+    if regions_to_include is not None and len(regions_to_include):
+        ikeep &= np.isin(region, regions_to_include)
+    if regions_to_remove is not None and len(regions_to_remove):
+        ikeep &= ~np.isin(region, regions_to_remove)
+    nkeep = int(ikeep.sum())
+    if nkeep == 0:
+        log.warning(f'aero force/moment sum: no aero elements left after '
+                    f'regions_to_include={regions_to_include} '
+                    f'regions_to_remove={regions_to_remove}; skipping')
+        return None
+
+    Cp = aero_dict['Cp_centroid'][ikeep]
+    area_i = aero_dict['area'][ikeep]
+    force_i = (qinf * Cp * area_i)[:, np.newaxis] * aero_dict['normal'][ikeep, :]
+    moment_i = np.cross(aero_dict['centroid'][ikeep, :] - reference_point, force_i)
     force = force_i.sum(axis=0)
     moment = moment_i.sum(axis=0)
-    area = aero_dict['area'].sum()
+    area = area_i.sum()
 
-    log.info(f'aero force/moment sum (all {len(force_i)} aero elements):')
+    if nkeep == len(region):
+        log.info(f'aero force/moment sum (all {nkeep} aero elements):')
+    else:
+        log.info(f'aero force/moment sum ({nkeep} of {len(region)} aero elements; '
+                 f'regions_to_include={regions_to_include} regions_to_remove={regions_to_remove}):')
     log.info(f'  qinf={qinf} {pressure_units}; reference_point={reference_point.tolist()} {xyz_units}; '
              f'area={area:g} {xyz_units}^2')
     log.info(f'  F = [{force[0]:g}, {force[1]:g}, {force[2]:g}]')
