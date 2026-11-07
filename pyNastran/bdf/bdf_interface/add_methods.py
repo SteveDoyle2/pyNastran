@@ -829,9 +829,8 @@ class AddMethods:
         assert key > 0, 'mid=%s material=\n%s' % (key, material)
 
         model = self.model
-        add_object_to_dict(
-            model, key, 'materials', material, model.materials,
-            allow_overwrites)
+        add_object_to_dict_no_dupes(model, key, 'material', material, model.materials,
+                                    model._duplicate['materials'], allow_overwrites)
 
         # if key in model.materials and not allow_overwrites:
         #     if not material == model.materials[key]:
@@ -950,7 +949,8 @@ class AddMethods:
 
         tag = _get_add_tag(model, coord, model.coords[key])
         if coord == model.coords[key]:
-            model.log.warning(f'replacing equivalent coord {key}:{tag}\n{coord}')
+            if model._warn_on_equivalent_duplicate:
+                model.log.warning(f'replacing equivalent coord {key}:{tag}\n{coord}')
             if model.save_file_structure:
                 model._duplicate_equivalents.append(
                     ('coord', key, coord.type, model.coords[key].ifile, coord.ifile))
@@ -1925,7 +1925,8 @@ def add_object_to_dict(model: BDF, key: int,
 
     tag = _get_add_tag(model, obj, obj_dict[key])
     if obj == obj_dict[key]:
-        model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
+        if model._warn_on_equivalent_duplicate:
+            model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
         if model.save_file_structure:
             model._duplicate_equivalents.append(
                 (obj_name, key, obj.type, obj_dict[key].ifile, obj.ifile))
@@ -1987,7 +1988,8 @@ def add_object_to_dict_no_dupes(model: BDF, key: int, obj_name: str,
 
     tag = _get_add_tag(model, obj, obj_dict[key])
     if obj == obj_dict[key]:
-        model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
+        if model._warn_on_equivalent_duplicate:
+            model.log.warning(f'replacing equivalent {obj_name} {key}:{tag}\n{obj}')
         if model.save_file_structure:
             model._duplicate_equivalents.append(
                 (obj_name, key, obj.type, obj_dict[key].ifile, obj.ifile))

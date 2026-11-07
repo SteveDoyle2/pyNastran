@@ -1398,7 +1398,7 @@ class TestFullModelForce(unittest.TestCase):
         out_model = pressure_map_to_structure_model(
             _two_tri_cart3d(log), _one_quad_structure(log),
             np.array([1], dtype='int32'), None, map_type='pressure',
-            qinf=PANEL_QINF, force_to_pressure_tol=0.05)
+            qinf=PANEL_QINF, force_to_pressure_tol=0.05, cp_sid=0)
         self.assertIn("force_to_pressure_tol=0.05 requires map_type='force'", '\n'.join(msgs))
         self.assertEqual(_pload2_values(out_model), {1: 2.0})
 

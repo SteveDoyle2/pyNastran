@@ -744,7 +744,7 @@ class TestShells(unittest.TestCase):
         model._verify_bdf(xref=False)
 
     def test_trax(self):
-        """tests a CTRAX3/CTRAX6/???"""
+        """tests a CTRAX3/CTRAX6/???, which are axisymmetric elements"""
         log = SimpleLogger(level='warning')
         model = BDF(log=log)
         model.add_grid(1, [0., 0., 0.])
@@ -770,6 +770,7 @@ class TestShells(unittest.TestCase):
         pid = 1
         nids = [1, 2, 3]
         ctrax3 = model.add_ctrax3(1, pid, nids, theta=0., comment='ctrax3')
+        ctrax3.Mass()
         #model.add_pshell(pid, mid1=2, t=0.1)
 
         psolid = model.add_psolid(pid, mid1, cordm=0, integ=None, stress=None,
@@ -791,7 +792,7 @@ class TestShells(unittest.TestCase):
 
         ctrax6.raw_fields()
         ctrax6.write_card(size=8)
-
+        # ctrax6.Mass()
 
         psolid.raw_fields()
         psolid.write_card(size=8)

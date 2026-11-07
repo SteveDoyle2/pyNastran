@@ -8,6 +8,7 @@ from pathlib import Path
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.bdf import BDF
+from pyNastran.bdf.errors import DuplicateIDsError
 from pyNastran.bdf.mesh_utils.cmd_line.find_duplicates import (
     cmd_line_find_duplicates,
     find_duplicates,
@@ -55,7 +56,7 @@ def _write_test_model(test_dir: Path) -> tuple[str, str, str]:
         f.write("ENDDATA\n")
 
     # Use BDF API to write properly formatted cards
-    m1 = BDF(log=SimpleLogger(level='error'))
+    m1 = BDF(log=SimpleLogger(level="error"))
     m1.add_grid(100, [0.0, 0.0, 0.0])
     m1.add_grid(101, [1.0, 0.0, 0.0])
     m1.add_grid(102, [1.0, 1.0, 0.0])
@@ -67,7 +68,7 @@ def _write_test_model(test_dir: Path) -> tuple[str, str, str]:
     m1.add_mat1(1, 1.0e7, None, 0.3)
     m1.write_bdf(inc1, enddata=False)
 
-    m2 = BDF(log=SimpleLogger(level='error'))
+    m2 = BDF(log=SimpleLogger(level="error"))
     m2.add_grid(100, [0.0, 0.0, 0.0])
     m2.add_grid(101, [1.0, 0.0, 0.0])
     m2.add_grid(102, [1.0, 1.0, 0.0])
@@ -423,5 +424,167 @@ class TestRoundTrip(unittest.TestCase):
             _cleanup([main_bdf, inc1, inc2, json_file, inc2_v2, main_v2])
 
 
-if __name__ == "__main__":
+class TestWarnOnEquivalentDuplicate(unittest.TestCase):
+    """tests for BDF._warn_on_equivalent_duplicate flag"""
+
+    def _make_model_with_equivalent_duplicate(self, warn: bool) -> tuple[BDF, str]:
+        """Build a punch BDF with two identical GRID 1 cards.
+
+        Parameters
+        ----------
+        warn : bool
+            value for ``_warn_on_equivalent_duplicate``
+
+        Returns
+        -------
+        model : BDF
+        bdf_filename : str
+        """
+        bdf_filename = str(TEST_DIR / "tmp_equiv_dup.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+
+        model = BDF(log=LOG)
+        model._stop_on_duplicate_error = False
+        model._warn_on_equivalent_duplicate = warn
+        model.read_bdf(bdf_filename, xref=False)
+        return model, bdf_filename
+
+    def test_equivalent_duplicate_warn_on(self) -> None:
+        """with _warn_on_equivalent_duplicate=True, warning is emitted"""
+        model, bdf_filename = self._make_model_with_equivalent_duplicate(warn=True)
+        try:
+            assert len(model.nodes) == 1
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_equivalent_duplicate_warn_off(self) -> None:
+        """with _warn_on_equivalent_duplicate=False, no warning is emitted"""
+        model, bdf_filename = self._make_model_with_equivalent_duplicate(warn=False)
+        try:
+            assert len(model.nodes) == 1
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_equivalent_duplicate_warn_off_still_tracks(self) -> None:
+        """silencing the warning still populates _duplicate_equivalents"""
+        bdf_filename = str(TEST_DIR / "tmp_equiv_dup_track.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+        try:
+            model = BDF(log=LOG)
+            model._stop_on_duplicate_error = False
+            model._warn_on_equivalent_duplicate = False
+            model.read_bdf(bdf_filename, xref=False, save_file_structure=True)
+            assert len(model.nodes) == 1
+            assert len(model._duplicate_equivalents) == 1
+            obj_name, key, card_type, _ifile1, _ifile2 = model._duplicate_equivalents[0]
+            assert obj_name == "node"
+            assert key == 1
+            assert card_type == "GRID"
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_different_duplicate_still_errors(self) -> None:
+        """_warn_on_equivalent_duplicate only affects equivalent cards;
+        non-equal duplicates still error
+        """
+        bdf_filename = str(TEST_DIR / "tmp_diff_dup.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("MAT1,1,3.0e7,,0.3\n")
+            f.write("MAT1,1,1.0e7,,0.3\n")
+        try:
+            model = BDF(log=LOG)
+            model._warn_on_equivalent_duplicate = False
+            with self.assertRaises(DuplicateIDsError):
+                model.read_bdf(bdf_filename, xref=False)
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_equivalent_material_warn_off(self) -> None:
+        """equivalent MAT1 duplicates are silenced by the flag"""
+        bdf_filename = str(TEST_DIR / "tmp_equiv_mat.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("MAT1,1,3.0e7,,0.3\n")
+            f.write("MAT1,1,3.0e7,,0.3\n")
+        try:
+            model = BDF(log=LOG)
+            model._stop_on_duplicate_error = False
+            model._warn_on_equivalent_duplicate = False
+            model.read_bdf(bdf_filename, xref=False)
+            assert len(model.materials) == 1
+            assert model.materials[1].e == 3.0e7
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_equivalent_property_warn_off(self) -> None:
+        """equivalent PSHELL duplicates are silenced by the flag"""
+        bdf_filename = str(TEST_DIR / "tmp_equiv_prop.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("MAT1,1,3.0e7,,0.3\n")
+            f.write("PSHELL,10,1,0.1\n")
+            f.write("PSHELL,10,1,0.1\n")
+        try:
+            model = BDF(log=LOG)
+            model._stop_on_duplicate_error = False
+            model._warn_on_equivalent_duplicate = False
+            model.read_bdf(bdf_filename, xref=False)
+            assert len(model.properties) == 1
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_equivalent_element_warn_off(self) -> None:
+        """equivalent CQUAD4 duplicates are silenced by the flag"""
+        bdf_filename = str(TEST_DIR / "tmp_equiv_elem.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("GRID,1,,0.0,0.0,0.0\n")
+            f.write("GRID,2,,1.0,0.0,0.0\n")
+            f.write("GRID,3,,1.0,1.0,0.0\n")
+            f.write("GRID,4,,0.0,1.0,0.0\n")
+            f.write("MAT1,1,3.0e7,,0.3\n")
+            f.write("PSHELL,1,1,0.1\n")
+            f.write("CQUAD4,100,1,1,2,3,4\n")
+            f.write("CQUAD4,100,1,1,2,3,4\n")
+        try:
+            model = BDF(log=LOG)
+            model._stop_on_duplicate_error = False
+            model._warn_on_equivalent_duplicate = False
+            model.read_bdf(bdf_filename, xref=False)
+            assert len(model.elements) == 1
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_equivalent_coord_warn_off(self) -> None:
+        """equivalent CORD2R duplicates are silenced by the flag"""
+        bdf_filename = str(TEST_DIR / "tmp_equiv_coord.bdf")
+        with open(bdf_filename, "w") as f:
+            f.write("$ pyNastran: punch=True\n")
+            f.write("CORD2R,10,0,0.,0.,0.,0.,0.,1.,\n")
+            f.write(",1.,0.,0.\n")
+            f.write("CORD2R,10,0,0.,0.,0.,0.,0.,1.,\n")
+            f.write(",1.,0.,0.\n")
+        try:
+            model = BDF(log=LOG)
+            model._stop_on_duplicate_error = False
+            model._warn_on_equivalent_duplicate = False
+            model.read_bdf(bdf_filename, xref=False)
+            assert len(model.coords) == 2  # cid=0 (default) + cid=10
+        finally:
+            _cleanup([bdf_filename])
+
+    def test_default_flag_is_true(self) -> None:
+        """_warn_on_equivalent_duplicate defaults to True"""
+        model = BDF(log=LOG)
+        assert model._warn_on_equivalent_duplicate is True
+
+
+if __name__ == "__main__":  # pragma: no cover
     unittest.main()

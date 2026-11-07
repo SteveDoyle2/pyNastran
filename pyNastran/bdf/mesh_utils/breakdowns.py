@@ -491,7 +491,7 @@ def get_thickness_breakdown(model: BDF,
                     print(elem)
                     raise
         else:  # pragma: no cover
-            print(f'prop\n%s' % prop)
+            print('prop\n%s' % prop)
             print(f'eids = {eids}\n')
             eid0 = eids[0]
             elem = model.elements[eid0]
@@ -799,6 +799,11 @@ def get_mass_breakdown(model: BDF,
             rho = prop.Rho()
             type_to_eids = _split_eids_by_type(eids, model)
             total_volume = 0.0
+            axisymmetric_solids = {
+                'CTRAX3', 'CTRAX6',
+                'CTRIAX', 'CTRIAX6',
+                'CQUADX', 'CQUADX4', 'CQUADX8',
+            }
             for etype, typed_eids in type_to_eids.items():
                 if etype == 'CHEXA':
                     total_volume += _vectorized_chexa8_volumes(typed_eids, model, nid_to_pos).sum()
@@ -807,6 +812,11 @@ def get_mass_breakdown(model: BDF,
                 elif etype in ('CPENTA', 'CPYRAM'):
                     for eid in typed_eids:
                         total_volume += model.elements[eid].Volume()
+                elif etype in axisymmetric_solids:
+                    key = (etype, prop.type)
+                    if key not in skipped_eid_pid:
+                        skipped_eid_pid.add(key)
+                        model.log.debug(f'skipping mass for axisymmetric {key}')
                 else:
                     key = (etype, prop.type)
                     if key not in skipped_eid_pid:
@@ -816,7 +826,8 @@ def get_mass_breakdown(model: BDF,
                 pids_to_mass[pid] = rho * total_volume
 
         elif prop_type in properties_to_skip:
-            pass
+            skipped_eid_pid.add(('*', prop_type))
+            continue
         elif prop_type == 'PSHEAR':
             thickness = prop.t
             nsm = prop.nsm  # per area
@@ -824,11 +835,10 @@ def get_mass_breakdown(model: BDF,
             type_to_eids = _split_eids_by_type(eids, model)
             total_area = 0.0
             for etype, typed_eids in type_to_eids.items():
-                if etype == 'CQUAD4':
+                if etype == 'CSHEAR':
                     total_area += _vectorized_quad4_areas(typed_eids, model, nid_to_pos).sum()
-                else:
-                    for eid in typed_eids:
-                        total_area += model.elements[eid].Area()
+                else:  # pragma: no cover
+                    raise NotImplementedError(f'PSHEAR uses an {etype}')
             if total_area > 0.0:
                 if detailed:
                     pids_to_mass[pid] = total_area * (rho * thickness)
@@ -836,20 +846,32 @@ def get_mass_breakdown(model: BDF,
                 else:
                     pids_to_mass[pid] = total_area * (rho * thickness + nsm)
         elif prop_type in {'PBRSECT', 'PBMSECT', 'PWELD'}:
+            skipped_eid_pid.add(('*', prop_type))
             model.log.warning('skipping:\n%s' % prop)
             continue
         elif prop_type == 'PGPLSN':
-            #type_to_eids = _split_eids_by_type(eids, model)
+            pids_to_mass[pid] = 0.
+            pids_to_mass_nonstructural[pid] = 0.
+
+            type_to_eids = _split_eids_by_type(eids, model)
             model.log.warning(prop.get_stats())
+            for etype, typed_eids in type_to_eids.items():
+                model.log.warning(etype)
+                model.log.warning(typed_eids)
         else:  # pragma: no cover
             raise NotImplementedError(prop)
 
     has_mass = len(mass_type_to_mass) > 0 or len(pids_to_mass) > 0
     if not has_mass:
-        msg = 'No elements with mass were found'
-        model.log.warning(msg)
-        if stop_if_no_mass:
-            raise RuntimeError(msg)
+        if skipped_eid_pid:
+            model.log.warning(
+                'No elements with computable mass were found; '
+                f'skipped element types: {skipped_eid_pid}')
+        else:
+            msg = 'No elements with mass were found'
+            model.log.warning(msg)
+            if stop_if_no_mass:
+                raise RuntimeError(msg)
 
     if detailed:
         return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass

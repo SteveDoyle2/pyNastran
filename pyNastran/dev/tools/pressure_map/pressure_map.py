@@ -812,20 +812,29 @@ def _write_pressure_file(
             "SUBCASE 3\n"
             "  SUBTITLE = Moment\n"
             f"  LOAD = {moment_sid}\n"
-            "SUBCASE 4\n"
-            "  SUBTITLE = Cp, Coeff Pressure\n"
-            f"  LOAD = {cp_sid}\n"
-            "SUBCASE 5\n"
-            "  SUBTITLE = Cp, Coeff Pressure Signed\n"
-            f"  LOAD = {cp_signed_sid}\n"
         )
+        if cp_sid:
+            msg += (
+                f"SUBCASE 4\n"
+                f"  SUBTITLE = Cp, Coeff Pressure\n"
+                f"  LOAD = {cp_sid}\n"
+            )
+        if cp_signed_sid:
+            msg += (
+                f"SUBCASE 5\n"
+                f"  SUBTITLE = Cp, Coeff Pressure Signed\n"
+                f"  LOAD = {cp_signed_sid}\n"
+            )
         forces: list[PLOAD2] = model.loads[force_sid]
         moments: list[PLOAD2] = model.loads[moment_sid]
         write_header = False
     elif map_type == "pressure":
-        assert set(model.loads) <= {pressure_sid, cp_sid}, (list(model.loads), pressure_sid, cp_sid)
+        allowed_sids = {pressure_sid}
+        if cp_sid:
+            allowed_sids.add(cp_sid)
+        assert set(model.loads) <= allowed_sids, (list(model.loads), pressure_sid, cp_sid)
         pressures = model.loads[pressure_sid]
-        cps: list[PLOAD2] = model.loads.get(cp_sid, [])
+        cps: list[PLOAD2] = model.loads.get(cp_sid, []) if cp_sid else []
         msg += f"SUBCASE 1\n  SUBTITLE = Pressure\n  LOAD = {pressure_sid}\n"
         if len(cps):
             msg += f"SUBCASE 2\n  SUBTITLE = Cp, Coeff Pressure\n  LOAD = {cp_sid}\n"
@@ -2766,7 +2775,9 @@ def map_panel_force_moment_centroid(
         bdf_model_out.add_pload2(pressure_sid, eids=eids, pressure=pressurei, comment=comment_p)
         bdf_model_out.add_pload2(force_sid, eids=eids, pressure=forcei, comment=comment_f)
         bdf_model_out.add_pload2(moment_sid, eids=eids, pressure=momenti, comment=comment_m)
-        bdf_model_out.add_pload2(cp_sid, eids=eids, pressure=pressurei / qinf, comment=comment_cp)
+        if cp_sid:
+            bdf_model_out.add_pload2(
+                cp_sid, eids=eids, pressure=pressurei / qinf, comment=comment_cp)
         bdf_model_out.add_pload2(
             cp_signed_sid,
             eids=eids,
@@ -2985,11 +2996,12 @@ def pressure_map_to_structure_model(
             pressure_sid=pressure_sid,
         )
         # Cp PLOAD2s for display/validation (pressure / qinf)
-        cp_centroid = aero_cp_centroid[iaero_elem]
-        comment_cp = "Cp (map_pressure_centroid)"
-        for eid, cp in zip(structure_eids, cp_centroid):
-            bdf_model_out.add_pload2(cp_sid, eids=[eid], pressure=cp, comment=comment_cp)
-            comment_cp = ""
+        if cp_sid:
+            cp_centroid = aero_cp_centroid[iaero_elem]
+            comment_cp = "Cp (map_pressure_centroid)"
+            for eid, cp in zip(structure_eids, cp_centroid):
+                bdf_model_out.add_pload2(cp_sid, eids=[eid], pressure=cp, comment=comment_cp)
+                comment_cp = ""
         # structure totals from the PLOAD2 pressures just written
         structure_force, structure_moment = _sum_pressure_force_moment(
             aero_pressure_centroid,
