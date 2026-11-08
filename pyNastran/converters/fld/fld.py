@@ -1,4 +1,5 @@
 #pylint:  disable=C0111
+import os
 import copy
 from struct import unpack, Struct, pack
 from collections import defaultdict
@@ -8,7 +9,7 @@ import numpy as np
 import scipy
 from scipy.spatial import KDTree
 
-from pyNastran.utils import is_binary_file
+from pyNastran.utils import is_binary_file, PathLike
 from cpylog import __version__ as CPYLOG_VERSION, SimpleLogger
 if CPYLOG_VERSION > '1.6.0':
     from cpylog import get_logger
@@ -77,9 +78,9 @@ class FLD:
         self.log.info(f'---writing FLD...{stop_on_failure!r}---')
         raise RuntimeError('write-fld')
 
-    def read_csv(self, csv_filename: str):
+    def read_csv(self, csv_filename: PathLike):
         self.infilename = csv_filename
-        self.log.info(f'---reading CSV...{self.infilename}---')
+        self.log.info(f'---reading CSV...{str(self.infilename)}---')
 
         import pandas as pd
         df = pd.read_csv(csv_filename)
@@ -93,7 +94,7 @@ class FLD:
                   for title in titles]
         # print(titles)
         titles = [title.split(' ')[0] for title in titles]
-        print(titles)
+        #print(titles)
         df.columns = titles
         x = df['x']
         y = df['y']
@@ -101,13 +102,13 @@ class FLD:
         p = df['pressure']
         self.xyzp = np.column_stack([x, y, z, p])
 
-    def read_fld(self, fld_filename: str) -> None:
+    def read_fld(self, fld_filename: PathLike) -> None:
         """
         Reads an FLD file
 
         Parameters
         ----------
-        fld_filename : str
+        fld_filename : PathLike
             the filename to read
 
         FIELD: [loadcase_name] : [TABLE]
@@ -134,11 +135,12 @@ class FLD:
         1.50000, 1.50000, 0.00000, 3.0
         END DATA
         """
-        if fld_filename.lower().endswith('.csv'):
+        ext = os.path.splitext(fld_filename)[1].lower()
+        if ext == '.csv':
             self.read_csv(fld_filename)
             return
         self.infilename = fld_filename
-        self.log.info(f'---reading FLD...{self.infilename}---')
+        self.log.info(f'---reading FLD...{str(self.infilename)}---')
 
         with open(fld_filename, 'r') as infile:
             lines = infile.readlines()
@@ -147,7 +149,7 @@ class FLD:
         # PRESS
         # x1 y1 z1 p1
         # x2 y2 z2 p2
-        if line0 == 'PRESS' and fld_filename.lower().endswith('.txt'):
+        if line0 == 'PRESS' and ext == '.txt':
             data_lines = []
             for line in lines[1:]:
                 data_lines.append(line.strip().split())
@@ -177,7 +179,7 @@ class FLD:
             for line in header_lines:
                 if line.startswith('INDEP VAR'):
                     sline = line.split(':')
-                    print(sline)
+                    #print(sline)
                     indep_, var__, var_, unit_, zero_ = sline
                     var = var_.strip('[] ')
                     unit = unit_.strip('[] ')
@@ -188,7 +190,7 @@ class FLD:
                     var = var_.strip('[] ')
                     unit = unit_.strip('[] ')
                     ind_vars.append((var, unit))
-            for var in ind_vars:
-                print(f'I: {var}')
-            for var in dep_vars:
-                print(f'D: {var}')
+            #for var in ind_vars:
+            #    print(f'I: {var}')
+            #for var in dep_vars:
+            #    print(f'D: {var}')

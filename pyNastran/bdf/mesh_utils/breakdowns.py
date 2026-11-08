@@ -253,7 +253,7 @@ def get_property_mass_breakdown_table(model: BDF):
     pids_to_length = get_length_breakdown(model, property_ids=None, stop_if_no_length=False)
     pids_to_area = get_area_breakdown(model, property_ids=None, sum_bar_area=False, stop_if_no_area=False)
     pids_to_volume = get_volume_breakdown(model, property_ids=None, stop_if_no_volume=False)
-    pids_to_mass, mass_type_to_mass = get_mass_breakdown(model, stop_if_no_mass=False, detailed=False)
+    pids_to_mass, eid_type_to_mass, mass_type_to_mass = get_mass_breakdown(model, stop_if_no_mass=False, detailed=False)
 
     pids = set(list(pids_to_length) +
                list(pids_to_area) +
