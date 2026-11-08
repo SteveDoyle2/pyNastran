@@ -14,7 +14,7 @@ from pyNastran.bdf.cards.test.test_dynamic import TestDynamic
 from pyNastran.bdf.cards.test.test_bolt_nx import TestBoltNX, TestBoltMSC
 from pyNastran.bdf.cards.test.test_rods import TestRods
 from pyNastran.bdf.cards.test.test_bars import TestBars
-from pyNastran.bdf.cards.test.test_beams import TestBeams
+from pyNastran.bdf.cards.test.test_beams import TestBeams, TestBend
 from pyNastran.bdf.cards.test.test_contact import TestContact
 from pyNastran.bdf.cards.test.test_cyclic import TestCyclic
 from pyNastran.bdf.cards.test.test_dmig import (
