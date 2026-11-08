@@ -1,9 +1,8 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-import numpy as np
 
 #from .utils import get_group_name
-from tables import Group, Node, File, Table
+from tables import Group, Table
 from pyNastran.dev.bdf_vectorized3.bdf_interface.h5_pytables.utils import get_group_name
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
@@ -42,8 +41,9 @@ def load_h5_constraint(model: BDF, input_group: Group):
                 sids = identity['SID']
                 i0s = identity['S_POS']
                 ns = identity['S_LEN']
+                spc_ids = spcs['S']
                 for sid, i0, n in zip(sids, i0s, ns):
-                    spcsi = spcs[i0:i0+n].tolist()
+                    spcsi = spc_ids[i0:i0+n].tolist()
                     assert len(spcsi) == n, (spcsi, n)
                     model.spcadd.add(sid, spcsi)
 

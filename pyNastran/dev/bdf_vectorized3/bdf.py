@@ -41,9 +41,6 @@ from pyNastran.bdf.bdf_interface.utils import (
     _prep_comment,
 )
 from pyNastran.bdf.bdf_interface.add_card import CARD_MAP
-from pyNastran.bdf.bdf_interface.replication import (
-    to_fields_replication, get_nrepeats, int_replication, float_replication,
-    _field, repeat_cards)
 
 from pyNastran.bdf.field_writer_8 import print_card_8
 from pyNastran.bdf.field_writer_16 import print_card_16, print_field_16
@@ -54,8 +51,6 @@ from pyNastran.bdf.cards.utils import wipe_empty_fields, wipe_empty_fields_str
 #from .write_path import write_include
 from pyNastran.bdf.bdf_interface.assign_type import (
     integer, integer_or_string, string)
-from pyNastran.bdf.bdf_interface.model_group import ModelGroup
-from pyNastran.bdf.cards.coordinate_systems import transform_coords_vectorized
 
 #-------------------------------
 #from pyNastran.dev.bdf_vectorized3.cards.base_card import VectorizedBaseCard
@@ -75,8 +70,8 @@ else:  # pragma: no cover
 
 # core parsing
 from pyNastran.bdf.case_control_deck import CaseControlDeck, Subcase
-from pyNastran.bdf.errors import (CrossReferenceError, DuplicateIDsError,
-                                  CardParseSyntaxError, UnsupportedCard, DisabledCardError,
+from pyNastran.bdf.errors import (DuplicateIDsError,
+                                  UnsupportedCard, DisabledCardError,
                                   SuperelementFlagError, ReplicationError)
 from pyNastran.bdf.bdf_interface.internal_bdf import (
     get_file_tag, expand_replication, check_replicated_cards)
@@ -181,14 +176,11 @@ from pyNastran.bdf.cards.bdf_tables import (
     TABRND1, TABRNDG,
     DTABLE,
 )
-from pyNastran.bdf.cards.contact.contact_common import BCPARA, BCONP
-from pyNastran.bdf.cards.contact.msc import BCBODY
 from pyNastran.bdf.cards.contact.nx_contact import (
-    BCRPARA, BCTPARA, BCTPARM) # BLSEG
+    BCTPARA, BCTPARM) # BLSEG
 #from .cards.parametric.geometry import PSET, PVAL, FEEDGE, FEFACE, GMCURV, GMSURF
 
 # core vectorized
-from pyNastran.dev.bdf_vectorized3.bdf_interface.bdf_attributes import BDFAttributes
 from pyNastran.dev.bdf_vectorized3.bdf_interface.add_card import AddCards
 from pyNastran.dev.bdf_vectorized3.bdf_interface.write_mesh import WriteMesh
 
@@ -598,6 +590,14 @@ class BDF(AddCards, WriteMesh): # BDFAttributes
         self.reject_cards: list[str] = []
 
         self.include_filenames: dict[int, list[str]] = defaultdict(list)
+
+        self.system_command_lines: list[str] = []
+        self.executive_control_lines: list[str] = []
+        self.sol: int | str | None = None
+        self.sol_method: str | None = None
+        self.sol_iline: int | None = None
+        self.case_control_deck: CaseControlDeck | None = None
+
         # self.__init_attributes()
 
         cards_to_read = [
