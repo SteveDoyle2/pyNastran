@@ -4,7 +4,7 @@ from io import StringIO
 import numpy as np
 
 import pyNastran
-from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf, CrossReferenceError
+from pyNastran.dev.bdf_vectorized3.bdf import BDF, read_bdf
 from pyNastran.dev.bdf_vectorized3.cards.test.utils import save_load_deck
 
 #ROOT_PATH = pyNastran.__path__[0]

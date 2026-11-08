@@ -369,6 +369,8 @@ external = [
   "E302",
   "E703",
 ]
+[tool.ruff.lint]
+unfixable = ["F401"] # Stops Ruff from auto-deleting unused imports
 
 target-version = "py39"
 
