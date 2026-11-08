@@ -687,12 +687,13 @@ def get_mass_breakdown(model: BDF,
         Map from property id to mass (structural mass only if detailed is True).
     pids_to_mass_nonstructural : dict {int : float, ...}, optional
         Map from property id to nonstructural mass (only if detailed is True).
+    eid_type_to_mass : dict[str type, float mass]
+        grab bag of what's left
     mass_type_to_mass : dict {str : float, ...}
         Map from mass id to mass for mass elements.
         Used for CONM2s
 
-    TODO: What about CONRODs, CONM2s
-        #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PCOMPS',
+    TODO: What about PBCOMP, PBMSECT, PBEAM3, PBEND, PCOMPS
 
     ..note:: WTMASS is not considered
     """
@@ -729,11 +730,13 @@ def get_mass_breakdown(model: BDF,
         'PACABS', 'PAABSF', 'PACBAR', 'PMIC',
     }
     bar_properties = {'PBAR', 'PBARL', 'PBEAM', 'PBEAML', 'PROD', 'PTUBE'}
-    log.level = 'debug'
 
+    used_eids_list = []
+    all_eids_list = list(model.elements)
     nid_to_pos = _build_nid_to_position(model)
     for pid, eids in pid_eids.items():
         prop = model.properties[pid]
+        used_eids_list.append(eids)
         prop_type = prop.type
         if prop_type == 'PSHELL':
             # TODO: doesn't support PSHELL differential thicknesses
@@ -872,7 +875,36 @@ def get_mass_breakdown(model: BDF,
         else:  # pragma: no cover
             raise NotImplementedError(prop)
 
-    has_mass = len(mass_type_to_mass) > 0 or len(pids_to_mass) > 0
+    eid_type_to_mass_dict = defaultdict(float)
+    used_eids = np.array([])
+    if len(used_eids_list):
+        used_eids = np.hstack(used_eids_list)
+    leftover_eids = np.setdiff1d(all_eids_list, used_eids)
+
+    if len(leftover_eids):
+        # CONROD
+        elements_to_skip = {
+            'CELAS2', 'CELAS4', 'CDAMP2', 'CDAMP4',
+            'CHBDYE', 'CHBDYG', 'CHBDYP',
+            'CAABSF', 'GENEL',
+        }
+        for eid in leftover_eids:
+            elem = model.elements[eid]
+            elem_type = elem.type
+            if elem_type in elements_to_skip:
+                continue
+            if elem_type == 'CONROD':
+                massi = elem.Mass()
+                eid_type_to_mass_dict[elem_type] += massi
+            else:  # pragma: no cover
+                raise NotImplementedError(elem)
+
+    eid_type_to_mass = dict(eid_type_to_mass_dict)
+    has_mass = (
+        (len(mass_type_to_mass) > 0) or 
+        (len(pids_to_mass) > 0) or
+        (len(leftover_eids) > 0)
+    )
     if not has_mass:
         if skipped_eid_pid:
             model.log.warning(
@@ -880,10 +912,11 @@ def get_mass_breakdown(model: BDF,
                 f'skipped element types: {skipped_eid_pid}')
         else:
             msg = 'No elements with mass were found'
+            #print(model.elements)
             model.log.warning(msg)
             if stop_if_no_mass:
                 raise RuntimeError(msg)
 
     if detailed:
-        return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
-    return pids_to_mass, mass_type_to_mass
+        return pids_to_mass, pids_to_mass_nonstructural, eid_type_to_mass, mass_type_to_mass
+    return pids_to_mass, eid_type_to_mass, mass_type_to_mass

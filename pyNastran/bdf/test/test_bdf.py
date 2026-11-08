@@ -1187,7 +1187,8 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike) -> None:
     if len(model.elements) == 0 and len(model.masses) == 0:
         model.log.warning('requested breakdown, but no elements/masses found')
         return
-    pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
+    (pids_to_mass, pids_to_mass_nonstructural,
+     eid_type_to_mass, mass_type_to_mass) = get_mass_breakdown(
         model, property_ids=None,
         stop_if_no_mass=True, detailed=True)
 
@@ -1254,6 +1255,9 @@ def write_mass_breakdown(model: BDF, mass_filename: PathLike) -> None:
                 f'{structural},{nsm},{total},'
                 f'{cg[0]},{cg[1]},{cg[2]},'
                 f'{I[0]},{I[1]},{I[2]},{I[3]},{I[4]},{I[5]}\n')
+        for etype, mass in sorted(eid_type_to_mass.items()):
+            # TODO: CONROD
+            pass
 
         total_mass_elements = 0.0
         for eid in sorted(model.masses.keys()):

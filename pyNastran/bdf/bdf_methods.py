@@ -113,7 +113,7 @@ class BDFMethods(BDFAttributes):
         #'PBCOMP', 'PBMSECT', 'PBEAM3', 'PBEND', 'PCOMPS',
 
         """
-        pids_to_mass, mass_type_to_mass = get_mass_breakdown(
+        pids_to_mass, eid_type_to_mass, mass_type_to_mass = get_mass_breakdown(
             self, property_ids=property_ids,
             stop_if_no_mass=stop_if_no_mass, detailed=False)
         return pids_to_mass, mass_type_to_mass
@@ -153,7 +153,7 @@ class BDFMethods(BDFAttributes):
         #     'model.get_mass_breakdown(...)',
         #     'from pyNastran.bdf.mesh_utils.breakdowns import get_mass_breakdown' \
         #     'get_mass_breakdown', '1.5')
-        pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass = get_mass_breakdown(
+        pids_to_mass, pids_to_mass_nonstructural, eid_type_to_mass, mass_type_to_mass = get_mass_breakdown(
             self, property_ids=property_ids,
             stop_if_no_mass=stop_if_no_mass, detailed=True)
         return pids_to_mass, pids_to_mass_nonstructural, mass_type_to_mass
