@@ -28,10 +28,18 @@ os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 try:
     from qtpy.QtCore import QTimer, qInstallMessageHandler
     from qtpy.QtWidgets import QApplication
+except (ImportError, RuntimeError):  # qtpy raises a RuntimeError subclass
+    IS_GUI = False
+
+try:
     import vtkmodules  # pylint: disable=unused-import
+except ImportError:
+    IS_GUI = False
+
+try:
     from pyNastran.f06.dev.flutter.gui.gui_flutter_plot import FlutterGui
     IS_GUI = True
-except (ImportError, RuntimeError):  # qtpy raises a RuntimeError subclass
+except ImportError:
     IS_GUI = False
 
 PKG_PATH = Path(pyNastran.__path__[0])
