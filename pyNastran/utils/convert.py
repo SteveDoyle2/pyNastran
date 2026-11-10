@@ -14,22 +14,26 @@ def _altitude_factor(alt_units_in: str, alt_units_out: str) -> float:
     # units to feet
     if alt_units_in == 'm':
         factor /= 0.3048
+    elif alt_units_in == 'km':
+        factor /= 0.0003048
     elif alt_units_in == 'ft':
         pass
     elif alt_units_in == 'kft':
         factor *= 1000.
     else:  # pragma: no cover
-        raise RuntimeError(f'alt_units_in={alt_units_in!r} is not valid; use [m, ft, kft]')
+        raise RuntimeError(f'alt_units_in={alt_units_in!r} is not valid; use [ft, kft, m, km]')
 
     # ft to m
     if alt_units_out == 'm':
         factor *= 0.3048
+    elif alt_units_out == 'km':
+        factor *= 0.0003048
     elif alt_units_out == 'ft':
         pass
     elif alt_units_out == 'kft':
         factor /= 1000.
     else:  # pragma: no cover
-        raise RuntimeError(f'alt_units_out={alt_units_out!r} is not valid; use [1/m, 1/in, 1/ft]')
+        raise RuntimeError(f'alt_units_out={alt_units_out!r} is not valid; use [ft, kft, m, km]')
     return factor
 
 
@@ -98,7 +102,7 @@ def _temperature_factor(temperature: float, temperature_units_in: str,
     elif temperature_units_in == 'F':
         temperature2 = (temperature2 - 32) / 1.8
     elif temperature_units_in == 'K':
-        temperature2 -= 273.15
+        temperature2 = temperature2 - 273.15  # not -=; would mutate an input array
     elif temperature_units_in == 'R':
         temperature2 = (temperature2 - 491.67) / 1.8
     else:
@@ -111,7 +115,7 @@ def _temperature_factor(temperature: float, temperature_units_in: str,
     elif temperature_units_out == 'F':
         temperature2 = temperature2 * 1.8 + 32
     elif temperature_units_out == 'K':
-        temperature2 += 273.15
+        temperature2 = temperature2 + 273.15
     elif temperature_units_out == 'R':
         temperature2 = temperature2 * 1.8 + 491.67
     else:
@@ -244,30 +248,38 @@ def _length_factor(length_units_in: str, length_units_out: str) -> float:
     factor = 1.0
     if length_units_in == 'm':
         factor /= 0.3048
+    elif length_units_in == 'km':
+        factor /= 0.0003048
     elif length_units_in == 'cm':
         factor /= 30.48
     elif length_units_in == 'mm':
         factor /= 304.8
     elif length_units_in == 'ft':
         pass
+    elif length_units_in == 'nmi':
+        factor *= 6076.12
     elif length_units_in == 'in':
         factor /= 12.
     else:
-        msg = f'length_units_in={length_units_in!r} is not valid; use [m, cm, mm, in, ft]'
+        msg = f'length_units_in={length_units_in!r} is not valid; use [km, m, cm, mm, in, ft, nmi]'
         raise RuntimeError(msg)
 
     if length_units_out == 'm':
         factor *= 0.3048
+    elif length_units_out == 'km':
+        factor *= 0.0003048
     elif length_units_out == 'cm':
         factor *= 30.48
     elif length_units_out == 'mm':
         factor *= 304.8
     elif length_units_out == 'ft':
         pass
+    elif length_units_out == 'nmi':
+        factor /= 6076.12
     elif length_units_out == 'in':
         factor *= 12.
     else:
-        msg = f'length_units_out={length_units_out!r} is not valid; use [m, cm, mm, in, ft]'
+        msg = f'length_units_out={length_units_out!r} is not valid; use [km, m, cm, mm, in, ft, nmi]'
         raise RuntimeError(msg)
     return factor
 

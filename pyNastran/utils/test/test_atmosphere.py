@@ -63,6 +63,8 @@ class TestAtmConvert(unittest.TestCase):
 
         assert np.allclose(_length_factor('ft', 'ft'), 1.)
         assert np.allclose(_length_factor('in', 'in'), 1.)
+        assert np.allclose(_length_factor('nmi', 'nmi'), 1.)
+        assert np.allclose(_length_factor('km', 'km'), 1.)
         assert np.allclose(_length_factor('m', 'm'), 1.)
         assert np.allclose(_length_factor('cm', 'cm'), 1.)
         assert np.allclose(_length_factor('mm', 'mm'), 1.)
@@ -72,6 +74,9 @@ class TestAtmConvert(unittest.TestCase):
 
         assert np.allclose(_length_factor('ft', 'ft'), 1,)
         assert np.allclose(_length_factor('ft', 'm'), 1 / 3.28084)
+
+        assert np.allclose(_length_factor('nmi', 'ft'), 6076.12)
+        assert np.allclose(_length_factor('ft', 'nmi'), 1/6076.12)
 
         assert np.allclose(_length_factor('m', 'ft'), 3.28084)
         assert np.allclose(_length_factor('m', 'cm'), 100.)
@@ -257,6 +262,14 @@ class TestAtmConvert(unittest.TestCase):
             convert_temperature(1., 'F', 'bad')
         with self.assertRaises(RuntimeError):
             convert_temperature(1., 'bad', 'C')
+
+        # arrays must not be modified in place
+        temps = np.array([0., 100.])
+        assert np.allclose(convert_temperature(temps, 'C', 'K'), [273.15, 373.15])
+        assert np.allclose(temps, [0., 100.])
+        temps = np.array([273.15, 373.15])
+        assert np.allclose(convert_temperature(temps, 'K', 'C'), [0., 100.])
+        assert np.allclose(temps, [273.15, 373.15])
 
         assert np.allclose(_temperature_factor(1., 'R', 'R'), 1)
         assert np.allclose(_temperature_factor(1., 'F', 'F'), 1)

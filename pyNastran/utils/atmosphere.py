@@ -110,7 +110,7 @@ def get_alt_for_eas_with_constant_mach(equivalent_airspeed: float,
     mach : float
         the mach to hold constant
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     velocity_units : str; default=ft/s
         the velocity units; ft/s, m/s, in/s, knots
     nmax : int; default=20
@@ -188,7 +188,7 @@ def get_alt_for_q_with_constant_mach(q: float, mach: float,
     pressure_units : str; default='psf'
         the pressure units; psf, psi, Pa, kPa, MPa
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     nmax : int; default=20
         max number of iterations for convergence
     tol : float; default=0.1
@@ -219,7 +219,7 @@ def get_alt_for_pressure(pressure: float,
     pressure_units : str; default='psf'
         the pressure units; psf, psi, Pa, kPa, MPa
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     nmax : int; default=20
         max number of iterations for convergence
     tol : float; default=0.1
@@ -278,7 +278,7 @@ def get_alt_for_mach_eas(mach: float,
     eas_units : str; default='knots'
         the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     nmax : int; default=20
         max number of iterations for convergence
     tol : float; default=0.1
@@ -339,7 +339,7 @@ def get_alt_for_cas_mach(calibrated_airspeed: float,
     mach : float
         the mach to hold constant
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     cas_units : str; default=ft/s
         the calibrated airspeed units; ft/s, m/s, in/s, knots
     nmax : int; default=20
@@ -402,7 +402,7 @@ def get_mach_for_alt_eas(alt: float,
     eas_units : str; default='knots'
         the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     gamma : float; default=1.4
         gas constant
 
@@ -445,9 +445,9 @@ def atm_temperature(alt: float,
     alt : float
         Altitude in alt_units
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     temperature_units : str; default='R'
-        the altitude units; R, K
+        the temperature units; R, K
 
     Returns
     -------
@@ -501,7 +501,7 @@ def atm_pressure(alt: float,
     alt : float
         Altitude in alt_units
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     pressure_units : str; default='psf'
         the pressure units; psf, psi, Pa, kPa, MPa
 
@@ -553,7 +553,7 @@ def atm_dynamic_pressure(alt: float, mach: float,
     mach : float
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     pressure_units : str; default='psf'
         the pressure units; psf, psi, Pa, kPa, MPa
 
@@ -592,7 +592,7 @@ def atm_speed_of_sound(alt: float,
     alt : float
         Altitude in alt_units
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     velocity_units : str; default='ft/s'
         the velocity units; ft/s, m/s, in/s, knots
     gamma: float; default=1.4
@@ -630,7 +630,7 @@ def atm_velocity(alt: float, mach: float,
     mach : float
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     velocity_units : str; default='ft/s'
         the velocity units; ft/s, m/s, in/s, knots
 
@@ -661,7 +661,7 @@ def atm_equivalent_airspeed(alt: float,
     mach : float
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     eas_units : str; default='ft/s'
         the equivalent airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
@@ -709,7 +709,7 @@ def atm_calibrated_airspeed(alt: float,
     mach : float
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     cas_units : str; default='ft/s'
         the calibrated airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
@@ -760,7 +760,7 @@ def get_mach_for_alt_cas(alt: float, vcas: float,
     vcas : float
         Calibrated airspeed in cas_units
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     cas_units : str; default='ft/s'
         the calibrated airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
@@ -808,7 +808,7 @@ def get_alt_mach_for_eas_cas(equivalent_airspeed: float,
     eas_units / cas_units : str; default='ft/s'
         the airspeed units; ft/s, in/s, knots, m/s, cm/s, mm/s
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     tol : float; default=1e-12
         Mach number tolerance
 
@@ -899,7 +899,7 @@ def atm_mach(alt: float,
     V : float
         Velocity in velocity_units
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     velocity_units : str; default='ft/s'
         the velocity units; ft/s, in/s, knots, m/s, cm/s, mm/s
 
@@ -930,7 +930,7 @@ def atm_density(alt: float,
     R : float; default=1716.
         gas constant for air in english units (???)
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     density_units : str; default='slug/ft^3'
         the density units; slug/ft^3, slinch/in^3, kg/m^3, g/cm^3, Mg/mm^3
 
@@ -964,7 +964,7 @@ def atm_kinematic_viscosity_nu(alt: float,
     alt : float
         Altitude in alt_units
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     visc_units : str; default='slug/ft^3'
         the kinematic viscosity units; ft^2/s, m^2/s
 
@@ -1004,7 +1004,7 @@ def atm_dynamic_viscosity_mu(alt: float,
     alt : float
         Altitude in alt_units
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     visc_units : str; default='(lbf*s)/ft^2'
         the viscosity units; (lbf*s)/ft^2, (N*s)/m^2, Pa*s, psf*s
 
@@ -1043,9 +1043,9 @@ def atm_unit_reynolds_number(alt: float, mach: float,
     mach : float
         Mach Number \f$ M \f$
     alt_units : str; default='ft'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     reynolds_units : str; default='1/ft'
-        the altitude units; 1/ft, 1/m, 1/in
+        the unit reynolds units; 1/ft, 1/m, 1/in
 
     Returns
     -------
@@ -1156,7 +1156,7 @@ def create_atmosphere_table(quantities: list[str],
     nalt : int
     dalt : float
     alt_units : str; default='m'
-        the altitude units; ft, kft, m
+        the altitude units; ft, kft, m, km
     velocity_units : str; default='m/s'
         the velocity units; ft/s, m/s, in/s, knots
     density_units : str; default='kg/m^3'
@@ -1164,7 +1164,7 @@ def create_atmosphere_table(quantities: list[str],
     pressure_units : str; default='psf'
         the pressure units; psf, psi, Pa, kPa, MPa
     temperature_units : str; default='R'
-        the altitude units; R, K
+        the temperature units; R, K
     dynamic_viscosity_units : str; default='(lbf*s)/ft^2'
         the dynamic viscosity, mu; (lbf*s)/ft^2, (N*s)/m^2, Pa*s, psf*s
 
