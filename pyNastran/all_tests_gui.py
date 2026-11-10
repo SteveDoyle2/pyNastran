@@ -28,6 +28,7 @@ from pyNastran.gui.qt_version import qt_version
 #else:  # pragma: no cover
     #raise NotImplementedError(qt_version)
 
+from pyNastran.f06.test.all_tests import *
 import pyNastran.gui.formats
 import pyNastran.gui.gui_common
 #if not IS_DEV:
