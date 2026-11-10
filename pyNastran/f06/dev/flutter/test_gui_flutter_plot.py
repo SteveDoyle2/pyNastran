@@ -36,9 +36,6 @@ try:
 except ImportError:  # pragma: no cover
     IS_GUI = False
 
-import pyNastran.f06.dev.flutter
-import pyNastran.f06.dev.flutter.gui
-import pyNastran.f06.dev.flutter.gui.gui_flutter_plot
 from pyNastran.f06.dev.flutter.gui.gui_flutter_plot import FlutterGui
 
 PKG_PATH = Path(pyNastran.__path__[0])
