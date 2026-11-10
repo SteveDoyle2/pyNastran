@@ -25,6 +25,7 @@ from pyNastran.f06.dev.flutter.utils import get_plot_file, PLOT_TYPES, X_PLOT_TY
 
 # no windows pop up; must be set before the QApplication is created
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
+IS_GUI = True
 try:
     from qtpy.QtCore import QTimer, qInstallMessageHandler
     from qtpy.QtWidgets import QApplication
