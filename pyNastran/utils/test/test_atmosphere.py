@@ -1,4 +1,5 @@
 """various atmosphere tests"""
+
 import io
 import os
 import unittest
@@ -6,16 +7,24 @@ from contextlib import redirect_stderr
 import numpy as np
 
 from pyNastran.utils.atmosphere import (
-    atm_density, atm_dynamic_pressure, atm_temperature,
-    atm_pressure, atm_velocity, atm_mach, atm_equivalent_airspeed,
-    atm_dynamic_viscosity_mu, atm_kinematic_viscosity_nu,
-    atm_calibrated_airspeed, cas_to_mach,
-    get_alt_for_density, get_alt_for_pressure,
+    atm_density,
+    atm_dynamic_pressure,
+    atm_temperature,
+    atm_pressure,
+    atm_velocity,
+    atm_mach,
+    atm_equivalent_airspeed,
+    atm_dynamic_viscosity_mu,
+    atm_kinematic_viscosity_nu,
+    atm_calibrated_airspeed,
+    cas_to_mach,
+    get_alt_for_density,
+    get_alt_for_pressure,
     get_alt_for_mach_eas,
     get_alt_for_q_with_constant_mach,
     get_alt_for_eas_with_constant_mach,
-    #get_alt_for_mach_q,
-    #get_alt_for_mach_eas,
+    # get_alt_for_mach_q,
+    # get_alt_for_mach_eas,
     # mach
     get_mach_for_alt_eas,
     get_mach_for_alt_cas,
@@ -26,8 +35,8 @@ from pyNastran.utils.atmosphere import (
     constant_mach_line_alt1_alt2,
     constant_alt_line_alt_mach,
     # cas
-    #cas_to_mach,
-    #------
+    # cas_to_mach,
+    # ------
     atm_unit_reynolds_number,
     sutherland_viscoscity,
     _reynolds_factor,
@@ -42,303 +51,347 @@ from pyNastran.utils.atmosphere_sweep import (
 )
 
 from pyNastran.utils.convert import (
-    convert_length, convert_area,
-    convert_density, convert_mass,
-    convert_velocity, convert_force, convert_pressure,
+    convert_length,
+    convert_area,
+    convert_density,
+    convert_mass,
+    convert_velocity,
+    convert_force,
+    convert_pressure,
     convert_temperature,
-    _length_factor, _area_factor,
-    _density_factor, _velocity_factor, _force_factor,
+    _length_factor,
+    _area_factor,
+    _density_factor,
+    _velocity_factor,
+    _force_factor,
     _temperature_factor,
 )
+
+
 class TestAtmConvert(unittest.TestCase):
     """various unit conversion tests"""
 
     def test_length(self):
         """length checks"""
-        assert np.allclose(convert_length(1., 'ft', 'ft'), 1.)
+        assert np.allclose(convert_length(1.0, "ft", "ft"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_length(1., 'ft', 'bad')
+            convert_length(1.0, "ft", "bad")
         with self.assertRaises(RuntimeError):
-            convert_length(1., 'bad', 'ft')
+            convert_length(1.0, "bad", "ft")
 
-        assert np.allclose(_length_factor('ft', 'ft'), 1.)
-        assert np.allclose(_length_factor('in', 'in'), 1.)
-        assert np.allclose(_length_factor('nmi', 'nmi'), 1.)
-        assert np.allclose(_length_factor('km', 'km'), 1.)
-        assert np.allclose(_length_factor('m', 'm'), 1.)
-        assert np.allclose(_length_factor('cm', 'cm'), 1.)
-        assert np.allclose(_length_factor('mm', 'mm'), 1.)
+        assert np.allclose(_length_factor("ft", "ft"), 1.0)
+        assert np.allclose(_length_factor("in", "in"), 1.0)
+        assert np.allclose(_length_factor("nmi", "nmi"), 1.0)
+        assert np.allclose(_length_factor("km", "km"), 1.0)
+        assert np.allclose(_length_factor("m", "m"), 1.0)
+        assert np.allclose(_length_factor("cm", "cm"), 1.0)
+        assert np.allclose(_length_factor("mm", "mm"), 1.0)
 
-        assert np.allclose(_length_factor('ft', 'in'), 12.)
-        assert np.allclose(_length_factor('in', 'ft'), 1 / 12.)
+        assert np.allclose(_length_factor("ft", "in"), 12.0)
+        assert np.allclose(_length_factor("in", "ft"), 1 / 12.0)
 
-        assert np.allclose(_length_factor('ft', 'ft'), 1,)
-        assert np.allclose(_length_factor('ft', 'm'), 1 / 3.28084)
+        assert np.allclose(
+            _length_factor("ft", "ft"),
+            1,
+        )
+        assert np.allclose(_length_factor("ft", "m"), 1 / 3.28084)
 
-        assert np.allclose(_length_factor('nmi', 'ft'), 6076.12)
-        assert np.allclose(_length_factor('ft', 'nmi'), 1/6076.12)
+        assert np.allclose(_length_factor("nmi", "ft"), 6076.12)
+        assert np.allclose(_length_factor("ft", "nmi"), 1 / 6076.12)
 
-        assert np.allclose(_length_factor('m', 'ft'), 3.28084)
-        assert np.allclose(_length_factor('m', 'cm'), 100.)
-        assert np.allclose(_length_factor('m', 'mm'), 1000.)
+        assert np.allclose(_length_factor("m", "ft"), 3.28084)
+        assert np.allclose(_length_factor("m", "cm"), 100.0)
+        assert np.allclose(_length_factor("m", "mm"), 1000.0)
 
-        assert np.allclose(_length_factor('cm', 'mm'), 10.)
-        assert np.allclose(_length_factor('cm', 'm'), 1 / 100.)
+        assert np.allclose(_length_factor("cm", "mm"), 10.0)
+        assert np.allclose(_length_factor("cm", "m"), 1 / 100.0)
 
-        assert np.allclose(_length_factor('cm', 'in'), 1/2.54), _length_factor('cm', 'in')
-        assert np.allclose(_length_factor('in', 'cm'), 2.54), _length_factor('in', 'cm')
+        assert np.allclose(_length_factor("cm", "in"), 1 / 2.54), _length_factor(
+            "cm", "in"
+        )
+        assert np.allclose(_length_factor("in", "cm"), 2.54), _length_factor("in", "cm")
 
-        assert np.allclose(_length_factor('mm', 'm'), 1 / 1000.)
-        assert np.allclose(_length_factor('mm', 'cm'), 1 / 10.)
+        assert np.allclose(_length_factor("mm", "m"), 1 / 1000.0)
+        assert np.allclose(_length_factor("mm", "cm"), 1 / 10.0)
 
     def test_area(self):
         """area checks"""
-        assert np.allclose(convert_area(1., 'ft^2', 'ft^2'), 1.)
+        assert np.allclose(convert_area(1.0, "ft^2", "ft^2"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_area(1., 'ft^2', 'bad^2')
+            convert_area(1.0, "ft^2", "bad^2")
         with self.assertRaises(RuntimeError):
-            convert_area(1., 'bad^2', 'ft^2')
+            convert_area(1.0, "bad^2", "ft^2")
 
-        assert np.allclose(_area_factor('ft^2', 'ft^2'), 1.)
-        assert np.allclose(_area_factor('in^2', 'in^2'), 1.)
-        assert np.allclose(_area_factor('m^2', 'm^2'), 1.)
-        assert np.allclose(_area_factor('cm^2', 'cm^2'), 1.)
-        assert np.allclose(_area_factor('mm^2', 'mm^2'), 1.)
+        assert np.allclose(_area_factor("ft^2", "ft^2"), 1.0)
+        assert np.allclose(_area_factor("in^2", "in^2"), 1.0)
+        assert np.allclose(_area_factor("m^2", "m^2"), 1.0)
+        assert np.allclose(_area_factor("cm^2", "cm^2"), 1.0)
+        assert np.allclose(_area_factor("mm^2", "mm^2"), 1.0)
 
-        assert np.allclose(_area_factor('ft^2', 'in^2'), 12.**2)
-        assert np.allclose(_area_factor('in^2', 'ft^2'), 1 / 12.**2)
+        assert np.allclose(_area_factor("ft^2", "in^2"), 12.0**2)
+        assert np.allclose(_area_factor("in^2", "ft^2"), 1 / 12.0**2)
 
-        assert np.allclose(_area_factor('ft^2', 'ft^2'), 1.)
-        assert np.allclose(_area_factor('ft^2', 'm^2'), 1 / 3.28084**2)
+        assert np.allclose(_area_factor("ft^2", "ft^2"), 1.0)
+        assert np.allclose(_area_factor("ft^2", "m^2"), 1 / 3.28084**2)
 
-        assert np.allclose(_area_factor('m^2', 'ft^2'), 3.28084**2)
-        assert np.allclose(_area_factor('m^2', 'cm^2'), 100.**2)
-        assert np.allclose(_area_factor('m^2', 'mm^2'), 1000.**2)
+        assert np.allclose(_area_factor("m^2", "ft^2"), 3.28084**2)
+        assert np.allclose(_area_factor("m^2", "cm^2"), 100.0**2)
+        assert np.allclose(_area_factor("m^2", "mm^2"), 1000.0**2)
 
-        assert np.allclose(_area_factor('cm^2', 'mm^2'), 10.**2)
-        assert np.allclose(_area_factor('cm^2', 'm^2'), 1 / 100.**2)
+        assert np.allclose(_area_factor("cm^2", "mm^2"), 10.0**2)
+        assert np.allclose(_area_factor("cm^2", "m^2"), 1 / 100.0**2)
 
-        assert np.allclose(_area_factor('cm^2', 'in^2'), 1/2.54**2), _area_factor('cm^2', 'in^2')
-        assert np.allclose(_area_factor('in^2', 'cm^2'), 2.54**2), _area_factor('in^2', 'cm^2')
+        assert np.allclose(_area_factor("cm^2", "in^2"), 1 / 2.54**2), _area_factor(
+            "cm^2", "in^2"
+        )
+        assert np.allclose(_area_factor("in^2", "cm^2"), 2.54**2), _area_factor(
+            "in^2", "cm^2"
+        )
 
-        assert np.allclose(_area_factor('mm^2', 'm^2'), 1 / 1000.**2)
-        assert np.allclose(_area_factor('mm^2', 'cm^2'), 1 / 10.**2)
+        assert np.allclose(_area_factor("mm^2", "m^2"), 1 / 1000.0**2)
+        assert np.allclose(_area_factor("mm^2", "cm^2"), 1 / 10.0**2)
 
     def test_mass(self):
         """mass checks"""
-        assert np.allclose(convert_mass(1., 'slinch', 'slinch'), 1.)
+        assert np.allclose(convert_mass(1.0, "slinch", "slinch"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_mass(1., 'slinch', 'bad')
+            convert_mass(1.0, "slinch", "bad")
         with self.assertRaises(RuntimeError):
-            convert_mass(1., 'bad', 'slinch')
+            convert_mass(1.0, "bad", "slinch")
 
-        assert np.allclose(convert_mass(1., 'slinch', 'slug'), 12.)
-        assert np.allclose(convert_mass(1., 'slug', 'slinch'), 1 / 12.)
+        assert np.allclose(convert_mass(1.0, "slinch", "slug"), 12.0)
+        assert np.allclose(convert_mass(1.0, "slug", "slinch"), 1 / 12.0)
 
-        assert np.allclose(convert_mass(1., 'slug', 'kg'), 14.5939)
-        assert np.allclose(convert_mass(1., 'kg', 'slug'), 1 / 14.5939)
+        assert np.allclose(convert_mass(1.0, "slug", "kg"), 14.5939)
+        assert np.allclose(convert_mass(1.0, "kg", "slug"), 1 / 14.5939)
 
-        #assert np.allclose(convert_mass(1., 'Mg', 'kg'), 1000)
-        #assert np.allclose(convert_mass(1., 'kg', 'Mg'), 1 / 1000)
+        # assert np.allclose(convert_mass(1., 'Mg', 'kg'), 1000)
+        # assert np.allclose(convert_mass(1., 'kg', 'Mg'), 1 / 1000)
 
     def test_force(self):
         """force checks"""
-        assert np.allclose(convert_force(1., 'lbf', 'lbf'), 1.)
+        assert np.allclose(convert_force(1.0, "lbf", "lbf"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_force(1., 'lbf', 'bad')
+            convert_force(1.0, "lbf", "bad")
         with self.assertRaises(RuntimeError):
-            convert_force(1., 'bad', 'lbf')
+            convert_force(1.0, "bad", "lbf")
 
-        assert np.allclose(_force_factor('lbf', 'N'), 4.44822)
-        assert np.allclose(_force_factor('N', 'lbf'), 1 / 4.44822)
+        assert np.allclose(_force_factor("lbf", "N"), 4.44822)
+        assert np.allclose(_force_factor("N", "lbf"), 1 / 4.44822)
 
-        assert np.allclose(_force_factor('MN', 'N'), 1000000.)
-        assert np.allclose(_force_factor('N', 'MN'), 1 / 1000000.)
+        assert np.allclose(_force_factor("MN", "N"), 1000000.0)
+        assert np.allclose(_force_factor("N", "MN"), 1 / 1000000.0)
 
-        assert np.allclose(_force_factor('mN', 'N'), 0.001)
-        assert np.allclose(_force_factor('N', 'mN'), 1 / 0.001)
+        assert np.allclose(_force_factor("mN", "N"), 0.001)
+        assert np.allclose(_force_factor("N", "mN"), 1 / 0.001)
 
-        assert np.allclose(_force_factor('cN', 'N'), 0.01)
-        assert np.allclose(_force_factor('N', 'cN'), 1 / 0.01)
+        assert np.allclose(_force_factor("cN", "N"), 0.01)
+        assert np.allclose(_force_factor("N", "cN"), 1 / 0.01)
 
     def test_pressure(self):
         """pressure checks"""
-        assert np.allclose(convert_pressure(1., 'psf', 'psf'), 1.)
+        assert np.allclose(convert_pressure(1.0, "psf", "psf"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_pressure(1., 'psf', 'bad')
+            convert_pressure(1.0, "psf", "bad")
         with self.assertRaises(RuntimeError):
-            convert_pressure(1., 'bad', 'psf')
+            convert_pressure(1.0, "bad", "psf")
 
-        assert np.allclose(convert_pressure(1., 'bar', 'Pa'), 100_000.)
-        assert np.allclose(convert_pressure(1., 'Pa', 'bar'), 1 / 100_000.)
+        assert np.allclose(convert_pressure(1.0, "bar", "Pa"), 100_000.0)
+        assert np.allclose(convert_pressure(1.0, "Pa", "bar"), 1 / 100_000.0)
 
-        assert np.allclose(convert_pressure(1., 'bar', 'kPa'), 100.)
-        assert np.allclose(convert_pressure(1., 'kPa', 'bar'), 1 / 100.)
+        assert np.allclose(convert_pressure(1.0, "bar", "kPa"), 100.0)
+        assert np.allclose(convert_pressure(1.0, "kPa", "bar"), 1 / 100.0)
 
-        #------------
-        assert np.allclose(convert_pressure(1., 'psf', 'Pa'), 47.880208)
-        assert np.allclose(convert_pressure(1., 'Pa', 'psf'), 1 / 47.880208)
+        # ------------
+        assert np.allclose(convert_pressure(1.0, "psf", "Pa"), 47.880208)
+        assert np.allclose(convert_pressure(1.0, "Pa", "psf"), 1 / 47.880208)
 
-        assert np.allclose(convert_pressure(1., 'kPa', 'Pa'), 1000.)
-        assert np.allclose(convert_pressure(1., 'Pa', 'kPa'), 1 / 1000.)
+        assert np.allclose(convert_pressure(1.0, "kPa", "Pa"), 1000.0)
+        assert np.allclose(convert_pressure(1.0, "Pa", "kPa"), 1 / 1000.0)
 
-        assert np.allclose(convert_pressure(1., 'MPa', 'Pa'), 1000000.)
-        assert np.allclose(convert_pressure(1., 'Pa', 'MPa'), 1 / 1000000.)
+        assert np.allclose(convert_pressure(1.0, "MPa", "Pa"), 1000000.0)
+        assert np.allclose(convert_pressure(1.0, "Pa", "MPa"), 1 / 1000000.0)
 
-        assert np.allclose(convert_pressure(1., 'psi', 'psf'), 144.)
-        assert np.allclose(convert_pressure(1., 'psf', 'psi'), 1 / 144.)
+        assert np.allclose(convert_pressure(1.0, "psi", "psf"), 144.0)
+        assert np.allclose(convert_pressure(1.0, "psf", "psi"), 1 / 144.0)
 
     def test_velocity(self):
         """velocity checks"""
-        assert np.allclose(convert_velocity(1., 'ft/s', 'ft/s'), 1.)
+        assert np.allclose(convert_velocity(1.0, "ft/s", "ft/s"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_velocity(1., 'ft/s', 'bad')
+            convert_velocity(1.0, "ft/s", "bad")
         with self.assertRaises(RuntimeError):
-            convert_velocity(1., 'bad', 'ft/s')
+            convert_velocity(1.0, "bad", "ft/s")
 
-        assert np.allclose(_velocity_factor('ft/s', 'ft/s'), 1.)
-        assert np.allclose(_velocity_factor('in/s', 'in/s'), 1.)
-        assert np.allclose(_velocity_factor('m/s', 'm/s'), 1.)
-        assert np.allclose(_velocity_factor('cm/s', 'cm/s'), 1.)
-        assert np.allclose(_velocity_factor('mm/s', 'mm/s'), 1.)
+        assert np.allclose(_velocity_factor("ft/s", "ft/s"), 1.0)
+        assert np.allclose(_velocity_factor("in/s", "in/s"), 1.0)
+        assert np.allclose(_velocity_factor("m/s", "m/s"), 1.0)
+        assert np.allclose(_velocity_factor("cm/s", "cm/s"), 1.0)
+        assert np.allclose(_velocity_factor("mm/s", "mm/s"), 1.0)
 
-        assert np.allclose(_velocity_factor('ft/s', 'in/s'), 12.)
-        assert np.allclose(_velocity_factor('in/s', 'ft/s'), 1 / 12.)
+        assert np.allclose(_velocity_factor("ft/s", "in/s"), 12.0)
+        assert np.allclose(_velocity_factor("in/s", "ft/s"), 1 / 12.0)
 
-        assert np.allclose(_velocity_factor('m/s', 'ft/s'), 3.28084)
-        assert np.allclose(_velocity_factor('ft/s', 'm/s'), 1 / 3.28084)
+        assert np.allclose(_velocity_factor("m/s", "ft/s"), 3.28084)
+        assert np.allclose(_velocity_factor("ft/s", "m/s"), 1 / 3.28084)
 
-        assert np.allclose(_velocity_factor('ft/s', 'm/s'), 1 / 3.28084)
-        assert np.allclose(_velocity_factor('m/s', 'ft/s'), 3.28084)
+        assert np.allclose(_velocity_factor("ft/s", "m/s"), 1 / 3.28084)
+        assert np.allclose(_velocity_factor("m/s", "ft/s"), 3.28084)
 
-        assert np.allclose(_velocity_factor('ft/s', 'cm/s'), 1 / 3.28084 * 100)
-        assert np.allclose(_velocity_factor('ft/s', 'mm/s'), 1 / 3.28084 * 1000)
+        assert np.allclose(_velocity_factor("ft/s", "cm/s"), 1 / 3.28084 * 100)
+        assert np.allclose(_velocity_factor("ft/s", "mm/s"), 1 / 3.28084 * 1000)
 
-        assert np.allclose(_velocity_factor('cm/s', 'm/s'), 1 / 100.)
-        assert np.allclose(_velocity_factor('m/s', 'cm/s'), 100.)
+        assert np.allclose(_velocity_factor("cm/s", "m/s"), 1 / 100.0)
+        assert np.allclose(_velocity_factor("m/s", "cm/s"), 100.0)
 
-        assert np.allclose(_velocity_factor('m/s', 'mm/s'), 1000.)
-        assert np.allclose(_velocity_factor('mm/s', 'm/s'), 1 / 1000.)
+        assert np.allclose(_velocity_factor("m/s", "mm/s"), 1000.0)
+        assert np.allclose(_velocity_factor("mm/s", "m/s"), 1 / 1000.0)
 
-        assert np.allclose(_velocity_factor('mm/s', 'cm/s'), 1 / 10.)
-        assert np.allclose(_velocity_factor('cm/s', 'mm/s'), 10.)
+        assert np.allclose(_velocity_factor("mm/s", "cm/s"), 1 / 10.0)
+        assert np.allclose(_velocity_factor("cm/s", "mm/s"), 10.0)
 
-        assert np.allclose(_velocity_factor('knots', 'ft/s'), 1.68781)
-        assert np.allclose(_velocity_factor('ft/s', 'knots'), 1 / 1.68781)
+        assert np.allclose(_velocity_factor("knots", "ft/s"), 1.68781)
+        assert np.allclose(_velocity_factor("ft/s", "knots"), 1 / 1.68781)
 
     def test_density(self):
         """density checks"""
-        assert np.allclose(convert_density(1., 'slug/ft^3', 'slug/ft^3'), 1.)
+        assert np.allclose(convert_density(1.0, "slug/ft^3", "slug/ft^3"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_density(1., 'slug/ft^3', 'bad')
+            convert_density(1.0, "slug/ft^3", "bad")
         with self.assertRaises(RuntimeError):
-            convert_density(1., 'bad', 'slug/ft^3')
+            convert_density(1.0, "bad", "slug/ft^3")
 
-        assert np.allclose(_density_factor('slinch/in^3', 'slinch/in^3'), 1)
-        assert np.allclose(_density_factor('slug/ft^3', 'slug/ft^3'), 1)
-        assert np.allclose(_density_factor('kg/m^3', 'kg/m^3'), 1)
-        assert np.allclose(_density_factor('g/cm^3', 'g/cm^3'), 1)
-        assert np.allclose(_density_factor('Mg/mm^3', 'Mg/mm^3'), 1)
+        assert np.allclose(_density_factor("slinch/in^3", "slinch/in^3"), 1)
+        assert np.allclose(_density_factor("slug/ft^3", "slug/ft^3"), 1)
+        assert np.allclose(_density_factor("kg/m^3", "kg/m^3"), 1)
+        assert np.allclose(_density_factor("g/cm^3", "g/cm^3"), 1)
+        assert np.allclose(_density_factor("Mg/mm^3", "Mg/mm^3"), 1)
 
-        assert np.allclose(_density_factor('slinch/in^3', 'slug/ft^3'), 12**4)
-        assert np.allclose(_density_factor('slug/ft^3', 'slinch/in^3'), 1 / 12**4)
+        assert np.allclose(_density_factor("slinch/in^3", "slug/ft^3"), 12**4)
+        assert np.allclose(_density_factor("slug/ft^3", "slinch/in^3"), 1 / 12**4)
 
-        assert np.allclose(_density_factor('slug/ft^3', 'kg/m^3'), 515.379)
-        assert np.allclose(_density_factor('kg/m^3', 'slug/ft^3'), 1 / 515.379)
+        assert np.allclose(_density_factor("slug/ft^3", "kg/m^3"), 515.379)
+        assert np.allclose(_density_factor("kg/m^3", "slug/ft^3"), 1 / 515.379)
 
-        assert np.allclose(_density_factor('g/cm^3', 'kg/m^3'), 1000.), 'actual=%g expected=%g' % (convert_density(1., 'g/cm^3', 'kg/m^3'), 1000.)
-        assert np.allclose(_density_factor('kg/m^3', 'g/cm^3'), 1 / 1000.), 'actual=%g expected=%g' % (convert_density(1., 'kg/m^3', 'g/cm^3'), 1 / 1000.)
+        assert np.allclose(_density_factor("g/cm^3", "kg/m^3"), 1000.0), (
+            "actual=%g expected=%g" % (convert_density(1.0, "g/cm^3", "kg/m^3"), 1000.0)
+        )
+        assert np.allclose(_density_factor("kg/m^3", "g/cm^3"), 1 / 1000.0), (
+            "actual=%g expected=%g"
+            % (convert_density(1.0, "kg/m^3", "g/cm^3"), 1 / 1000.0)
+        )
 
-        assert np.allclose(_density_factor('Mg/mm^3', 'kg/m^3'), 1000.**4), 'actual=%g expected=%g' % (convert_density(1., 'Mg/mm^3', 'kg/m^3'), 1000.**4)
-        assert np.allclose(_density_factor('kg/m^3', 'Mg/mm^3'), 1/1000.**4), 'actual=%g expected=%g' % (convert_density(1., 'kg/m^3', 'Mg/mm^3'), 1/1000.**4)
+        assert np.allclose(_density_factor("Mg/mm^3", "kg/m^3"), 1000.0**4), (
+            "actual=%g expected=%g"
+            % (convert_density(1.0, "Mg/mm^3", "kg/m^3"), 1000.0**4)
+        )
+        assert np.allclose(_density_factor("kg/m^3", "Mg/mm^3"), 1 / 1000.0**4), (
+            "actual=%g expected=%g"
+            % (convert_density(1.0, "kg/m^3", "Mg/mm^3"), 1 / 1000.0**4)
+        )
 
-        assert np.allclose(_density_factor('g/cm^3', 'slug/ft^3'), 1.94032)
-        assert np.allclose(_density_factor('slug/ft^3', 'g/cm^3'), 1 / 1.94032), 'actual=%g expected=%g' % (convert_density(1., 'slug/ft^3', 'g/cm^3'), 1 / 1.94032)
+        assert np.allclose(_density_factor("g/cm^3", "slug/ft^3"), 1.94032)
+        assert np.allclose(_density_factor("slug/ft^3", "g/cm^3"), 1 / 1.94032), (
+            "actual=%g expected=%g"
+            % (convert_density(1.0, "slug/ft^3", "g/cm^3"), 1 / 1.94032)
+        )
 
     def test_temperature(self):
         """density checks"""
-        assert np.allclose(convert_temperature(1., 'R', 'R'), 1.)
+        assert np.allclose(convert_temperature(1.0, "R", "R"), 1.0)
         with self.assertRaises(RuntimeError):
-            convert_temperature(1., 'F', 'bad')
+            convert_temperature(1.0, "F", "bad")
         with self.assertRaises(RuntimeError):
-            convert_temperature(1., 'bad', 'C')
+            convert_temperature(1.0, "bad", "C")
 
         # arrays must not be modified in place
-        temps = np.array([0., 100.])
-        assert np.allclose(convert_temperature(temps, 'C', 'K'), [273.15, 373.15])
-        assert np.allclose(temps, [0., 100.])
+        temps = np.array([0.0, 100.0])
+        assert np.allclose(convert_temperature(temps, "C", "K"), [273.15, 373.15])
+        assert np.allclose(temps, [0.0, 100.0])
         temps = np.array([273.15, 373.15])
-        assert np.allclose(convert_temperature(temps, 'K', 'C'), [0., 100.])
+        assert np.allclose(convert_temperature(temps, "K", "C"), [0.0, 100.0])
         assert np.allclose(temps, [273.15, 373.15])
 
-        assert np.allclose(_temperature_factor(1., 'R', 'R'), 1)
-        assert np.allclose(_temperature_factor(1., 'F', 'F'), 1)
-        assert np.allclose(_temperature_factor(1., 'C', 'C'), 1)
-        assert np.allclose(_temperature_factor(1., 'K', 'K'), 1)
+        assert np.allclose(_temperature_factor(1.0, "R", "R"), 1)
+        assert np.allclose(_temperature_factor(1.0, "F", "F"), 1)
+        assert np.allclose(_temperature_factor(1.0, "C", "C"), 1)
+        assert np.allclose(_temperature_factor(1.0, "K", "K"), 1)
 
-        assert np.allclose(_temperature_factor(32., 'F', 'C'), 0.)
-        assert np.allclose(_temperature_factor(0., 'C', 'F'), 32.)
+        assert np.allclose(_temperature_factor(32.0, "F", "C"), 0.0)
+        assert np.allclose(_temperature_factor(0.0, "C", "F"), 32.0)
 
-        assert np.allclose(_temperature_factor(104., 'F', 'C'), 40.)
-        assert np.allclose(_temperature_factor(40., 'C', 'F'), 104.)
+        assert np.allclose(_temperature_factor(104.0, "F", "C"), 40.0)
+        assert np.allclose(_temperature_factor(40.0, "C", "F"), 104.0)
 
-        assert np.allclose(_temperature_factor(40., 'F', 'R'), 499.67)
-        assert np.allclose(_temperature_factor(499.67, 'R', 'F'), 40.)
+        assert np.allclose(_temperature_factor(40.0, "F", "R"), 499.67)
+        assert np.allclose(_temperature_factor(499.67, "R", "F"), 40.0)
 
-        assert np.allclose(_temperature_factor(20., 'C', 'K'), 293.15)
-        assert np.allclose(_temperature_factor(293.15, 'K', 'C'), 20.)
+        assert np.allclose(_temperature_factor(20.0, "C", "K"), 293.15)
+        assert np.allclose(_temperature_factor(293.15, "K", "C"), 20.0)
+
 
 class TestAtm(unittest.TestCase):
     """various atmosphere tests"""
+
     def test_calibrated_airpseed(self):
         alt = 30000
         mach = 0.8
-        cas = atm_calibrated_airspeed(alt, mach, alt_units='ft', cas_units='knots')
+        cas = atm_calibrated_airspeed(alt, mach, alt_units="ft", cas_units="knots")
         self.assertAlmostEqual(cas, 303.990024, delta=0.001), cas
 
-        mach2 = cas_to_mach(alt, cas, alt_units='ft', cas_units='knots')
+        mach2 = cas_to_mach(alt, cas, alt_units="ft", cas_units="knots")
         self.assertAlmostEqual(mach2, mach, delta=0.01)
 
     def test_temperature(self):
         """tests temperature at various altitudes"""
+        T_km = atm_temperature(alt=0.0, alt_units="km", temperature_units="R")
+        self.assertEqual(
+            T_km, atm_temperature(alt=0.0, alt_units="ft", temperature_units="R")
+        )
         with self.assertRaises(RuntimeError):
-            atm_temperature(alt=0., alt_units='km', temperature_units='R')
-        with self.assertRaises(RuntimeError):
-            atm_temperature(alt=0., alt_units='ft', temperature_units='F')
+            atm_temperature(alt=0.0, alt_units="ft", temperature_units="F")
 
-        self.assertEqual(atm_temperature(alt=10 *1000.), 482.40003999999999)
-        self.assertEqual(atm_temperature(alt=60 *1000.), 389.988)
-        self.assertEqual(atm_temperature(alt=120*1000.), 451.2655824328092)
-        self.assertEqual(atm_temperature(alt=165*1000.), 508.78800000000001)
-        self.assertEqual(atm_temperature(alt=230*1000.), 394.18835930326833)
-        self.assertEqual(atm_temperature(alt=270*1000.), 354.34800000000001)
-        self.assertEqual(atm_temperature(alt=350*1000.), 354.34800000000001)
+        self.assertEqual(atm_temperature(alt=10 * 1000.0), 482.40003999999999)
+        self.assertEqual(atm_temperature(alt=60 * 1000.0), 389.988)
+        self.assertEqual(atm_temperature(alt=120 * 1000.0), 451.2655824328092)
+        self.assertEqual(atm_temperature(alt=165 * 1000.0), 508.78800000000001)
+        self.assertEqual(atm_temperature(alt=230 * 1000.0), 394.18835930326833)
+        self.assertEqual(atm_temperature(alt=270 * 1000.0), 354.34800000000001)
+        self.assertEqual(atm_temperature(alt=350 * 1000.0), 354.34800000000001)
 
-        self.assertEqual(atm_temperature(alt=0, alt_units='ft', temperature_units='K'),
-                         287.77777777777777)
+        self.assertEqual(
+            atm_temperature(alt=0, alt_units="ft", temperature_units="K"),
+            287.77777777777777,
+        )
 
     def test_pressure(self):
         """tests pressure at various altitudes"""
-        self.assertEqual(atm_pressure(alt=0., alt_units='ft', pressure_units='psf'),
-                         2116.2247459927403)
-        self.assertEqual(atm_pressure(alt=0., alt_units='m', pressure_units='psf'),
-                         2116.2247459927403)
+        self.assertEqual(
+            atm_pressure(alt=0.0, alt_units="ft", pressure_units="psf"),
+            2116.2247459927403,
+        )
+        self.assertEqual(
+            atm_pressure(alt=0.0, alt_units="m", pressure_units="psf"),
+            2116.2247459927403,
+        )
 
         units = {
-            'alt_units': 'ft',
-            'pressure_units': 'psf',
+            "alt_units": "ft",
+            "pressure_units": "psf",
         }
-        self.assertEqual(atm_pressure(alt=10*1000., **units), 1456.3074319943232)
-        self.assertEqual(atm_pressure(alt=60*1000., **units), 151.20878913237249)
-        self.assertEqual(atm_pressure(alt=120*1000., **units), 9.8627955961437763)
-        self.assertEqual(atm_pressure(alt=165*1000., **units), 1.7725806687593277)
-        self.assertEqual(atm_pressure(alt=230*1000., **units), 0.13023784776280109)
-        self.assertEqual(atm_pressure(alt=270*1000., **units), 0.017353278750799964)
-        self.assertEqual(atm_pressure(alt=350*1000., **units), 0.00028114006933161638)
+        self.assertEqual(atm_pressure(alt=10 * 1000.0, **units), 1456.3074319943232)
+        self.assertEqual(atm_pressure(alt=60 * 1000.0, **units), 151.20878913237249)
+        self.assertEqual(atm_pressure(alt=120 * 1000.0, **units), 9.8627955961437763)
+        self.assertEqual(atm_pressure(alt=165 * 1000.0, **units), 1.7725806687593277)
+        self.assertEqual(atm_pressure(alt=230 * 1000.0, **units), 0.13023784776280109)
+        self.assertEqual(atm_pressure(alt=270 * 1000.0, **units), 0.017353278750799964)
+        self.assertEqual(
+            atm_pressure(alt=350 * 1000.0, **units), 0.00028114006933161638
+        )
 
         units = {
-            'alt_units': 'kft',
-            'pressure_units': 'psf',
+            "alt_units": "kft",
+            "pressure_units": "psf",
         }
         self.assertEqual(atm_pressure(alt=10, **units), 1456.3074319943232)
         self.assertEqual(atm_pressure(alt=60, **units), 151.20878913237249)
@@ -349,105 +402,140 @@ class TestAtm(unittest.TestCase):
         self.assertEqual(atm_pressure(alt=350, **units), 0.00028114006933161638)
 
         self.assertEqual(
-            atm_pressure(alt=0., alt_units='m', pressure_units='Pa'),
-            101325.20482878872)
+            atm_pressure(alt=0.0, alt_units="m", pressure_units="Pa"),
+            101325.20482878872,
+        )
         self.assertAlmostEqual(
-            atm_pressure(alt=0., alt_units='m', pressure_units='kPa'),
-            101.32520482878872, delta=0.001)
+            atm_pressure(alt=0.0, alt_units="m", pressure_units="kPa"),
+            101.32520482878872,
+            delta=0.001,
+        )
         self.assertAlmostEqual(
-            atm_pressure(alt=0., alt_units='m', pressure_units='MPa'),
-            0.10132520482878872, delta=0.000001)
+            atm_pressure(alt=0.0, alt_units="m", pressure_units="MPa"),
+            0.10132520482878872,
+            delta=0.000001,
+        )
 
         with self.assertRaises(RuntimeError):
-            atm_pressure(alt=0., alt_units='m', pressure_units='kbar')
+            atm_pressure(alt=0.0, alt_units="m", pressure_units="kbar")
 
     def test_viscosity(self):
         """tests dynamic viscosity at various altitudes"""
         units = {
-            'alt_units': 'ft',
-            'visc_units': '(lbf*s)/ft^2',
+            "alt_units": "ft",
+            "visc_units": "(lbf*s)/ft^2",
         }
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=0., **units), 3.7345965612371534e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=10 *1000., **units), 3.5317481186391660e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=60 *1000., **units), 2.9702384755729678e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=120*1000., **units), 3.3485025784164385e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=165*1000., **units), 3.6827603483595828e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=230*1000., **units), 2.9969664628998927e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=270*1000., **units), 2.7383347922674784e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=350*1000., **units), 2.7383347922674784e-07)
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=0.0, **units), 3.7345965612371534e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=10 * 1000.0, **units), 3.5317481186391660e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=60 * 1000.0, **units), 2.9702384755729678e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=120 * 1000.0, **units), 3.3485025784164385e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=165 * 1000.0, **units), 3.6827603483595828e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=230 * 1000.0, **units), 2.9969664628998927e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=270 * 1000.0, **units), 2.7383347922674784e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=350 * 1000.0, **units), 2.7383347922674784e-07
+        )
 
         units = {
-            'alt_units': 'kft',
-            'visc_units': '(lbf*s)/ft^2',
+            "alt_units": "kft",
+            "visc_units": "(lbf*s)/ft^2",
         }
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=0., **units), 3.7345965612371534e-07)
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=10., **units), 3.5317481186391660e-07)
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=0.0, **units), 3.7345965612371534e-07
+        )
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=10.0, **units), 3.5317481186391660e-07
+        )
 
         units = {
-            'alt_units': 'm',
-            'visc_units': '(lbf*s)/ft^2',
+            "alt_units": "m",
+            "visc_units": "(lbf*s)/ft^2",
         }
-        self.assertEqual(atm_dynamic_viscosity_mu(alt=0., **units), 3.7345965612371534e-07)
+        self.assertEqual(
+            atm_dynamic_viscosity_mu(alt=0.0, **units), 3.7345965612371534e-07
+        )
 
     def test_density(self):
         """tests density at various altitudes"""
-        self.assertEqual(atm_density(299., alt_units='ft'), 0.0023600367621627013)
-        self.assertEqual(atm_density(299./1000., alt_units='kft'), 0.0023600367621627013)
+        self.assertEqual(atm_density(299.0, alt_units="ft"), 0.0023600367621627013)
+        self.assertEqual(
+            atm_density(299.0 / 1000.0, alt_units="kft"), 0.0023600367621627013
+        )
 
-        rho2 = atm_density(0., alt_units='m', density_units='kg/m^3')
+        rho2 = atm_density(0.0, alt_units="m", density_units="kg/m^3")
         assert np.allclose(rho2, 1.22699081123), rho2
 
-        rho1 = atm_density(0.)
+        rho1 = atm_density(0.0)
         assert np.allclose(rho1, 0.00238075522), rho1
-        rho2 = atm_density(0., alt_units='ft', density_units='slinch/in^3')
-        assert np.allclose(rho2, 0.00238075522/12.**4), rho2
+        rho2 = atm_density(0.0, alt_units="ft", density_units="slinch/in^3")
+        assert np.allclose(rho2, 0.00238075522 / 12.0**4), rho2
 
     def test_velocity(self):
         """tests velocity at various altitudes"""
-        vel_fts_55_2p4 = atm_velocity(55000., 2.4)
-        #vel_fts_55_2 = atm_velocity(55000., 2.0)
-        vel_fts_55_2b = atm_velocity(55000., 2.0, alt_units='ft', velocity_units='ft/s')
-        vel_fts_55_2c = atm_velocity(55., 2.0, alt_units='kft', velocity_units='ft/s')
-        vel_ins_55_2c = atm_velocity(55., 2.0, alt_units='kft', velocity_units='in/s')
+        vel_fts_55_2p4 = atm_velocity(55000.0, 2.4)
+        # vel_fts_55_2 = atm_velocity(55000., 2.0)
+        vel_fts_55_2b = atm_velocity(
+            55000.0, 2.0, alt_units="ft", velocity_units="ft/s"
+        )
+        vel_fts_55_2c = atm_velocity(55.0, 2.0, alt_units="kft", velocity_units="ft/s")
+        vel_ins_55_2c = atm_velocity(55.0, 2.0, alt_units="kft", velocity_units="in/s")
         assert np.allclose(vel_fts_55_2p4, 2323.05516639), vel_fts_55_2p4
         assert np.allclose(vel_fts_55_2b, 1935.87930533), vel_fts_55_2b
         assert np.allclose(vel_fts_55_2c, 1935.87930533), vel_fts_55_2c
-        assert np.allclose(vel_fts_55_2b, vel_ins_55_2c/12.)
+        assert np.allclose(vel_fts_55_2b, vel_ins_55_2c / 12.0)
 
-        #vel_fts_55_2b   = atm_velocity(55000., 2.0, alt_units='ft', velocity_units='ft/s')
-        vel_knots_55_2b = atm_velocity(55000., 2.0, alt_units='ft', velocity_units='knots')
+        # vel_fts_55_2b   = atm_velocity(55000., 2.0, alt_units='ft', velocity_units='ft/s')
+        vel_knots_55_2b = atm_velocity(
+            55000.0, 2.0, alt_units="ft", velocity_units="knots"
+        )
         assert np.allclose(vel_knots_55_2b, 1146.977130662127), vel_knots_55_2b
 
-        vel_ms_55_2b = atm_velocity(55000., 2.0, alt_units='ft', velocity_units='m/s')
+        vel_ms_55_2b = atm_velocity(55000.0, 2.0, alt_units="ft", velocity_units="m/s")
         assert np.allclose(vel_ms_55_2b, 590.0560122641932), vel_ms_55_2b
 
-        vel_mms_55_2b = atm_velocity(55000., 2.0, alt_units='ft', velocity_units='mm/s')
+        vel_mms_55_2b = atm_velocity(
+            55000.0, 2.0, alt_units="ft", velocity_units="mm/s"
+        )
         assert np.allclose(vel_mms_55_2b, 590.0560122641932 * 1000), vel_mms_55_2b
 
         with self.assertRaises(RuntimeError):
-            atm_velocity(55000., 2.0, alt_units='ft', velocity_units='bad')
+            atm_velocity(55000.0, 2.0, alt_units="ft", velocity_units="bad")
 
         self.assertAlmostEqual(vel_fts_55_2p4, 2323.0, delta=0.1)
         self.assertAlmostEqual(vel_fts_55_2p4, 2323.0, delta=0.1)
         self.assertAlmostEqual(vel_fts_55_2p4, vel_fts_55_2p4)
         self.assertAlmostEqual(vel_fts_55_2b, 1935.8, delta=0.1)
 
-        with self.assertRaises(TypeError):
-            atm_velocity(55000, [2.4])
-        #self.assertRaises(AtmosphereError, atm_velocity, 55000, None)
-        #-----
-        vel_a = atm_velocity(55000., 2.4, alt_units='ft', velocity_units='ft/s')
-        vel_b = atm_velocity(55000., 2.4, alt_units='ft', velocity_units='ft/s')
-        vel_c = atm_velocity(55000., 2.0, alt_units='ft', velocity_units='ft/s')
+        vel_list = atm_velocity(55000, np.array([2.4]))
+        assert np.allclose(vel_list, [vel_fts_55_2p4])
+        # self.assertRaises(AtmosphereError, atm_velocity, 55000, None)
+        # -----
+        vel_a = atm_velocity(55000.0, 2.4, alt_units="ft", velocity_units="ft/s")
+        vel_b = atm_velocity(55000.0, 2.4, alt_units="ft", velocity_units="ft/s")
+        vel_c = atm_velocity(55000.0, 2.0, alt_units="ft", velocity_units="ft/s")
 
         self.assertAlmostEqual(vel_a, 2323.0, delta=0.1)
         self.assertAlmostEqual(vel_b, 2323.0, delta=0.1)
         self.assertAlmostEqual(vel_a, vel_b)
         self.assertAlmostEqual(vel_c, 1935.8, delta=0.1)
 
-        vel_a = atm_velocity(55., 2.4, alt_units='kft', velocity_units='ft/s')
-        vel_b = atm_velocity(55., 2.4, alt_units='kft', velocity_units='ft/s')
-        vel_c = atm_velocity(55., 2.0, alt_units='kft', velocity_units='ft/s')
+        vel_a = atm_velocity(55.0, 2.4, alt_units="kft", velocity_units="ft/s")
+        vel_b = atm_velocity(55.0, 2.4, alt_units="kft", velocity_units="ft/s")
+        vel_c = atm_velocity(55.0, 2.0, alt_units="kft", velocity_units="ft/s")
 
         self.assertAlmostEqual(vel_a, 2323.0, delta=0.1)
         self.assertAlmostEqual(vel_b, 2323.0, delta=0.1)
@@ -458,19 +546,25 @@ class TestAtm(unittest.TestCase):
         """
         Tests mach at various speeds.
         """
-        mach_a = atm_mach(14000., 743.011549709834) #, debug=False)
-        mach_b = atm_mach(14000., 2122.8901420281)
+        mach_a = atm_mach(14000.0, 743.011549709834)  # , debug=False)
+        mach_b = atm_mach(14000.0, 2122.8901420281)
         self.assertAlmostEqual(mach_a, 0.7, delta=0.01)
         self.assertAlmostEqual(mach_b, 2.0, delta=0.002)
 
-        mach_a = atm_mach(14000., 743.011549709834, alt_units='ft', velocity_units='ft/s')
-        mach_b = atm_mach(14000., 2122.8901420281, alt_units='ft', velocity_units='ft/s')
+        mach_a = atm_mach(
+            14000.0, 743.011549709834, alt_units="ft", velocity_units="ft/s"
+        )
+        mach_b = atm_mach(
+            14000.0, 2122.8901420281, alt_units="ft", velocity_units="ft/s"
+        )
         self.assertAlmostEqual(mach_a, 0.7, delta=0.01)
         self.assertAlmostEqual(mach_b, 2.0, delta=0.002)
 
-        mach_a = atm_mach(14., 743.011549709834, alt_units='kft', velocity_units='ft/s')
-        mach_b = atm_mach(14., 2122.8901420281, alt_units='kft', velocity_units='ft/s')
-        mach_c = atm_mach(14., 628.3419, alt_units='kft', velocity_units='knots')
+        mach_a = atm_mach(
+            14.0, 743.011549709834, alt_units="kft", velocity_units="ft/s"
+        )
+        mach_b = atm_mach(14.0, 2122.8901420281, alt_units="kft", velocity_units="ft/s")
+        mach_c = atm_mach(14.0, 628.3419, alt_units="kft", velocity_units="knots")
 
         self.assertAlmostEqual(mach_a, 0.7, delta=0.01)
         self.assertAlmostEqual(mach_b, 2.0, delta=0.002)
@@ -479,67 +573,102 @@ class TestAtm(unittest.TestCase):
     def test_reynolds(self):
         """tests reynolds number"""
         self.assertEqual(
-            atm_unit_reynolds_number(55000., 2.4, alt_units='ft', reynolds_units='1/ft'),
-            2244166.3810534105)
+            atm_unit_reynolds_number(
+                55000.0, 2.4, alt_units="ft", reynolds_units="1/ft"
+            ),
+            2244166.3810534105,
+        )
         self.assertEqual(
-            atm_unit_reynolds_number(55000., 2.4, alt_units='ft', reynolds_units='1/in'),
-            187013.8650877842)
+            atm_unit_reynolds_number(
+                55000.0, 2.4, alt_units="ft", reynolds_units="1/in"
+            ),
+            187013.8650877842,
+        )
         self.assertEqual(
-            atm_unit_reynolds_number(55000., 2.4, alt_units='ft', reynolds_units='1/m'),
-            7362750.594007252)
+            atm_unit_reynolds_number(
+                55000.0, 2.4, alt_units="ft", reynolds_units="1/m"
+            ),
+            7362750.594007252,
+        )
 
         with self.assertRaises(RuntimeError):
-            atm_unit_reynolds_number(55000., 2.4, alt_units='ft', reynolds_units='1/mm')
+            atm_unit_reynolds_number(
+                55000.0, 2.4, alt_units="ft", reynolds_units="1/mm"
+            )
 
     def test_equiv_airspeed(self):
         """tests ``atm_equivalent_airspeed``"""
-        alt = 0.
-        mach = 1.
-        veq1 = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s')
+        alt = 0.0
+        mach = 1.0
+        veq1 = atm_equivalent_airspeed(alt, mach, alt_units="ft", eas_units="ft/s")
         assert np.allclose(veq1, 1115.5461442719434)
 
-        alt = 10000.
-        veq2 = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s')
+        alt = 10000.0
+        veq2 = atm_equivalent_airspeed(alt, mach, alt_units="ft", eas_units="ft/s")
         assert np.allclose(veq2, 925.407847794747)
 
-        veq3 = atm_equivalent_airspeed(alt/1000., mach, alt_units='kft', eas_units='ft/s')
+        veq3 = atm_equivalent_airspeed(
+            alt / 1000.0, mach, alt_units="kft", eas_units="ft/s"
+        )
         assert np.allclose(veq2, veq3)
 
-        alt = 0.
-        veq4 = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='m/s')
+        alt = 0.0
+        veq4 = atm_equivalent_airspeed(alt, mach, alt_units="ft", eas_units="m/s")
         assert np.allclose(veq4, 340.0184647740884)
 
-        alt = 0.
-        veq4 = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='mm/s')
+        alt = 0.0
+        veq4 = atm_equivalent_airspeed(alt, mach, alt_units="ft", eas_units="mm/s")
         assert np.allclose(veq4, 340.0184647740884 * 1000)
 
     def test_reynolds_factor(self):
         """tests ``test_reynolds_factor``"""
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/m', reynolds_units_out='1/m'), 1)
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/ft', reynolds_units_out='1/ft'), 1)
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/in', reynolds_units_out='1/in'), 1)
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/m", reynolds_units_out="1/m"), 1
+        )
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/ft", reynolds_units_out="1/ft"), 1
+        )
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/in", reynolds_units_out="1/in"), 1
+        )
 
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/m', reynolds_units_out='1/ft'), 0.3048)
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/m', reynolds_units_out='1/in'), 0.3048/12)
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/m", reynolds_units_out="1/ft"), 0.3048
+        )
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/m", reynolds_units_out="1/in"),
+            0.3048 / 12,
+        )
 
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/ft', reynolds_units_out='1/m'), 1/0.3048)
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/ft', reynolds_units_out='1/in'), 1/12)
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/ft", reynolds_units_out="1/m"),
+            1 / 0.3048,
+        )
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/ft", reynolds_units_out="1/in"),
+            1 / 12,
+        )
 
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/in', reynolds_units_out='1/m'), 12/0.3048)
-        assert np.allclose(_reynolds_factor(reynolds_units_in='1/in', reynolds_units_out='1/ft'), 12)
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/in", reynolds_units_out="1/m"),
+            12 / 0.3048,
+        )
+        assert np.allclose(
+            _reynolds_factor(reynolds_units_in="1/in", reynolds_units_out="1/ft"), 12
+        )
 
     def test_atm_kinematic_viscosity_nu(self):
         """tests ``atm_kinematic_viscosity_mu``"""
-        mu = atm_kinematic_viscosity_nu(10., alt_units='kft', visc_units='ft^2/s')
+        mu = atm_kinematic_viscosity_nu(10.0, alt_units="kft", visc_units="ft^2/s")
         self.assertEqual(mu, 0.00020075264466844382)
 
-        mu = atm_kinematic_viscosity_nu(5000., alt_units='m', visc_units='m^2/s')
+        mu = atm_kinematic_viscosity_nu(5000.0, alt_units="m", visc_units="m^2/s")
         self.assertEqual(mu, 2.204293839480214e-05)
 
     def test_atm_dynamic_viscosity_mu(self):
         """tests ``test_atm_dynamic_viscosity_mu``"""
-        mu1 = atm_dynamic_viscosity_mu(0., alt_units='ft', visc_units='(N*s)/m^2')
-        mu2 = atm_dynamic_viscosity_mu(300., alt_units='kft', visc_units='(N*s)/m^2')
+        mu1 = atm_dynamic_viscosity_mu(0.0, alt_units="ft", visc_units="(N*s)/m^2")
+        mu2 = atm_dynamic_viscosity_mu(300.0, alt_units="kft", visc_units="(N*s)/m^2")
         self.assertEqual(mu1, 1.7881345434714084e-05), mu1
         self.assertEqual(mu2, 1.3111218182081286e-05), mu2
 
@@ -555,64 +684,96 @@ class TestAtm(unittest.TestCase):
     def test_get_alt_for_density(self):
         """tests ``get_alt_for_density``"""
         alt_targets = [
-            0., 10., 20., 30., 40., 50.,
-            300., 350., 400.,
+            0.0,
+            10.0,
+            20.0,
+            30.0,
+            40.0,
+            50.0,
+            300.0,
+            350.0,
+            400.0,
         ]
         for alt_target in alt_targets:
-            rho1 = atm_density(alt_target * 1000.)
+            rho1 = atm_density(alt_target * 1000.0)
             alt1 = get_alt_for_density(rho1)
-            #self.assertAlmostEqual(alt, alt_target)
-            assert np.allclose(alt1, alt_target*1000, atol=1.), 'alt1=%s alt_target=%s' % (alt1, alt_target*1000)
+            # self.assertAlmostEqual(alt, alt_target)
+            assert np.allclose(alt1, alt_target * 1000, atol=1.0), (
+                "alt1=%s alt_target=%s" % (alt1, alt_target * 1000)
+            )
 
-            rho2 = atm_density(alt_target, alt_units='kft', density_units='kg/m^3')
+            rho2 = atm_density(alt_target, alt_units="kft", density_units="kg/m^3")
             tol = 0.005  # 5 feet
-            alt2 = get_alt_for_density(rho2, density_units='kg/m^3', alt_units='kft', tol=tol, nmax=50)
-            #self.assertAlmostEqual(alt, alt_target)
-            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+            alt2 = get_alt_for_density(
+                rho2, density_units="kg/m^3", alt_units="kft", tol=tol, nmax=50
+            )
+            # self.assertAlmostEqual(alt, alt_target)
+            assert np.allclose(alt2, alt_target, atol=1e-3), "alt2=%s alt_target=%s" % (
+                alt2,
+                alt_target,
+            )
 
     def test_get_alt_for_mach_eas(self):
         """tests ``get_alt_for_mach_eas``"""
         mach = 0.8
-        eas_target = 500.  # knots
+        eas_target = 500.0  # knots
         alt_expected = 3067.215571329515  # ft
-        alt = get_alt_for_mach_eas(mach, eas_target, alt_units='ft', eas_units='knots', tol=1e-12)
+        alt = get_alt_for_mach_eas(
+            mach, eas_target, alt_units="ft", eas_units="knots", tol=1e-12
+        )
         assert np.allclose(alt, alt_expected)
-        #print(f'alt={alt}')
-        eas = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='knots')
-        #print(f'eas={eas}')
+        # print(f'alt={alt}')
+        eas = atm_equivalent_airspeed(alt, mach, alt_units="ft", eas_units="knots")
+        # print(f'eas={eas}')
         assert np.allclose(eas, eas_target)
 
     def test_get_alt_for_pressure(self):
         """tests ``get_alt_for_pressure``"""
         alt_targets = [
-            0., 10., 20., 30., 40., 50.,
-            300., 350., #400.,
+            0.0,
+            10.0,
+            20.0,
+            30.0,
+            40.0,
+            50.0,
+            300.0,
+            350.0,  # 400.,
         ]
         for alt_target in alt_targets:
-            pressure1 = atm_pressure(alt_target*1000.)
-            #alt1 = get_alt_for_pressure(pressure1, tol=5., SI=False, nmax=20)
+            pressure1 = atm_pressure(alt_target * 1000.0)
+            # alt1 = get_alt_for_pressure(pressure1, tol=5., SI=False, nmax=20)
             alt1 = get_alt_for_pressure(pressure1, nmax=20)
 
-            #self.assertAlmostEqual(alt, alt_target)
-            assert np.allclose(alt1, alt_target*1000, atol=1.), 'alt1=%s alt_target=%s' % (alt1, alt_target*1000)
+            # self.assertAlmostEqual(alt, alt_target)
+            assert np.allclose(alt1, alt_target * 1000, atol=1.0), (
+                "alt1=%s alt_target=%s" % (alt1, alt_target * 1000)
+            )
 
-            pressure2 = atm_pressure(alt_target, alt_units='kft', pressure_units='Pa')
+            pressure2 = atm_pressure(alt_target, alt_units="kft", pressure_units="Pa")
 
-            tol = 0.005 # 5 feet
-            alt2 = get_alt_for_pressure(pressure2, pressure_units='Pa', alt_units='kft', tol=tol)
-            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+            tol = 0.005  # 5 feet
+            alt2 = get_alt_for_pressure(
+                pressure2, pressure_units="Pa", alt_units="kft", tol=tol
+            )
+            assert np.allclose(alt2, alt_target, atol=1e-3), "alt2=%s alt_target=%s" % (
+                alt2,
+                alt_target,
+            )
 
     def test_get_alt_for_q_with_constant_mach(self):
         """tests ``get_alt_for_q_with_constant_mach`` for various altitudes"""
         alt = get_alt_for_q_with_constant_mach(
-            534.2, 0.8, pressure_units='psf', alt_units='ft', nmax=20, tol=5.)
+            534.2, 0.8, pressure_units="psf", alt_units="ft", nmax=20, tol=5.0
+        )
         assert np.allclose(alt, 15064.6441438)
 
-        tol = 0.001 # in feet
+        tol = 0.001  # in feet
         alt_a = get_alt_for_q_with_constant_mach(
-            600., 0.8, pressure_units='psf', alt_units='ft', nmax=20, tol=tol)
+            600.0, 0.8, pressure_units="psf", alt_units="ft", nmax=20, tol=tol
+        )
         alt_b = get_alt_for_q_with_constant_mach(
-            400., 0.8, pressure_units='psf', alt_units='ft', nmax=20, tol=tol)
+            400.0, 0.8, pressure_units="psf", alt_units="ft", nmax=20, tol=tol
+        )
 
         self.assertAlmostEqual(alt_a, 12144.30, delta=1.25)  # TODO: should be 0.01
         self.assertAlmostEqual(alt_b, 22058.47, delta=2.25)  # TODO: should be 0.01
@@ -620,22 +781,29 @@ class TestAtm(unittest.TestCase):
     def test_get_alt_for_q_with_constant_mach2(self):
         """tests ``get_alt_for_q_with_constant_mach``"""
         mach = 0.8
-        alt_targets = [0., 10., 20., 30., 40., 50.]
+        alt_targets = [0.0, 10.0, 20.0, 30.0, 40.0, 50.0]
         for alt_target in alt_targets:
-            pressure1 = atm_dynamic_pressure(alt_target*1000., mach)
+            pressure1 = atm_dynamic_pressure(alt_target * 1000.0, mach)
             alt1 = get_alt_for_q_with_constant_mach(pressure1, mach)
-            #self.assertAlmostEqual(alt1, alt_target)
-            assert np.allclose(alt1, alt_target*1000, atol=1.), 'alt1=%s alt_target=%s' % (alt1, alt_target*1000)
+            # self.assertAlmostEqual(alt1, alt_target)
+            assert np.allclose(alt1, alt_target * 1000, atol=1.0), (
+                "alt1=%s alt_target=%s" % (alt1, alt_target * 1000)
+            )
 
-            pressure2 = atm_dynamic_pressure(alt_target, mach,
-                                             alt_units='kft', pressure_units='psi')
+            pressure2 = atm_dynamic_pressure(
+                alt_target, mach, alt_units="kft", pressure_units="psi"
+            )
 
-            tol = 0.005 # 5 feet
+            tol = 0.005  # 5 feet
             alt2 = get_alt_for_q_with_constant_mach(
-                pressure2, mach, pressure_units='psi', alt_units='kft', tol=tol)
-            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+                pressure2, mach, pressure_units="psi", alt_units="kft", tol=tol
+            )
+            assert np.allclose(alt2, alt_target, atol=1e-3), "alt2=%s alt_target=%s" % (
+                alt2,
+                alt_target,
+            )
 
-        #get_alt_for_q_mach(q, mach, pressure_units='psf', alt_units='ft')
+        # get_alt_for_q_mach(q, mach, pressure_units='psf', alt_units='ft')
 
     def test_get_mach_for_alt_eas(self):
         data = [
@@ -645,8 +813,10 @@ class TestAtm(unittest.TestCase):
             (30000, 0.8),
         ]
         for alti, machi in data:
-            easi = atm_equivalent_airspeed(alti, machi, alt_units='ft', eas_units='knots')
-            mach = get_mach_for_alt_eas(alti, easi, alt_units='ft', eas_units='knots')
+            easi = atm_equivalent_airspeed(
+                alti, machi, alt_units="ft", eas_units="knots"
+            )
+            mach = get_mach_for_alt_eas(alti, easi, alt_units="ft", eas_units="knots")
             assert np.allclose(mach, machi), (alti, machi, mach)
 
     def test_get_mach_for_alt_cas(self):
@@ -657,79 +827,101 @@ class TestAtm(unittest.TestCase):
             (30000, 0.8),
         ]
         for alti, machi in data:
-            casi = atm_calibrated_airspeed(alti, machi, alt_units='ft', cas_units='knots')
-            mach = get_mach_for_alt_cas(alti, casi, alt_units='ft', cas_units='knots')
+            casi = atm_calibrated_airspeed(
+                alti, machi, alt_units="ft", cas_units="knots"
+            )
+            mach = get_mach_for_alt_cas(alti, casi, alt_units="ft", cas_units="knots")
             assert np.allclose(mach, machi), (alti, machi, mach)
 
     def test_get_alt_mach_for_eas_cas(self):
         data = [
-            (0., 0.2),
-            (0., 0.8),
-            (10000., 0.5),
-            (30000., 0.8),
-            (-16000., 0.33),
-            (60000., 1.5),
+            (0.0, 0.2),
+            (0.0, 0.8),
+            (10000.0, 0.5),
+            (30000.0, 0.8),
+            (-16000.0, 0.33),
+            (60000.0, 1.5),
         ]
         for alti, machi in data:
-            easi = atm_equivalent_airspeed(alti, machi, alt_units='ft', eas_units='knots')
-            casi = atm_calibrated_airspeed(alti, machi, alt_units='ft', cas_units='knots')
-            alt, mach = get_alt_mach_for_eas_cas(easi, casi, eas_units='knots',
-                                                 cas_units='knots', alt_units='ft')
+            easi = atm_equivalent_airspeed(
+                alti, machi, alt_units="ft", eas_units="knots"
+            )
+            casi = atm_calibrated_airspeed(
+                alti, machi, alt_units="ft", cas_units="knots"
+            )
+            alt, mach = get_alt_mach_for_eas_cas(
+                easi, casi, eas_units="knots", cas_units="knots", alt_units="ft"
+            )
             self.assertAlmostEqual(alt, alti, delta=0.01, msg=(alti, machi))
             self.assertAlmostEqual(mach, machi, places=8, msg=(alti, machi))
 
         # SI
         alt, mach = get_alt_mach_for_eas_cas(
-            atm_equivalent_airspeed(3000., 0.6, alt_units='m', eas_units='m/s'),
-            atm_calibrated_airspeed(3000., 0.6, alt_units='m', cas_units='m/s'),
-            eas_units='m/s', cas_units='m/s', alt_units='m')
-        self.assertAlmostEqual(alt, 3000., delta=0.01)
+            atm_equivalent_airspeed(3000.0, 0.6, alt_units="m", eas_units="m/s"),
+            atm_calibrated_airspeed(3000.0, 0.6, alt_units="m", cas_units="m/s"),
+            eas_units="m/s",
+            cas_units="m/s",
+            alt_units="m",
+        )
+        self.assertAlmostEqual(alt, 3000.0, delta=0.01)
         self.assertAlmostEqual(mach, 0.6, places=8)
 
         with self.assertRaises(ValueError):
-            get_alt_mach_for_eas_cas(300., 200., eas_units='knots', cas_units='knots')
+            get_alt_mach_for_eas_cas(300.0, 200.0, eas_units="knots", cas_units="knots")
         with self.assertRaises(ValueError):
-            get_alt_mach_for_eas_cas(0., 200., eas_units='knots', cas_units='knots')
+            get_alt_mach_for_eas_cas(0.0, 200.0, eas_units="knots", cas_units="knots")
 
     def test_get_alt_for_eas_with_constant_mach(self):
         """tests get_alt_for_q_with_constant_mach"""
         mach = 0.8
         alt_targets = [
             # 0.,
-            10.,
+            10.0,
             # 20., 30., 40., 50.,
             # 300., 350., 400.,
         ]
         for alt_target in alt_targets:
             veq1 = atm_equivalent_airspeed(
-                alt_target*1000., mach, alt_units='ft', eas_units='ft/s')
+                alt_target * 1000.0, mach, alt_units="ft", eas_units="ft/s"
+            )
             veq2 = atm_equivalent_airspeed(
-                alt_target, mach, alt_units='kft', eas_units='knots')
-            #print(f'veq_ft/s={veq1:.4f} veq_knots={veq2:.4f}')
-            tol = 5. # 5 feet
+                alt_target, mach, alt_units="kft", eas_units="knots"
+            )
+            # print(f'veq_ft/s={veq1:.4f} veq_knots={veq2:.4f}')
+            tol = 5.0  # 5 feet
             alt1 = get_alt_for_eas_with_constant_mach(
-                veq1, mach, velocity_units='ft/s', alt_units='ft', nmax=20, tol=tol)
-            #print(f'alt1={alt1:.4f}')
-            tol = 5/1000. # 5 feet
+                veq1, mach, velocity_units="ft/s", alt_units="ft", nmax=20, tol=tol
+            )
+            # print(f'alt1={alt1:.4f}')
+            tol = 5 / 1000.0  # 5 feet
             alt2 = get_alt_for_eas_with_constant_mach(
-                veq2, mach, velocity_units='knots', alt_units='kft', nmax=20, tol=tol)
-            #print(f'alt2={alt2:.4f}')
+                veq2, mach, velocity_units="knots", alt_units="kft", nmax=20, tol=tol
+            )
+            # print(f'alt2={alt2:.4f}')
 
-            assert np.allclose(alt1/1000., alt_target, atol=1e-3), 'alt1=%s alt_target=%s' % (alt1, alt_target)
-            assert np.allclose(alt2, alt_target, atol=1e-3), 'alt2=%s alt_target=%s' % (alt2, alt_target)
+            assert np.allclose(alt1 / 1000.0, alt_target, atol=1e-3), (
+                "alt1=%s alt_target=%s" % (alt1, alt_target)
+            )
+            assert np.allclose(alt2, alt_target, atol=1e-3), "alt2=%s alt_target=%s" % (
+                alt2,
+                alt_target,
+            )
 
     def test_get_alt_for_eas_with_constant_mach2(self):
         """tests get_alt_for_eas_with_constant_mach"""
-        eas_expected = 500.
+        eas_expected = 500.0
         mach = 0.8
         alt = get_alt_for_eas_with_constant_mach(
-            eas_expected, mach,
-            velocity_units='ft/s', alt_units='ft', nmax=20, tol=5.)
-        print(f'alt = {alt}')
-        eas = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='ft/s')
-        assert np.allclose(eas, eas_expected), 'eas=%s eas_expected=%s' % (eas, eas_expected)
+            eas_expected, mach, velocity_units="ft/s", alt_units="ft", nmax=20, tol=5.0
+        )
+        print(f"alt = {alt}")
+        eas = atm_equivalent_airspeed(alt, mach, alt_units="ft", eas_units="ft/s")
+        assert np.allclose(eas, eas_expected), "eas=%s eas_expected=%s" % (
+            eas,
+            eas_expected,
+        )
 
-        eas = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='knots')
+        eas = atm_equivalent_airspeed(alt, mach, alt_units="ft", eas_units="knots")
         assert np.allclose(eas, 296.2418795250434), eas
 
     def test_atm_unit_reynolds_number(self):
@@ -737,132 +929,235 @@ class TestAtm(unittest.TestCase):
         mach = 0.8
         targets = [
             # (alt_kft, Re_1/ft)
-            (0., 5689165.64362),
-            (10., 4289977.7416),
-            (20., 3169466.53065),
-            (30., 2286823.00426),
-            (40., 1532035.46128),
-            (50., 949974.915093)]
+            (0.0, 5689165.64362),
+            (10.0, 4289977.7416),
+            (20.0, 3169466.53065),
+            (30.0, 2286823.00426),
+            (40.0, 1532035.46128),
+            (50.0, 949974.915093),
+        ]
         for alt, re_expected in targets:
-            rel_a = atm_unit_reynolds_number(alt*1000., mach)
-            assert np.allclose(rel_a, re_expected, atol=1e-3), 'rel_a=%s re_expected=%s' % (rel_a, re_expected)
+            rel_a = atm_unit_reynolds_number(alt * 1000.0, mach)
+            assert np.allclose(rel_a, re_expected, atol=1e-3), (
+                "rel_a=%s re_expected=%s" % (rel_a, re_expected)
+            )
 
-            rel_b = atm_unit_reynolds_number(alt, mach, alt_units='kft', reynolds_units='1/ft')
-            assert np.allclose(rel_b, re_expected, atol=1e-3), 'rel_b=%s re_expected=%s' % (rel_b, re_expected)
+            rel_b = atm_unit_reynolds_number(
+                alt, mach, alt_units="kft", reynolds_units="1/ft"
+            )
+            assert np.allclose(rel_b, re_expected, atol=1e-3), (
+                "rel_b=%s re_expected=%s" % (rel_b, re_expected)
+            )
 
     def test_sweep_eas_mach(self):
-        eass = np.linspace(0., 1000., num=101, dtype='float64')
+        eass = np.linspace(0.0, 1000.0, num=101, dtype="float64")
         eass[0] = 1e-5
-        #neas = len(eass)
+        # neas = len(eass)
 
         machi = 0.5
-        #machs = np.ones(neas, dtype='float64') * mach
+        # machs = np.ones(neas, dtype='float64') * mach
         rhos1, machs1, velocity1, alts = make_flfacts_eas_sweep_constant_mach(
-            machi, eass, gamma=1.4,
-            velocity_units='ft/s', density_units='slug/ft^3',
-            alt_units='ft',
-            #pressure_units='psf',
-            eas_units='knots')
+            machi,
+            eass,
+            gamma=1.4,
+            velocity_units="ft/s",
+            density_units="slug/ft^3",
+            alt_units="ft",
+            # pressure_units='psf',
+            eas_units="knots",
+        )
 
         rhos2, machs2, velocity2 = make_flfacts_alt_sweep_constant_mach(
-            machi, alts,
+            machi,
+            alts,
             eas_limit=1000000,
-            velocity_units='ft/s', density_units='slug/ft^3',
-            alt_units='ft',
-            #pressure_units='psf',
-            eas_units='knots')
+            velocity_units="ft/s",
+            density_units="slug/ft^3",
+            alt_units="ft",
+            # pressure_units='psf',
+            eas_units="knots",
+        )
         assert np.allclose(rhos1, rhos2)
         assert np.allclose(machs1, machs2)
-        #assert np.allclose(velocity1, velocity2)
-        #-----------------------------------------------
+        # assert np.allclose(velocity1, velocity2)
+        # -----------------------------------------------
         rhos1, machs1, velocity1, alts = make_flfacts_eas_sweep_constant_mach(
-            machi, eass, gamma=1.4,
-            velocity_units='m/s', density_units='kg/m^3',
-            alt_units='m',
-            #pressure_units='psf',
-            eas_units='m/s')
+            machi,
+            eass,
+            gamma=1.4,
+            velocity_units="m/s",
+            density_units="kg/m^3",
+            alt_units="m",
+            # pressure_units='psf',
+            eas_units="m/s",
+        )
 
         rhos2, machs2, velocity2 = make_flfacts_alt_sweep_constant_mach(
-            machi, alts,
+            machi,
+            alts,
             eas_limit=1000000,
-            velocity_units='m/s', density_units='kg/m^3',
-            alt_units='ft',
-            #pressure_units='psf',
-            eas_units='m/s')
-        #print(machs1-machs2)
-        #print(velocity1-velocity2)
-        #assert np.allclose(rhos1, rhos2)
+            velocity_units="m/s",
+            density_units="kg/m^3",
+            alt_units="ft",
+            # pressure_units='psf',
+            eas_units="m/s",
+        )
+        # print(machs1-machs2)
+        # print(velocity1-velocity2)
+        # assert np.allclose(rhos1, rhos2)
         assert np.allclose(machs1, machs2)
-        #assert np.allclose(velocity1, velocity2)
+        # assert np.allclose(velocity1, velocity2)
 
     def test_sweep(self):
         """tests FLFACT sweeps"""
         mach = 0.8
-        alts = np.linspace(-10000, 80000.)[::-1]
-        #make_flfacts_alt_sweep_constant_mach
+        alts = np.linspace(-10000, 80000.0)[::-1]
+        # make_flfacts_alt_sweep_constant_mach
         rho, mach, vel = make_flfacts_alt_sweep_constant_mach(
-            mach, alts, eas_limit=300., alt_units='m',
-            velocity_units='m/s',
-            density_units='kg/m^3',
-            eas_units='m/s')
-        vel_expected = [224.97932124482696, 224.97932124482696, 224.97932124482696, 228.02811169475368, 231.9519431728144, 235.81049204862362, 239.6069122099433, 243.34411149101786, 247.02477773681403, 250.65140142136016, 254.22629536116307, 257.75161196708507, 261.2293584002385, 264.6614099349766, 268.04952178159016, 269.58519565506737, 269.58519565506737, 269.58519565506737, 269.0029125642663, 266.3865851329001, 263.74430516975593, 261.0752846980864, 258.37869504062513, 255.65366381416462, 252.8992716326313, 250.1145484833398, 247.2984697359336, 244.4499517374548, 241.5678469398473, 238.65093849776292, 236.0224049056773, 236.0224049056773, 236.0224049056773, 236.0224049056773, 236.0224049056773, 236.0224049056773, 236.0224049056773, 236.0224049056773, 238.67960652624149, 245.01487555752158, 251.19041366543848, 257.2177260422781, 263.1069996471146, 268.8673054431369, 274.5067624106907]
-        mach_expected = [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]
+            mach,
+            alts,
+            eas_limit=300.0,
+            alt_units="m",
+            velocity_units="m/s",
+            density_units="kg/m^3",
+            eas_units="m/s",
+        )
+        vel_expected = [
+            224.97932124482696,
+            224.97932124482696,
+            224.97932124482696,
+            228.02811169475368,
+            231.9519431728144,
+            235.81049204862362,
+            239.6069122099433,
+            243.34411149101786,
+            247.02477773681403,
+            250.65140142136016,
+            254.22629536116307,
+            257.75161196708507,
+            261.2293584002385,
+            264.6614099349766,
+            268.04952178159016,
+            269.58519565506737,
+            269.58519565506737,
+            269.58519565506737,
+            269.0029125642663,
+            266.3865851329001,
+            263.74430516975593,
+            261.0752846980864,
+            258.37869504062513,
+            255.65366381416462,
+            252.8992716326313,
+            250.1145484833398,
+            247.2984697359336,
+            244.4499517374548,
+            241.5678469398473,
+            238.65093849776292,
+            236.0224049056773,
+            236.0224049056773,
+            236.0224049056773,
+            236.0224049056773,
+            236.0224049056773,
+            236.0224049056773,
+            236.0224049056773,
+            236.0224049056773,
+            238.67960652624149,
+            245.01487555752158,
+            251.19041366543848,
+            257.2177260422781,
+            263.1069996471146,
+            268.8673054431369,
+            274.5067624106907,
+        ]
+        nvel = len(vel_expected)
+        mach_expected = np.full(nvel, 0.8).tolist()
         assert np.allclose(vel, vel_expected), vel.tolist()
         assert np.allclose(mach, mach_expected), mach.tolist()
         del rho, mach, vel, alts
 
-        alt = 10000.
-        machs = np.linspace(0., 0.8)
-        #make_flfacts_mach_sweep_constant_alt
+        alt = 10000.0
+        machs = np.linspace(0.0, 0.8)
+        # make_flfacts_mach_sweep_constant_alt
         rho, mach, vel = make_flfacts_mach_sweep_constant_alt(
-            alt, machs, eas_limit=300.,
-            alt_units='m',
-            velocity_units='m/s',
-            density_units='kg/m^3',
-            eas_units='m/s')
+            alt,
+            machs,
+            eas_limit=300.0,
+            alt_units="m",
+            velocity_units="m/s",
+            density_units="kg/m^3",
+            eas_units="m/s",
+        )
         del rho, mach, vel, alt
 
-        alt = 0.
+        alt = 0.0
         machs = np.linspace(0.6, 0.8)
         with self.assertRaises(RuntimeError):
             rho, mach, vel = make_flfacts_mach_sweep_constant_alt(
-                alt, machs, eas_limit=100.,
-                alt_units='m',
-                velocity_units='m/s',
-                density_units='kg/m^3',
-                eas_units='m/s')
+                alt,
+                machs,
+                eas_limit=100.0,
+                alt_units="m",
+                velocity_units="m/s",
+                density_units="kg/m^3",
+                eas_units="m/s",
+            )
         del alt
 
-        alt = 10000.
-        eass = np.linspace(0., 300.)
+        alt = 10000.0
+        eass = np.linspace(0.0, 300.0)
         rho, mach, vel = make_flfacts_eas_sweep_constant_alt(
-            alt, eass, alt_units='m',
-            velocity_units='m/s', density_units='kg/m^3',
-            eas_units='m/s')
+            alt,
+            eass,
+            alt_units="m",
+            velocity_units="m/s",
+            density_units="kg/m^3",
+            eas_units="m/s",
+        )
         del rho, mach, vel, alt
 
     def test_table(self):
         dirname = os.path.dirname(__file__)
-        quantities = ['density', 'pressure', 'speed_of_sound', 'temperature',
-                      'velocity', 'dynamic_viscosity',
-                      'calibrated_airspeed', 'equivalent_airspeed']
-        x = create_atmosphere_table(
-            quantities, 0.8,
-            0., 50000.,
-            dalt=1000.)
-        csv_filename = os.path.join(dirname, 'atmosphere.csv')
-        quantity_list = ['alt'] + quantities
-        header = ','.join(quantity_list)
-        np.savetxt(csv_filename, x, delimiter=',', header=header)
+        quantities = [
+            "density",
+            "pressure",
+            "speed_of_sound",
+            "temperature",
+            "velocity",
+            "dynamic_viscosity",
+            "calibrated_airspeed",
+            "equivalent_airspeed",
+        ]
+        x = create_atmosphere_table(quantities, 0.8, 0.0, 50000.0, dalt=1000.0)
+        csv_filename = os.path.join(dirname, "atmosphere.csv")
+        quantity_list = ["alt"] + quantities
+        header = ",".join(quantity_list)
+        np.savetxt(csv_filename, x, delimiter=",", header=header)
 
 
 class TestAtmConsistency(unittest.TestCase):
     """cross-checks between the atmosphere functions (physics + units)"""
+
     # layer boundaries in ft used by atm_temperature/atm_pressure
-    boundaries_ft = [36151.725, 82344.678, 155347.756,
-                     175346.171, 249000.304, 299515.564]
-    alts_ft = [0., 5000., 10000., 36000., 40000., 60000., 100000.,
-               160000., 200000., 270000.]
+    boundaries_ft = [
+        36151.725,
+        82344.678,
+        155347.756,
+        175346.171,
+        249000.304,
+        299515.564,
+    ]
+    alts_ft = [
+        0.0,
+        5000.0,
+        10000.0,
+        36000.0,
+        40000.0,
+        60000.0,
+        100000.0,
+        160000.0,
+        200000.0,
+        270000.0,
+    ]
 
     def test_layer_continuity(self):
         """temperature and pressure don't jump at the layer boundaries"""
@@ -878,26 +1173,26 @@ class TestAtmConsistency(unittest.TestCase):
 
     def test_monotonic_pressure_density(self):
         """pressure and density drop as altitude goes up"""
-        alts = np.linspace(0., 350000., num=351)
+        alts = np.linspace(0.0, 350000.0, num=351)
         pressure = np.array([atm_pressure(alt) for alt in alts])
         density = np.array([atm_density(alt) for alt in alts])
-        assert np.all(np.diff(pressure) < 0.)
-        assert np.all(np.diff(density) < 0.)
+        assert np.all(np.diff(pressure) < 0.0)
+        assert np.all(np.diff(density) < 0.0)
 
     def test_temperature_units(self):
         """K = 5/9 R and m/kft/ft give the same temperature"""
         for alt_ft in self.alts_ft:
             t_r = atm_temperature(alt_ft)
-            t_k = atm_temperature(alt_ft, temperature_units='K')
-            t_m = atm_temperature(alt_ft * 0.3048, alt_units='m')
-            t_kft = atm_temperature(alt_ft / 1000., alt_units='kft')
-            assert np.allclose(t_k, t_r * 5. / 9.), (alt_ft, t_k, t_r)
+            t_k = atm_temperature(alt_ft, temperature_units="K")
+            t_m = atm_temperature(alt_ft * 0.3048, alt_units="m")
+            t_kft = atm_temperature(alt_ft / 1000.0, alt_units="kft")
+            assert np.allclose(t_k, t_r * 5.0 / 9.0), (alt_ft, t_k, t_r)
             assert np.allclose(t_m, t_r), (alt_ft, t_m, t_r)
             assert np.allclose(t_kft, t_r), (alt_ft, t_kft, t_r)
 
     def test_ideal_gas(self):
         """rho = p / (R T)"""
-        R = 1716.
+        R = 1716.0
         for alt_ft in self.alts_ft:
             rho = atm_density(alt_ft)
             p = atm_pressure(alt_ft)
@@ -905,50 +1200,50 @@ class TestAtmConsistency(unittest.TestCase):
             assert np.allclose(rho, p / (R * T)), alt_ft
 
         # the gas constant is an input
-        rho_a = atm_density(10000., R=1716.)
-        rho_b = atm_density(10000., R=2 * 1716.)
+        rho_a = atm_density(10000.0, R=1716.0)
+        rho_b = atm_density(10000.0, R=2 * 1716.0)
         assert np.allclose(rho_a, 2 * rho_b)
 
     def test_density_units(self):
         """same altitude in different units gives the same density"""
-        rho_ft = atm_density(10000., alt_units='ft', density_units='kg/m^3')
-        rho_m = atm_density(3048., alt_units='m', density_units='kg/m^3')
-        rho_kft = atm_density(10., alt_units='kft', density_units='kg/m^3')
+        rho_ft = atm_density(10000.0, alt_units="ft", density_units="kg/m^3")
+        rho_m = atm_density(3048.0, alt_units="m", density_units="kg/m^3")
+        rho_kft = atm_density(10.0, alt_units="kft", density_units="kg/m^3")
         assert np.allclose(rho_ft, rho_m)
         assert np.allclose(rho_ft, rho_kft)
-        rho_slug = atm_density(10000.)
+        rho_slug = atm_density(10000.0)
         assert np.allclose(rho_ft, rho_slug * 515.379, rtol=1e-5)
 
     def test_speed_of_sound(self):
         """a = sqrt(gamma R T)"""
-        a0 = atm_speed_of_sound(0.)
+        a0 = atm_speed_of_sound(0.0)
         self.assertAlmostEqual(a0, 1115.5461442719434, delta=1e-8)
-        a0_ms = atm_speed_of_sound(0., velocity_units='m/s')
+        a0_ms = atm_speed_of_sound(0.0, velocity_units="m/s")
         assert np.allclose(a0_ms, a0 * 0.3048, rtol=1e-5)
-        a0_knots = atm_speed_of_sound(0., velocity_units='knots')
+        a0_knots = atm_speed_of_sound(0.0, velocity_units="knots")
         assert np.allclose(a0_knots, a0 / 1.68781, rtol=1e-5)
 
         # a scales with sqrt(gamma)
-        a_gamma1 = atm_speed_of_sound(0., gamma=1.0)
+        a_gamma1 = atm_speed_of_sound(0.0, gamma=1.0)
         assert np.allclose(a_gamma1, a0 / np.sqrt(1.4))
 
         # a is constant in the isothermal layer (36-82 kft)
-        a_40 = atm_speed_of_sound(40., alt_units='kft')
-        a_60 = atm_speed_of_sound(60., alt_units='kft')
+        a_40 = atm_speed_of_sound(40.0, alt_units="kft")
+        a_60 = atm_speed_of_sound(60.0, alt_units="kft")
         self.assertEqual(a_40, a_60)
 
         for alt_ft in self.alts_ft:
             a = atm_speed_of_sound(alt_ft)
             T = atm_temperature(alt_ft)
-            assert np.allclose(a, (1.4 * 1716. * T) ** 0.5), alt_ft
-            a_m = atm_speed_of_sound(alt_ft * 0.3048, alt_units='m')
+            assert np.allclose(a, (1.4 * 1716.0 * T) ** 0.5), alt_ft
+            a_m = atm_speed_of_sound(alt_ft * 0.3048, alt_units="m")
             assert np.allclose(a_m, a), alt_ft
 
     def test_velocity_mach_roundtrip(self):
         """atm_mach(atm_velocity(M)) = M"""
         for alt_ft in self.alts_ft:
             for mach in [0.3, 0.8, 2.0]:
-                for vel_units in ['ft/s', 'm/s', 'in/s', 'knots']:
+                for vel_units in ["ft/s", "m/s", "in/s", "knots"]:
                     vel = atm_velocity(alt_ft, mach, velocity_units=vel_units)
                     mach2 = atm_mach(alt_ft, vel, velocity_units=vel_units)
                     assert np.allclose(mach2, mach), (alt_ft, mach, vel_units, mach2)
@@ -959,23 +1254,23 @@ class TestAtmConsistency(unittest.TestCase):
             for mach in [0.5, 0.8, 1.5]:
                 q = atm_dynamic_pressure(alt_ft, mach)
                 p = atm_pressure(alt_ft)
-                assert np.allclose(q, 0.7 * p * mach ** 2), (alt_ft, mach)
+                assert np.allclose(q, 0.7 * p * mach**2), (alt_ft, mach)
 
                 rho = atm_density(alt_ft)
                 vel = atm_velocity(alt_ft, mach)
-                assert np.allclose(q, 0.5 * rho * vel ** 2), (alt_ft, mach)
+                assert np.allclose(q, 0.5 * rho * vel**2), (alt_ft, mach)
 
-        q_psf = atm_dynamic_pressure(10000., 0.8)
-        q_pa = atm_dynamic_pressure(10000., 0.8, pressure_units='Pa')
-        q_psi = atm_dynamic_pressure(10000., 0.8, pressure_units='psi')
-        q_m = atm_dynamic_pressure(3048., 0.8, alt_units='m')
+        q_psf = atm_dynamic_pressure(10000.0, 0.8)
+        q_pa = atm_dynamic_pressure(10000.0, 0.8, pressure_units="Pa")
+        q_psi = atm_dynamic_pressure(10000.0, 0.8, pressure_units="psi")
+        q_m = atm_dynamic_pressure(3048.0, 0.8, alt_units="m")
         assert np.allclose(q_pa, q_psf * 47.880208)
-        assert np.allclose(q_psi, q_psf / 144.)
+        assert np.allclose(q_psi, q_psf / 144.0)
         assert np.allclose(q_m, q_psf)
 
     def test_equivalent_airspeed_definition(self):
         """EAS = TAS * sqrt(rho / rho0)"""
-        rho0 = atm_density(0.)
+        rho0 = atm_density(0.0)
         for alt_ft in self.alts_ft:
             for mach in [0.3, 0.8, 2.0]:
                 eas = atm_equivalent_airspeed(alt_ft, mach)
@@ -988,20 +1283,22 @@ class TestAtmConsistency(unittest.TestCase):
                 assert np.allclose(eas, mach * eas1)
 
         # EAS = TAS at sea level
-        assert np.allclose(atm_equivalent_airspeed(0., 0.5), atm_velocity(0., 0.5))
+        assert np.allclose(atm_equivalent_airspeed(0.0, 0.5), atm_velocity(0.0, 0.5))
 
-        eas_ft = atm_equivalent_airspeed(10000., 0.8, alt_units='ft', eas_units='knots')
-        eas_m = atm_equivalent_airspeed(3048., 0.8, alt_units='m', eas_units='knots')
+        eas_ft = atm_equivalent_airspeed(
+            10000.0, 0.8, alt_units="ft", eas_units="knots"
+        )
+        eas_m = atm_equivalent_airspeed(3048.0, 0.8, alt_units="m", eas_units="knots")
         assert np.allclose(eas_ft, eas_m)
 
     def test_calibrated_airspeed(self):
         """CAS = TAS at sea level; CAS > EAS at altitude (compressibility)"""
         for mach in [0.2, 0.5, 0.8]:
-            cas0 = atm_calibrated_airspeed(0., mach)
-            tas0 = atm_velocity(0., mach)
+            cas0 = atm_calibrated_airspeed(0.0, mach)
+            tas0 = atm_velocity(0.0, mach)
             assert np.allclose(cas0, tas0), (mach, cas0, tas0)
 
-        for alt_ft in [10000., 30000., 50000.]:
+        for alt_ft in [10000.0, 30000.0, 50000.0]:
             for mach in [0.5, 0.8]:
                 cas = atm_calibrated_airspeed(alt_ft, mach)
                 eas = atm_equivalent_airspeed(alt_ft, mach)
@@ -1009,50 +1306,56 @@ class TestAtmConsistency(unittest.TestCase):
                 assert eas < cas < tas, (alt_ft, mach, eas, cas, tas)
 
         # units
-        cas_fts = atm_calibrated_airspeed(30000., 0.8, cas_units='ft/s')
-        cas_knots = atm_calibrated_airspeed(30000., 0.8, cas_units='knots')
-        cas_m = atm_calibrated_airspeed(9144., 0.8, alt_units='m', cas_units='knots')
+        cas_fts = atm_calibrated_airspeed(30000.0, 0.8, cas_units="ft/s")
+        cas_knots = atm_calibrated_airspeed(30000.0, 0.8, cas_units="knots")
+        cas_m = atm_calibrated_airspeed(9144.0, 0.8, alt_units="m", cas_units="knots")
         assert np.allclose(cas_fts, cas_knots * 1.68781, rtol=1e-5)
         assert np.allclose(cas_knots, cas_m)
 
     def test_get_alt_for_cas_mach(self):
         """round trip: alt -> CAS -> alt"""
         mach = 0.7
-        for alt_ft in [0., 5000., 20000., 40000.]:
+        for alt_ft in [0.0, 5000.0, 20000.0, 40000.0]:
             cas = atm_calibrated_airspeed(alt_ft, mach)
             alt = get_alt_for_cas_mach(cas, mach, tol=1e-6)
             assert np.allclose(alt, alt_ft, atol=0.01), (alt_ft, alt)
 
-        cas = atm_calibrated_airspeed(20., mach, alt_units='kft', cas_units='knots')
-        alt = get_alt_for_cas_mach(cas, mach, cas_units='knots', alt_units='kft', tol=1e-6)
-        assert np.allclose(alt, 20., atol=1e-5), alt
+        cas = atm_calibrated_airspeed(20.0, mach, alt_units="kft", cas_units="knots")
+        alt = get_alt_for_cas_mach(
+            cas, mach, cas_units="knots", alt_units="kft", tol=1e-6
+        )
+        assert np.allclose(alt, 20.0, atol=1e-5), alt
 
     def test_get_mach_for_alt_eas_si(self):
         """get_mach_for_alt_eas round trip in SI units"""
-        for alt_m in [0., 3000., 10000.]:
+        for alt_m in [0.0, 3000.0, 10000.0]:
             for mach in [0.3, 0.6, 0.9]:
-                eas = atm_equivalent_airspeed(alt_m, mach, alt_units='m', eas_units='m/s')
-                mach2 = get_mach_for_alt_eas(alt_m, eas, eas_units='m/s', alt_units='m')
+                eas = atm_equivalent_airspeed(
+                    alt_m, mach, alt_units="m", eas_units="m/s"
+                )
+                mach2 = get_mach_for_alt_eas(alt_m, eas, eas_units="m/s", alt_units="m")
                 assert np.allclose(mach2, mach), (alt_m, mach, mach2)
 
     def test_get_alt_for_pressure_si(self):
         """get_alt_for_pressure round trip in m/kPa"""
-        for alt_m in [0., 1000., 11000., 20000.]:
-            p = atm_pressure(alt_m, alt_units='m', pressure_units='kPa')
-            alt = get_alt_for_pressure(p, pressure_units='kPa', alt_units='m', tol=1e-4)
+        for alt_m in [0.0, 1000.0, 11000.0, 20000.0]:
+            p = atm_pressure(alt_m, alt_units="m", pressure_units="kPa")
+            alt = get_alt_for_pressure(p, pressure_units="kPa", alt_units="m", tol=1e-4)
             assert np.allclose(alt, alt_m, atol=0.01), (alt_m, alt)
 
     def test_get_alt_for_mach_eas_units(self):
         """get_alt_for_mach_eas round trip in m & m/s"""
         mach = 0.8
-        for alt_m in [1000., 5000., 10000.]:
-            eas = atm_equivalent_airspeed(alt_m, mach, alt_units='m', eas_units='m/s')
-            alt = get_alt_for_mach_eas(mach, eas, eas_units='m/s', alt_units='m', tol=1e-6)
+        for alt_m in [1000.0, 5000.0, 10000.0]:
+            eas = atm_equivalent_airspeed(alt_m, mach, alt_units="m", eas_units="m/s")
+            alt = get_alt_for_mach_eas(
+                mach, eas, eas_units="m/s", alt_units="m", tol=1e-6
+            )
             assert np.allclose(alt, alt_m, atol=0.01), (alt_m, alt)
 
     def test_get_alt_for_density_no_convergence(self):
         """get_alt_for_density raises if it runs out of iterations"""
-        rho = atm_density(30000.)
+        rho = atm_density(30000.0)
         with self.assertRaises(RuntimeError):
             get_alt_for_density(rho, nmax=1, tol=1e-6)
 
@@ -1066,38 +1369,40 @@ class TestAtmConsistency(unittest.TestCase):
 
     def test_kinematic_viscosity_units(self):
         """the m^2/s conversion doesn't depend on alt_units"""
-        nu_ft2 = atm_kinematic_viscosity_nu(5000., alt_units='ft', visc_units='ft^2/s')
-        for alt, alt_units in [(5000., 'ft'), (5., 'kft'), (1524., 'm')]:
-            nu_m2 = atm_kinematic_viscosity_nu(alt, alt_units=alt_units, visc_units='m^2/s')
-            assert np.allclose(nu_m2, nu_ft2 * 0.3048 ** 2), (alt_units, nu_m2)
+        nu_ft2 = atm_kinematic_viscosity_nu(5000.0, alt_units="ft", visc_units="ft^2/s")
+        for alt, alt_units in [(5000.0, "ft"), (5.0, "kft"), (1524.0, "m")]:
+            nu_m2 = atm_kinematic_viscosity_nu(
+                alt, alt_units=alt_units, visc_units="m^2/s"
+            )
+            assert np.allclose(nu_m2, nu_ft2 * 0.3048**2), (alt_units, nu_m2)
 
     def test_dynamic_viscosity_units(self):
         """the 4 viscosity unit names map to 2 factors"""
-        mu_lbf = atm_dynamic_viscosity_mu(10000., visc_units='(lbf*s)/ft^2')
-        mu_psf = atm_dynamic_viscosity_mu(10000., visc_units='psf*s')
-        mu_ns = atm_dynamic_viscosity_mu(10000., visc_units='(N*s)/m^2')
-        mu_pa = atm_dynamic_viscosity_mu(10000., visc_units='Pa*s')
+        mu_lbf = atm_dynamic_viscosity_mu(10000.0, visc_units="(lbf*s)/ft^2")
+        mu_psf = atm_dynamic_viscosity_mu(10000.0, visc_units="psf*s")
+        mu_ns = atm_dynamic_viscosity_mu(10000.0, visc_units="(N*s)/m^2")
+        mu_pa = atm_dynamic_viscosity_mu(10000.0, visc_units="Pa*s")
         self.assertEqual(mu_lbf, mu_psf)
         self.assertEqual(mu_ns, mu_pa)
         assert np.allclose(mu_ns, mu_lbf * 47.88026)
 
     def test_sutherland_continuity(self):
         """the linear (T<225 R) and Sutherland branches meet at 225 R"""
-        mu_lo = sutherland_viscoscity(225. - 1e-9)
-        mu_hi = sutherland_viscoscity(225.)
+        mu_lo = sutherland_viscoscity(225.0 - 1e-9)
+        mu_hi = sutherland_viscoscity(225.0)
         assert np.allclose(mu_lo, mu_hi, rtol=1e-6), (mu_lo, mu_hi)
 
     def test_sutherland_high_temperature_warning(self):
         """T > 5400 R writes a warning to stderr"""
         stderr = io.StringIO()
         with redirect_stderr(stderr):
-            sutherland_viscoscity(5000.)
-        self.assertEqual(stderr.getvalue(), '')
+            sutherland_viscoscity(5000.0)
+        self.assertEqual(stderr.getvalue(), "")
 
         stderr = io.StringIO()
         with redirect_stderr(stderr):
-            sutherland_viscoscity(6000.)
-        assert 'Temperature is too large' in stderr.getvalue(), stderr.getvalue()
+            sutherland_viscoscity(6000.0)
+        assert "Temperature is too large" in stderr.getvalue(), stderr.getvalue()
 
     def test_reynolds_definition(self):
         """Re/L = rho V / mu"""
@@ -1109,84 +1414,372 @@ class TestAtmConsistency(unittest.TestCase):
                 mu = atm_dynamic_viscosity_mu(alt_ft)
                 assert np.allclose(rel, rho * vel / mu), (alt_ft, mach)
 
-        rel_ft = atm_unit_reynolds_number(10000., 0.8)
-        rel_m = atm_unit_reynolds_number(3048., 0.8, alt_units='m')
+        rel_ft = atm_unit_reynolds_number(10000.0, 0.8)
+        rel_m = atm_unit_reynolds_number(3048.0, 0.8, alt_units="m")
         assert np.allclose(rel_ft, rel_m)
 
     def test_reynolds_factor_bad_units(self):
         """invalid reynolds units"""
         with self.assertRaises(RuntimeError):
-            _reynolds_factor('1/mm', '1/ft')
+            _reynolds_factor("1/mm", "1/ft")
         with self.assertRaises(RuntimeError):
-            _reynolds_factor('1/ft', '1/mm')
+            _reynolds_factor("1/ft", "1/mm")
 
     def test_eas_from_alts_machs(self):
         """vectorized EAS matches the scalar function"""
-        alts = [0., 10000., 30000.]
+        alts = [0.0, 10000.0, 30000.0]
         machs = [0.3, 0.6, 0.9]
-        eas = eas_from_alts_machs(alts, machs, alt_units='ft', eas_units='knots')
+        eas = eas_from_alts_machs(alts, machs, alt_units="ft", eas_units="knots")
         self.assertEqual(eas.shape, (3,))
         for i, (alt, mach) in enumerate(zip(alts, machs)):
-            expected = atm_equivalent_airspeed(alt, mach, alt_units='ft', eas_units='knots')
+            expected = atm_equivalent_airspeed(
+                alt, mach, alt_units="ft", eas_units="knots"
+            )
             self.assertEqual(eas[i], expected)
 
     def test_constant_mach_line(self):
         """constant Mach line: EAS falls with altitude"""
         machs, alts, eas = constant_mach_line_alt1_alt2(
-            0.8, 0., 10000., num=3, alt_units='ft', eas_units='knots')
+            0.8, 0.0, 10000.0, num=3, alt_units="ft", eas_units="knots"
+        )
         assert np.allclose(machs, [0.8, 0.8, 0.8])
-        assert np.allclose(alts, [0., 5000., 10000.])
-        assert np.all(np.diff(eas) < 0.)
-        assert np.allclose(eas[0], atm_velocity(0., 0.8, velocity_units='knots'))
+        assert np.allclose(alts, [0.0, 5000.0, 10000.0])
+        assert np.all(np.diff(eas) < 0.0)
+        assert np.allclose(eas[0], atm_velocity(0.0, 0.8, velocity_units="knots"))
 
     def test_constant_alt_line(self):
         """constant altitude line: EAS is linear in Mach"""
         machs, alts, eas = constant_alt_line_alt_mach(
-            10000., 0.2, 0.8, num=4, alt_units='ft', eas_units='knots')
+            10000.0, 0.2, 0.8, num=4, alt_units="ft", eas_units="knots"
+        )
         assert np.allclose(machs, [0.2, 0.4, 0.6, 0.8])
-        assert np.allclose(alts, 10000.)
+        assert np.allclose(alts, 10000.0)
         assert np.allclose(eas / machs, eas[0] / machs[0])
 
     def test_create_atmosphere_table_values(self):
         """table columns match the scalar functions"""
         mach = 0.8
-        quantities = ['density', 'pressure', 'temperature', 'speed_of_sound',
-                      'velocity', 'dynamic_viscosity',
-                      'calibrated_airspeed', 'equivalent_airspeed']
+        quantities = [
+            "density",
+            "pressure",
+            "temperature",
+            "speed_of_sound",
+            "velocity",
+            "dynamic_viscosity",
+            "calibrated_airspeed",
+            "equivalent_airspeed",
+        ]
         out = create_atmosphere_table(
-            quantities, mach, 0., 9000., nalt=4,
-            alt_units='m', density_units='kg/m^3', pressure_units='Pa',
-            temperature_units='K', velocity_units='m/s',
-            dynamic_viscosity_units='Pa*s')
+            quantities,
+            mach,
+            0.0,
+            9000.0,
+            nalt=4,
+            alt_units="m",
+            density_units="kg/m^3",
+            pressure_units="Pa",
+            temperature_units="K",
+            velocity_units="m/s",
+            dynamic_viscosity_units="Pa*s",
+        )
         self.assertEqual(out.shape, (4, 1 + len(quantities)))
-        assert np.allclose(out[:, 0], [0., 3000., 6000., 9000.])
+        assert np.allclose(out[:, 0], [0.0, 3000.0, 6000.0, 9000.0])
 
         for alt, row in zip(out[:, 0], out):
             expected = [
-                atm_density(alt, alt_units='m', density_units='kg/m^3'),
-                atm_pressure(alt, alt_units='m', pressure_units='Pa'),
-                atm_temperature(alt, alt_units='m', temperature_units='K'),
-                atm_speed_of_sound(alt, alt_units='m', velocity_units='m/s'),
-                atm_velocity(alt, mach, alt_units='m', velocity_units='m/s'),
-                atm_dynamic_viscosity_mu(alt, alt_units='m', visc_units='Pa*s'),
-                atm_calibrated_airspeed(alt, mach, alt_units='m', cas_units='m/s'),
-                atm_equivalent_airspeed(alt, mach, alt_units='m', eas_units='m/s'),
+                atm_density(alt, alt_units="m", density_units="kg/m^3"),
+                atm_pressure(alt, alt_units="m", pressure_units="Pa"),
+                atm_temperature(alt, alt_units="m", temperature_units="K"),
+                atm_speed_of_sound(alt, alt_units="m", velocity_units="m/s"),
+                atm_velocity(alt, mach, alt_units="m", velocity_units="m/s"),
+                atm_dynamic_viscosity_mu(alt, alt_units="m", visc_units="Pa*s"),
+                atm_calibrated_airspeed(alt, mach, alt_units="m", cas_units="m/s"),
+                atm_equivalent_airspeed(alt, mach, alt_units="m", eas_units="m/s"),
             ]
             assert np.allclose(row[1:], expected), (alt, row[1:], expected)
 
     def test_create_atmosphere_table_dalt(self):
         """dalt includes alt_max"""
-        out = create_atmosphere_table(['pressure'], 0.5, 0., 10000., dalt=2500.)
-        assert np.allclose(out[:, 0], [0., 2500., 5000., 7500., 10000.])
+        out = create_atmosphere_table(["pressure"], 0.5, 0.0, 10000.0, dalt=2500.0)
+        assert np.allclose(out[:, 0], [0.0, 2500.0, 5000.0, 7500.0, 10000.0])
 
     def test_create_atmosphere_table_errors(self):
         """bad quantity; nalt and dalt both set or both unset"""
         with self.assertRaises(AssertionError):
-            create_atmosphere_table(['bad'], 0.5, 0., 1000., nalt=2)
+            create_atmosphere_table(["bad"], 0.5, 0.0, 1000.0, nalt=2)
         with self.assertRaises(AssertionError):
-            create_atmosphere_table(['pressure'], 0.5, 0., 1000., nalt=2, dalt=100.)
+            create_atmosphere_table(["pressure"], 0.5, 0.0, 1000.0, nalt=2, dalt=100.0)
         with self.assertRaises(AssertionError):
-            create_atmosphere_table(['pressure'], 0.5, 0., 1000.)
+            create_atmosphere_table(["pressure"], 0.5, 0.0, 1000.0)
+
+
+class TestAtmArray(unittest.TestCase):
+    """tests that atmosphere functions accept and return numpy arrays"""
+
+    alts_ft = np.array(
+        [
+            0.0,
+            5000.0,
+            10000.0,
+            36000.0,
+            60000.0,
+            100000.0,
+            160000.0,
+            200000.0,
+            270000.0,
+            350000.0,
+        ]
+    )
+    machs_matched = np.array([0.3, 0.5, 0.8, 1.0, 1.5, 2.0, 0.6, 0.9, 1.2, 0.4])
+
+    def _check_vs_scalar(self, func, alts, *extra_args, **kwargs):
+        """array result matches element-wise scalar calls"""
+        arr = func(alts, *extra_args, **kwargs)
+        expected = np.array([func(float(a), *extra_args, **kwargs) for a in alts])
+        assert np.allclose(arr, expected), (arr, expected)
+        self.assertEqual(arr.shape, alts.shape)
+        return arr
+
+    def test_temperature_array(self):
+        """atm_temperature with array alt spanning all layers"""
+        self._check_vs_scalar(atm_temperature, self.alts_ft)
+        self._check_vs_scalar(atm_temperature, self.alts_ft, temperature_units="K")
+
+    def test_pressure_array(self):
+        """atm_pressure with array alt spanning all layers"""
+        self._check_vs_scalar(atm_pressure, self.alts_ft)
+        self._check_vs_scalar(atm_pressure, self.alts_ft, pressure_units="Pa")
+
+    def test_density_array(self):
+        """atm_density with array alt"""
+        self._check_vs_scalar(atm_density, self.alts_ft)
+        self._check_vs_scalar(atm_density, self.alts_ft, density_units="kg/m^3")
+
+    def test_speed_of_sound_array(self):
+        """atm_speed_of_sound with array alt"""
+        self._check_vs_scalar(atm_speed_of_sound, self.alts_ft)
+        self._check_vs_scalar(atm_speed_of_sound, self.alts_ft, velocity_units="m/s")
+
+    def test_velocity_array(self):
+        """atm_velocity with array alt and array mach"""
+        vel = atm_velocity(self.alts_ft, self.machs_matched)
+        expected = np.array(
+            [
+                atm_velocity(float(a), float(m))
+                for a, m in zip(self.alts_ft, self.machs_matched)
+            ]
+        )
+        assert np.allclose(vel, expected)
+        self.assertEqual(vel.shape, self.alts_ft.shape)
+
+    def test_velocity_broadcast(self):
+        """atm_velocity with array alt and scalar mach"""
+        vel = atm_velocity(self.alts_ft, 0.8)
+        expected = np.array([atm_velocity(float(a), 0.8) for a in self.alts_ft])
+        assert np.allclose(vel, expected)
+        self.assertEqual(vel.shape, self.alts_ft.shape)
+
+    def test_mach_array(self):
+        """atm_mach round-trips with arrays"""
+        vels = atm_velocity(self.alts_ft, self.machs_matched)
+        mach = atm_mach(self.alts_ft, vels)
+        assert np.allclose(mach, self.machs_matched)
+
+    def test_dynamic_pressure_array(self):
+        """atm_dynamic_pressure with arrays"""
+        q = atm_dynamic_pressure(self.alts_ft, self.machs_matched)
+        expected = np.array(
+            [
+                atm_dynamic_pressure(float(a), float(m))
+                for a, m in zip(self.alts_ft, self.machs_matched)
+            ]
+        )
+        assert np.allclose(q, expected)
+        self.assertEqual(q.shape, self.alts_ft.shape)
+
+    def test_equivalent_airspeed_array(self):
+        """atm_equivalent_airspeed with arrays"""
+        eas = atm_equivalent_airspeed(self.alts_ft, self.machs_matched)
+        expected = np.array(
+            [
+                atm_equivalent_airspeed(float(a), float(m))
+                for a, m in zip(self.alts_ft, self.machs_matched)
+            ]
+        )
+        assert np.allclose(eas, expected)
+        self.assertEqual(eas.shape, self.alts_ft.shape)
+
+    def test_calibrated_airspeed_array(self):
+        """atm_calibrated_airspeed with arrays"""
+        cas = atm_calibrated_airspeed(self.alts_ft, self.machs_matched)
+        expected = np.array(
+            [
+                atm_calibrated_airspeed(float(a), float(m))
+                for a, m in zip(self.alts_ft, self.machs_matched)
+            ]
+        )
+        assert np.allclose(cas, expected)
+        self.assertEqual(cas.shape, self.alts_ft.shape)
+
+    def test_dynamic_viscosity_array(self):
+        """atm_dynamic_viscosity_mu with array alt"""
+        self._check_vs_scalar(atm_dynamic_viscosity_mu, self.alts_ft)
+        self._check_vs_scalar(atm_dynamic_viscosity_mu, self.alts_ft, visc_units="Pa*s")
+
+    def test_kinematic_viscosity_array(self):
+        """atm_kinematic_viscosity_nu with array alt"""
+        self._check_vs_scalar(atm_kinematic_viscosity_nu, self.alts_ft)
+        self._check_vs_scalar(
+            atm_kinematic_viscosity_nu, self.alts_ft, visc_units="m^2/s"
+        )
+
+    def test_unit_reynolds_array(self):
+        """atm_unit_reynolds_number with arrays"""
+        re = atm_unit_reynolds_number(self.alts_ft, self.machs_matched)
+        expected = np.array(
+            [
+                atm_unit_reynolds_number(float(a), float(m))
+                for a, m in zip(self.alts_ft, self.machs_matched)
+            ]
+        )
+        assert np.allclose(re, expected)
+        self.assertEqual(re.shape, self.alts_ft.shape)
+
+    def test_sutherland_array(self):
+        """sutherland_viscoscity with array temperature"""
+        temps = np.array([0.0, 100.0, 224.0, 225.0, 226.0, 500.0, 1000.0])
+        mu = sutherland_viscoscity(temps)
+        expected = np.array([sutherland_viscoscity(float(t)) for t in temps])
+        assert np.allclose(mu, expected)
+        self.assertEqual(mu.shape, temps.shape)
+
+    def test_empty_array(self):
+        """empty array in gives empty array out"""
+        empty = np.array([])
+        self.assertEqual(atm_temperature(empty).shape, (0,))
+        self.assertEqual(atm_pressure(empty).shape, (0,))
+        self.assertEqual(atm_density(empty).shape, (0,))
+        self.assertEqual(sutherland_viscoscity(empty).shape, (0,))
+
+    def test_single_element_array(self):
+        """1-element array in gives 1-element array out"""
+        T = atm_temperature(np.array([10000.0]))
+        assert np.allclose(T, [atm_temperature(10000.0)])
+        self.assertEqual(T.shape, (1,))
+
+    def test_units_with_array(self):
+        """unit conversions work with arrays"""
+        alts_m = self.alts_ft * 0.3048
+        T_ft = atm_temperature(self.alts_ft, alt_units="ft", temperature_units="K")
+        T_m = atm_temperature(alts_m, alt_units="m", temperature_units="K")
+        assert np.allclose(T_ft, T_m)
+
+        p_ft = atm_pressure(self.alts_ft, alt_units="ft", pressure_units="Pa")
+        p_m = atm_pressure(alts_m, alt_units="m", pressure_units="Pa")
+        assert np.allclose(p_ft, p_m)
+
+    def test_monotonic_array(self):
+        """pressure and density decrease monotonically (vectorized)"""
+        alts = np.linspace(0.0, 350000.0, num=351)
+        p = atm_pressure(alts)
+        rho = atm_density(alts)
+        assert np.all(np.diff(p) < 0.0)
+        assert np.all(np.diff(rho) < 0.0)
+
+    def test_ideal_gas_array(self):
+        """rho = p / (R T) holds element-wise on arrays"""
+        R = 1716.0
+        p = atm_pressure(self.alts_ft)
+        T = atm_temperature(self.alts_ft)
+        rho = atm_density(self.alts_ft)
+        assert np.allclose(rho, p / (R * T))
+
+    def test_dynamic_pressure_definition_array(self):
+        """q = gamma/2 * p * M^2 = 0.5 * rho * V^2 for arrays"""
+        p = atm_pressure(self.alts_ft)
+        q = atm_dynamic_pressure(self.alts_ft, self.machs_matched)
+        assert np.allclose(q, 0.7 * p * self.machs_matched**2)
+
+        rho = atm_density(self.alts_ft)
+        vel = atm_velocity(self.alts_ft, self.machs_matched)
+        assert np.allclose(q, 0.5 * rho * vel**2)
+
+    def test_eas_definition_array(self):
+        """EAS = TAS * sqrt(rho/rho0) for arrays"""
+        rho0 = atm_density(0.0)
+        rho = atm_density(self.alts_ft)
+        tas = atm_velocity(self.alts_ft, self.machs_matched)
+        eas = atm_equivalent_airspeed(self.alts_ft, self.machs_matched)
+        assert np.allclose(eas, tas * np.sqrt(rho / rho0))
+
+    def test_reynolds_definition_array(self):
+        """Re/L = rho * V / mu for arrays"""
+        rel = atm_unit_reynolds_number(self.alts_ft, self.machs_matched)
+        rho = atm_density(self.alts_ft)
+        vel = atm_velocity(self.alts_ft, self.machs_matched)
+        mu = atm_dynamic_viscosity_mu(self.alts_ft)
+        assert np.allclose(rel, rho * vel / mu)
+
+
+class TestAtmEdgeCases(unittest.TestCase):
+    """Edge-case tests for guarded branches in vectorized atmosphere functions.
+
+    Exercises extreme negative/positive altitudes and negative temperatures
+    to verify np.clip/np.maximum guards prevent RuntimeWarnings and NaN.
+    """
+
+    def test_extreme_negative_altitude_pressure(self):
+        """atm_pressure with very negative altitudes (guard on log args)."""
+        alts = np.array([-200000.0, -100000.0, -50000.0, 0.0])
+        p = atm_pressure(alts)
+        assert p.shape == (4,)
+        assert np.all(np.isfinite(p))
+        assert np.all(p > 0)
+
+    def test_extreme_high_altitude_pressure(self):
+        """atm_pressure above 300k ft (extrapolation region)."""
+        alts = np.array([300000.0, 400000.0, 500000.0, 1000000.0])
+        p = atm_pressure(alts)
+        assert p.shape == (4,)
+        assert np.all(np.isfinite(p))
+        assert np.all(p > 0)
+
+    def test_extreme_negative_altitude_temperature(self):
+        """atm_temperature with very negative altitudes."""
+        alts = np.array([-200000.0, -100000.0, 0.0])
+        T = atm_temperature(alts)
+        assert T.shape == (3,)
+        assert np.all(np.isfinite(T))
+
+    def test_sutherland_negative_temperature(self):
+        """sutherland_viscoscity raises on negative T (unphysical)."""
+        with self.assertRaises(ValueError):
+            sutherland_viscoscity(-100.0)
+        with self.assertRaises(ValueError):
+            sutherland_viscoscity(np.array([-100.0, 300.0]))
+
+    def test_sutherland_zero_temperature(self):
+        """sutherland_viscoscity at T=0 (absolute zero) returns 0."""
+        mu = sutherland_viscoscity(0.0)
+        self.assertEqual(mu, 0.0)
+        self.assertIsInstance(mu, float)
+
+    def test_mixed_altitude_range(self):
+        """Full pipeline with altitudes spanning all layers including extremes."""
+        alts = np.array([-50000.0, 0.0, 36000.0, 82000.0, 155000.0, 249000.0, 350000.0])
+        machs = np.full_like(alts, 0.8)
+        T = atm_temperature(alts)
+        p = atm_pressure(alts)
+        rho = atm_density(alts)
+        v = atm_velocity(alts, machs)
+        q = atm_dynamic_pressure(alts, machs)
+        assert np.all(np.isfinite(T))
+        assert np.all(np.isfinite(p))
+        assert np.all(np.isfinite(rho))
+        assert np.all(np.isfinite(v))
+        assert np.all(np.isfinite(q))
+        assert np.all(p > 0)
+        assert np.all(rho > 0)
 
 
 if __name__ == "__main__":  # pragma: no cover
