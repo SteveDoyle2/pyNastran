@@ -4,8 +4,8 @@ TODO: change from dt_ms to FPS
 """
 from __future__ import annotations
 from typing import Optional, Any, TYPE_CHECKING
-from PyQt5.QtWidgets import QPushButton, QVBoxLayout
 from qtpy.QtWidgets import (
+    QPushButton, QVBoxLayout,
     QLabel, QGridLayout,
     QCheckBox, QComboBox,
     QSpinBox, QDoubleSpinBox,
