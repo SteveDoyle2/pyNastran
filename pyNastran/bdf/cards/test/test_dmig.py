@@ -430,6 +430,76 @@ DMI         W2GJ       1       1 1.54685.1353939.1312423.0986108.0621382
         finally:
             os.remove(fname)
 
+    def test_dmi_long_free_field_row_keeps_all_values(self):
+        """An 11-token free-field DMI row must keep rows 6-7.
+
+        The [:9] slice previously dropped the overflow tokens silently;
+        test_dmi_real_with_zeros only passed because its overflow values
+        were zeros.
+        """
+        from io import StringIO
+
+        bdf_str = (
+            "CEND\nBEGIN BULK\n"
+            "DMI,AAA,0,2,1,0,,7,1\n"
+            "DMI,AAA,1,1,1.0,1.0,1.0,1.0,1.0,2.0,3.0\n"
+            "ENDDATA\n"
+        )
+        model = BDF(debug=False)
+        model.read_bdf(StringIO(bdf_str), punch=False)
+        mat = model.dmi["AAA"].get_matrix(is_sparse=False)[0]
+        assert mat.shape == (7, 1), mat.shape
+        expected = np.array([1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 3.0])
+        assert np.array_equal(mat.flatten(), expected), (
+            f"mat={mat.flatten()}\nexpected={expected}"
+        )
+
+    def test_dmig_long_free_field_row_keeps_all_entries(self):
+        """A 12-token free-field DMIG row must keep both (Gi, Ci, value) triples.
+
+        The [:9] slice previously cut DMIG rows to 9 fields, silently dropping
+        every entry after the first.
+        """
+        from io import StringIO
+
+        bdf_str = (
+            "CEND\nBEGIN BULK\n"
+            "DMIG,CC,0,2,1,0,,5,1\n"
+            "DMIG,CC,1,1,,2,3,4.0,,5,6,7.0\n"
+            "ENDDATA\n"
+        )
+        model = BDF(debug=False)
+        model.read_bdf(StringIO(bdf_str), punch=False)
+        assert 'CC' in model.dmig
+        mat = model.dmig['CC'].get_matrix(is_sparse=False)[0]
+        assert mat.shape == (2, 1), mat.shape
+        assert np.array_equal(mat.flatten(), [4.0, 7.0]), (
+            f"mat={mat.flatten()}\nexpected=[4.0, 7.0]"
+        )
+
+    def test_dmi_long_free_field_continuation_keeps_all_values(self):
+        """A long leading-comma continuation must also be read in full.
+
+        Rows 6-10 are written on the continuation line; the [1:9] slice on
+        continuation lines previously dropped the trailing pairs.
+        """
+        from io import StringIO
+
+        bdf_str = (
+            "CEND\nBEGIN BULK\n"
+            "DMI,AAA,0,2,1,0,,11,1\n"
+            "DMI,AAA,1,1,1.0,1.0\n"
+            ",6,2.0,7,3.0,8,4.0,9,5.0,10,6.0\n"
+            "ENDDATA\n"
+        )
+        model = BDF(debug=False)
+        model.read_bdf(StringIO(bdf_str), punch=False)
+        mat = model.dmi["AAA"].get_matrix(is_sparse=False)[0]
+        expected = np.array([1.0, 1.0, 0.0, 0.0, 0.0, 2.0, 3.0, 4.0, 5.0, 6.0, 0.0])
+        assert np.array_equal(mat.flatten(), expected), (
+            f"mat={mat.flatten()}\nexpected={expected}"
+        )
+
     def test_dmi_real_int_zero_raises(self):
         """Tests that "0" (parsed as int) in a DMI value field raises AssertionError.
 
