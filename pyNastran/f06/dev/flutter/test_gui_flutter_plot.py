@@ -27,7 +27,7 @@ from pyNastran.f06.dev.flutter.utils import get_plot_file, PLOT_TYPES, X_PLOT_TY
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 IS_GUI = True
 try:
-    from qtpy.QtCore import QTimer, qInstallMessageHandler
+    from qtpy.QtCore import QEventLoop, QTimer, qInstallMessageHandler
     from qtpy.QtWidgets import QApplication
 except (ImportError, RuntimeError):  # pragma: no cover
     IS_GUI = False  # qtpy raises a RuntimeError subclass
@@ -106,7 +106,10 @@ class TestFlutterPlotGui(unittest.TestCase):
         and re-raises any exception, including ones raised inside Qt slots.
         Qt warnings are collected in self.qt_messages.
         """
-        app = self.app
+        # QApplication.quit() emits aboutToQuit, which makes Matplotlib
+        # destroy its figures. Stop a local loop instead, keeping the GUI
+        # and figures alive for assertions and subsequent interactions.
+        loop = QEventLoop()
         out = {}
         slot_errors = []
 
@@ -123,11 +126,11 @@ class TestFlutterPlotGui(unittest.TestCase):
             except BaseException as error:  # re-raised below
                 out['error'] = error
             finally:
-                app.quit()
+                loop.quit()
 
         watchdog = QTimer()
         watchdog.setSingleShot(True)
-        watchdog.timeout.connect(app.quit)
+        watchdog.timeout.connect(loop.quit)
 
         old_excepthook = sys.excepthook
         sys.excepthook = excepthook
@@ -135,7 +138,7 @@ class TestFlutterPlotGui(unittest.TestCase):
         try:
             watchdog.start(120_000)
             QTimer.singleShot(0, step)
-            app.exec_()
+            loop.exec_()
         finally:
             watchdog.stop()
             qInstallMessageHandler(old_handler)
