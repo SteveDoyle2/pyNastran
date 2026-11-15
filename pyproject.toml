@@ -27,11 +27,12 @@
 #        - pip install .[nogui]
 #
 #   2. With the GUI:
-#      - add gui (two options: pyside2, pyqt5)
+#      - add gui (PyQt5, PyQt6, or PySide6)
 #      - old (N/A):
 #      - new:
-#        - pip install .[gui_pyside2]
 #        - pip install .[gui_pyqt5]
+#        - pip install .[gui_pyqt6]
+#        - pip install .[gui_pyside6]
 #
 #   3. Just pyNastran:
 #      - old:
@@ -40,7 +41,7 @@
 #        - pip install . --no-dependencies
 #        - pip install . --no-deps
 #   4. Install everything:
-#      - pip install .[gui_pyside2,gui_pyqt5]
+#      - pip install .[gui_pyside6,dev]
 #
 #   5. Create wheel (for distribution):
 #      - pip wheel . --no-deps
@@ -111,7 +112,6 @@ classifiers = [
 #PyQt5-Qt5         5.15.2
 #PyQt5-sip         12.11.0
 #QtPy              2.1.0
-#PySide2           5.15.1
 #scipy             1.11.4
 #vtk               9.2.6
 dependencies = [
@@ -133,45 +133,37 @@ dependencies = [
 
 nogui = [
     'pandas>=1.4,<3.0',
-    'h5py',     # hdf5
+    'h5py; python_version < "3.15"',     # no Python 3.15 wheels yet
 ]
 gui_pyqt5 = [
-    'pandas>=1.4,<3.0',
-    'h5py',     # hdf5
+    'pyNastran[gui]',
     'PyQt5',    # gui library
-    'vtk>=9.0,<9.6', # rendering library
-    #'qtpy',
-    'imageio < 3.0',
-    'pillow >= 8.4.0',  # 2021/10
 ]
-gui_pyside2 = [
-    'pandas>=1.4,<3.0',
-    'h5py',     # hdf5
-    'PySide2',  # gui library
-    'vtk>=9.0', # rendering library
-    #'qtpy',
+gui = [
+    'pyNastran[nogui]',
+    'vtk>=9.6,<10', # rendering library
     'imageio < 3.0',
-    'pillow >= 8.4.0',
+    'pillow >= 10.1.0',
+    'natsort',
+    'python-docx',
+    'openpyxl',
 ]
-#gui = gui_pyside2
+gui_pyqt6 = [
+    'pyNastran[gui]',
+    'PyQt6',
+]
+gui_pyside6 = [
+    'pyNastran[gui]',
+    'PySide6',
+]
+ci = [
+    'flake8',
+    'coverage',
+]
 
-#buggy
-#gui_pyqt6_buggy = [
-#    # PyQt6 buggy
-#    'PyQt6',    # gui library
-#    'vtk>=9.0', # rendering library
-#    "pyNastran[nogui]",
-#]
-#gui_pyside6 = [
-#    'PySide6',  # gui library
-#    'vtk>=9.0', # rendering library
-#    "pyNastran[nogui]",
-#]
-#----
-
-# pip install -e .[gui_pyside2,dev]
+# pip install -e .[gui_pyside6,dev]
 dev = [
-    'tables',   # hdf5
+    'tables; python_version < "3.15"',   # hdf5
     #"tox",
     #"pre-commit",
     #"bump2version",
@@ -180,6 +172,10 @@ dev = [
     'codecov',
 ]
 #none = []
+
+[dependency-groups]
+# Used with --no-deps to exercise the intentionally minimal installation.
+no-scipy = ['numpy>1.25,<3', 'cpylog>=1.6.0', 'coverage', 'flake8']
 #-------------------------------------------------------------------------------------------
 [project.scripts]
 
@@ -214,12 +210,11 @@ repository      = "https://github.com/SteveDoyle2/pyNastran.git"
 #-------------------------------------------------------------------------------------------
 [build-system]
 requires = [
-    "setuptools >= 66.0.0",
-    "setuptools_scm[toml]>=6.2",
+    "setuptools >= 80.9.0",
+    "setuptools_scm>=10.3.4",
     "wheel",
 ]
-#build-backend = "setuptools.build_meta"
-#requires = ["setuptools>=61.0.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
 
 
 # setuptools_scm gets the git version
