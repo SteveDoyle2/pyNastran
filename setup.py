@@ -3,6 +3,9 @@ import os
 import sys
 from setuptools import setup, find_packages
 
+# PEP 517 backends do not put the source directory on sys.path.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import pyNastran
 from packages import check_python_version
 
