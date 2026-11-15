@@ -10,16 +10,15 @@ pyNastran is an easy package to install once you have the required Python module
 
 ``pip install pyNastran -U``
 
-That will install the minimum set of what you need to run pyNastran (so no GUI).  If you want the GUI, there are two options.  On the command line, type:
+That will install the minimum set of what you need to run pyNastran (so no GUI).  If you want the GUI, choose one Qt binding.  On the command line, type:
 
-    * ``pip install pyNastran[gui_pyside2] -U``
+    * ``pip install pyNastran[gui_pyside6] -U``
+    * ``pip install pyNastran[gui_pyqt6]   -U``
     * ``pip install pyNastran[gui_pyqt5]   -U``
 
 Python
 ------
-The software is tested on Windows and Linux against Python 3.9 - 3.12.
-
-The latest dev version supports Python 3.9 - 3.12.
+The current development version supports Python 3.11 - 3.15.
 
 Packages
 --------
@@ -27,31 +26,36 @@ pyNastran is tested against a range of package versions (lowest to highest based
 
  * **Required**:
 
-   * numpy >= 1.14
-   * scipy >= 1.0
-   * cpylog >= 1.4.0
-   * docopt-ng == 0.7.2   **(required for command line tools)**
+   * numpy > 1.25, < 3
+   * scipy > 1.8, < 2
+   * matplotlib > 3.6, < 4
+   * cpylog >= 1.6.0
+   * docopt-ng >= 0.9.0   **(required for command line tools)**
+   * colorama             **(colored logging)**
+   * qtpy
 
  * **Optional**:
 
-   * colorama >= 0.3.9    **(colored logging)**
-   * pandas >= 0.25,<2.0
-   * matplotlib >= 2.2.4  **(plotting)**
-   * h5py >= 2.8.0        **(HDF5 support)**
+   * pandas >= 1.4, < 3
+   * h5py                 **(HDF5 support; installed on Python < 3.15)**
+   * tables (PyTables)    **(included in the dev extra on Python < 3.15)**
 
  * **GUI**:
 
-   * vtk >= 9.0, <9.4
-   * qtpy >= 1.4.0
+   * vtk >= 9.0, < 10
    * Qt **(pick one)**
 
-     * PyQt5 >= 5.9.2
-     * PySide2 >= 5.11.2
-     * PyQt6   (currently disabled)
-     * PySide6 (currently disabled)
+      * PyQt5
+      * PyQt6
+      * PySide6
+
    * QScintilla >= 2.13.0 **(optional for fancy scripting; PyQt5/6 only)**
    * pygments >= 2.2.0 **(optional for fancy scripting; PyQt5/6 only)**
-   * imageio >= 2.4.1,<3  **(optional for animation support)**
+   * imageio < 3          **(animation support)**
+   * pillow >= 10.1.0
+   * natsort
+   * python-docx
+   * openpyxl
 
 *****************************************************
 Install Procedure - From Source
@@ -74,11 +78,12 @@ If you would like pandas and hdf5 support to the BDF/OP2, but no gui options.
 
     * ``pip install .[nogui]``
 
-For **optional** GUI support, there are two options:
+For **optional** GUI support, choose one Qt binding:
 
  * On the command line:
 
-    * ``pip install .[gui_pyside2]``
+    * ``pip install .[gui_pyside6]``
+    * ``pip install .[gui_pyqt6]``
     * ``pip install .[gui_pyqt5]``
 
 If you want to just install the dependencies yourself:
@@ -95,4 +100,3 @@ See `docs <https://pynastran-git.readthedocs.io/en/latest/>`_
 
 If you want to build the docs yourslf:
  - https://pynastran-git.readthedocs.io/en/latest/installation/building_docs.html
-
