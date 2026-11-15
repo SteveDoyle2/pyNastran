@@ -6266,12 +6266,16 @@ class SPLINE1(Spline):
 
             del xform
             local_spline_points_array = np.array(local_spline_points)
-            import scipy
             try:
-                hull = scipy.spatial.ConvexHull(local_spline_points_array[:, :2])
-                area_hull = hull.area
-            except scipy.spatial._qhull.QhullError:
+                from scipy.spatial import ConvexHull, QhullError
+            except ImportError:
                 area_hull = np.nan
+            else:
+                try:
+                    hull = ConvexHull(local_spline_points_array[:, :2])
+                    area_hull = hull.area
+                except QhullError:
+                    area_hull = np.nan
 
             # The points are now projected (with no z value)
             # Let's find the convex hull of points
