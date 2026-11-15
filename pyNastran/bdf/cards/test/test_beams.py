@@ -1870,6 +1870,7 @@ class TestBend(unittest.TestCase):
         cbend.cross_reference(model)
         #cbend.plot()
 
+    @unittest.skipUnless(IS_MATPLOTLIB, 'matplotlib is required')
     def test_cbend_geom3_plot(self):
         model = BDF(debug=False)
         model.add_grid(10, [0., 0., 0.])
