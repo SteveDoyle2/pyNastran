@@ -115,7 +115,7 @@ else:
         def toarray(self):
             mat = np.zeros(self.shape, dtype=self.dtype)
             row_col = (self.row, self.col)
-            mat[row_col] = self.data
+            np.add.at(mat, row_col, self.data)
             return mat
         @property
         def nnz(self) -> int:
