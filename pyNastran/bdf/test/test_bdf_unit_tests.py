@@ -3,6 +3,7 @@ from copy import deepcopy
 from pathlib import Path
 from io import StringIO
 import unittest
+from importlib.util import find_spec
 
 import numpy as np
 from cpylog import SimpleLogger
@@ -1025,6 +1026,8 @@ class TestBDFUnit(Tester):
             assert fem.card_count['FLUTTER'] == 4, fem.card_count
             assert fem.card_count['DOPTPRM'] == 1, fem.card_count
 
+    @unittest.skipUnless(find_spec('scipy') is not None,
+                         'SPLINE1 verification requires scipy')
     def test_aero_02(self):
         """checks 0012_flutter.bdf"""
         bdf_filename = os.path.join(MODEL_PATH, 'aero', '2_mode_flutter', '0012_flutter.bdf')

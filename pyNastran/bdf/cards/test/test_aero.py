@@ -6,6 +6,7 @@ from io import StringIO
 from pathlib import Path
 from collections import defaultdict
 import unittest
+from importlib.util import find_spec
 from typing import Any
 
 import numpy as np
@@ -34,6 +35,7 @@ from pyNastran.bdf.mesh_utils.mirror_mesh import bdf_mirror
 
 
 IS_MATPLOTLIB = False
+IS_SCIPY = find_spec('scipy') is not None
 if IS_MATPLOTLIB:
     import matplotlib.pyplot as plt
 
@@ -66,6 +68,7 @@ class TestAero(unittest.TestCase):
      * SPLINE1 / SPLINE2 / SPLINE4 / SPLINE5
     """
 
+    @unittest.skipUnless(IS_SCIPY, 'SPLINE1 verification requires scipy')
     def test_aero_op2(self):
         model = BDF(debug=False)
         model.bdf_filename = 'aero_op2.bdf'
@@ -1619,6 +1622,7 @@ class TestAero(unittest.TestCase):
         assert len(points) == 4
         save_load_deck(model)
 
+    @unittest.skipUnless(IS_SCIPY, 'SPLINE1 verification requires scipy')
     def test_spline1(self):
         """checks the SPLINE1 card"""
         log = SimpleLogger(level='warning')
