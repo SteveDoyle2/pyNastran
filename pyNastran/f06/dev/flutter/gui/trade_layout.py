@@ -6,7 +6,7 @@ from functools import wraps
 import pickle
 from typing import Any, TYPE_CHECKING
 import natsort
-from PyQt5.QtWidgets import QCheckBox
+from qtpy.QtWidgets import QCheckBox
 
 from pyNastran.gui.utils.qt.pydialog import QFloatEdit
 from pyNastran.utils import print_bad_path

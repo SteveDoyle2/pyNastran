@@ -28,7 +28,7 @@ from pyNastran.bdf.test.all_tests import *
 from pyNastran.op2.test.all_tests import *
 
 #f06
-from pyNastran.f06.test.all_tests import *
+from pyNastran.f06.test.all_tests_no_gui import *
 
 #op4
 from pyNastran.op4.test.op4_unit_tests import TestOP4, TestOP4Fast
