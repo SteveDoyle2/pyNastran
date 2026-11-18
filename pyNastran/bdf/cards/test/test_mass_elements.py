@@ -406,6 +406,82 @@ class TestMassElements(unittest.TestCase):
         model.add_mat1(mid, 3.0e7, None, 0.3)
         save_load_deck(model)
 
+    def test_conm2_qrg_remarks_5_6(self):
+        """
+        CONM2 products of inertia and cylindrical/spherical CIDs per the QRG.
+
+        Tests (atol=1e-12):
+        - remark 5: a CONM2 with I21 = int(rho x1 x2 dV) gives the same packed
+          Ixy as the equivalent pair of point masses, and the two add when
+          both are in one model (Ixy = 2 + 2 = 4, not 0)
+        - remark 6: a CORD2C/CORD2S CID is used as the local Cartesian system
+          of its axes for both the offset and the inertia, so the results
+          match a CORD2R with the same axes
+        """
+        log = get_logger(level='error')
+
+        # remark 5: point masses at (1,1,0) and (-1,-1,0); sum(m*x*y) = 2
+        points = BDF(log=log)
+        points.add_grid(1, [1., 1., 0.])
+        points.add_grid(2, [-1., -1., 0.])
+        points.add_conm2(1, 1, 1.0)
+        points.add_conm2(2, 2, 1.0)
+        points.cross_reference()
+
+        # same body as a single CONM2 at the origin
+        conm2 = BDF(log=log)
+        conm2.add_grid(3, [0., 0., 0.])
+        conm2.add_conm2(3, 3, 2.0, I=[2., 2., 2., 0., 0., 4.])
+        conm2.cross_reference()
+
+        both = BDF(log=log)
+        both.add_grid(1, [1., 1., 0.])
+        both.add_grid(2, [-1., -1., 0.])
+        both.add_grid(3, [0., 0., 0.])
+        both.add_conm2(1, 1, 1.0)
+        both.add_conm2(2, 2, 1.0)
+        both.add_conm2(3, 3, 2.0, I=[2., 2., 2., 0., 0., 4.])
+        both.cross_reference()
+
+        expected = np.array([2., 2., 4., 2., 0., 0.])
+        inertia_points = mass_properties(points)[2]
+        inertia_conm2 = mass_properties(conm2)[2]
+        inertia_both = mass_properties(both)[2]
+        assert np.allclose(inertia_points, expected, atol=1e-12), inertia_points
+        assert np.allclose(inertia_conm2, expected, atol=1e-12), inertia_conm2
+        assert np.allclose(inertia_both, 2 * expected, atol=1e-12), inertia_both
+
+        # remark 6: cylindrical/spherical CID == Cartesian CID with the same axes
+        origin = [1., 2., 3.]
+        zaxis = [1., 2., 4.]
+        xzplane = [2., 3., 3.]
+        X = [0.4, -0.7, 1.1]
+        inertia_card = [3.0, 0.4, 2.0, -0.3, 0.2, 1.5]
+        results = {}
+        for coord_type in ('R', 'C', 'S'):
+            model = BDF(log=log)
+            getattr(model, f'add_cord2{coord_type.lower()}')(
+                10, origin, zaxis, xzplane)
+            model.add_grid(1, [5., -2., 7.])
+            model.add_conm2(1, 1, 2.5, cid=10, X=X, I=inertia_card)
+            model.cross_reference()
+            elem = model.masses[1]
+            results[coord_type] = (elem.Centroid(), elem.Centroid_no_xref(model),
+                                   elem.offset(model.nodes[1].get_position()),
+                                   elem.Inertia(), mass_properties(model)[2])
+
+        centroid_r, centroid_no_xref_r, offset_r, tensor_r, inertia_r = results['R']
+        assert np.abs(tensor_r).max() > 0.
+        assert np.allclose(centroid_r, offset_r, atol=1e-12)
+        assert np.allclose(centroid_r, centroid_no_xref_r, atol=1e-12)
+        for coord_type in ('C', 'S'):
+            centroid, centroid_no_xref, offset, tensor, inertia = results[coord_type]
+            assert np.allclose(centroid, centroid_r, atol=1e-12), (coord_type, centroid, centroid_r)
+            assert np.allclose(centroid_no_xref, centroid_r, atol=1e-12), coord_type
+            assert np.allclose(offset, offset_r, atol=1e-12), coord_type
+            assert np.allclose(tensor, tensor_r, atol=1e-12), coord_type
+            assert np.allclose(inertia, inertia_r, atol=1e-12), coord_type
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

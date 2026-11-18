@@ -695,13 +695,16 @@ def _mass_properties(
                 continue
             if element.type in mass_inertia:
                 centroid, massi, dinertia = element.centroid_mass_inertia()
+                # dinertia is the CONM2 tensor (QRG CONM2 remark 5: card I21 = int(rho x1 x2 dV),
+                # matrix term = -I21).  The packed [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] uses the
+                # positive integrals (same as the point-mass sum(m*dx*dy) terms), so negate.
                 di_list = [
                     dinertia[0][0],
                     dinertia[1][1],
                     dinertia[2][2],
-                    dinertia[0][1],
-                    dinertia[0][2],
-                    dinertia[1][2],
+                    -dinertia[0][1],
+                    -dinertia[0][2],
+                    -dinertia[1][2],
                 ]
 
                 # this is broken into mr^2 and self-inertia
@@ -1726,13 +1729,16 @@ def _get_mass_nsm(
         for eid in eids2:
             elem = model.masses[eid]
             centroid, massi, dinertia = elem.centroid_mass_inertia()
+            # dinertia is the CONM2 tensor (QRG CONM2 remark 5: card I21 = int(rho x1 x2 dV),
+            # matrix term = -I21).  The packed [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] uses the
+            # positive integrals (same as the point-mass sum(m*dx*dy) terms), so negate.
             di_list = [
                 dinertia[0][0],
                 dinertia[1][1],
                 dinertia[2][2],
-                dinertia[0][1],
-                dinertia[0][2],
-                dinertia[1][2],
+                -dinertia[0][1],
+                -dinertia[0][2],
+                -dinertia[1][2],
             ]
             if eid in mass_ids_set:
                 mass = increment_inertia(

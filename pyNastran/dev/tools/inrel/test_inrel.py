@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+from pyNastran.dev.tools.inrel.inertia_loads import inertia_loads
 from pyNastran.dev.tools.inrel.inertia_relief2 import inertia_relief
 
 
@@ -173,11 +174,51 @@ class TestInrel(unittest.TestCase):
         assert np.allclose(m_resid, 0.0), m_resid
 
         # the applied load is self-equilibrating in force, so the linear
-        # relief is zero and the whole balance is carried by alpha
-        assert np.allclose(dforce, 0.0), dforce
+        # relief is zero and the whole balance is carried by alpha.  The
+        # rotational relief is applied as tangential forces -m (alpha x d),
+        # so dforce is non-zero, perpendicular to the bar, and sums to zero
+        assert np.abs(dforce).max() > 0.0, dforce
+        assert np.allclose(dforce.sum(axis=0), 0.0), dforce.sum(axis=0)
+        assert np.allclose(dforce @ v, 0.0), dforce @ v
 
-        # the relief must be a genuine rotation about the bar, not all zeros
-        assert np.abs(dmoment).max() > 0.0, dmoment
+        # point masses with no self-inertia carry no nodal moment
+        assert np.allclose(dmoment, 0.0), dmoment
+
+    def test_inrel_matches_inertia_loads(self):
+        """
+        inertia_relief vs the forward problem in inertia_loads.
+
+        The rigid-body (a, alpha) is solved independently with a 3x3 solve
+        about the cg, then inertia_loads distributes it.  The relief from
+        inertia_relief must be the same per-node load, i.e. the rotational
+        relief is a force -m (alpha x d) plus a self-inertia moment -I0 alpha.
+
+        Tolerance: atol=1e-10 on dforce/dmoment (loads are O(1)).
+        """
+        rng = np.random.default_rng(7)
+        nnode = 8
+        xyz = rng.normal(scale=5.0, size=(nnode, 3))
+        mass = rng.uniform(0.5, 2.0, nnode)
+        inertia = np.zeros((nnode, 6), dtype="float64")
+        inertia[:, :3] = rng.uniform(1.0, 4.0, (nnode, 3))
+        inertia[:, 3:] = rng.uniform(-0.5, 0.5, (nnode, 3))
+        force = rng.normal(size=(nnode, 3))
+        moment = rng.normal(size=(nnode, 3))
+        dforce, dmoment = inertia_relief(mass, xyz, inertia, force, moment)
+
+        # independent rigid-body solve about the cg
+        cg = (mass[:, np.newaxis] * xyz).sum(axis=0) / mass.sum()
+        d = xyz - cg
+        tensor = np.zeros((3, 3))
+        for massi, di, (ixx, iyy, izz, ixy, ixz, iyz) in zip(mass, d, inertia):
+            tensor += massi * (di @ di * np.eye(3) - np.outer(di, di))
+            tensor += np.array([[ixx, -ixy, -ixz], [-ixy, iyy, -iyz], [-ixz, -iyz, izz]])
+        accel = force.sum(axis=0) / mass.sum()
+        alpha = np.linalg.solve(tensor, moment.sum(axis=0) + np.cross(d, force).sum(axis=0))
+
+        dforce_expected, dmoment_expected = inertia_loads(mass, xyz, inertia, accel, alpha, cg)
+        assert np.allclose(dforce, dforce_expected, atol=1e-10), dforce - dforce_expected
+        assert np.allclose(dmoment, dmoment_expected, atol=1e-10), dmoment - dmoment_expected
 
     def test_inrel_rotated_with_self_inertia(self):
         """

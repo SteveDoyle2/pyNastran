@@ -1,12 +1,8 @@
 from itertools import count
 import numpy as np
-from cpylog import SimpleLogger
 from pyNastran.nptyping_interface import (
-    NDArrayNbool,
-    NDArrayNint, NDArrayN2int,
-    NDArrayNfloat, NDArrayNNfloat)
+    NDArrayNNfloat)
 
-from pyNastran.f06.errors import FatalError
 from pyNastran.dev.bdf_vectorized3.bdf import BDF, Subcase
 from pyNastran.dev.bdf_vectorized3.bdf_interface.breakdowns import NO_MASS
 
@@ -344,10 +340,11 @@ def conm2_fill_Mbb(model: BDF, mass_total: float,
         # TODO: support CID
         I11, I21, I22, I31, I32, I33 = elem_i
         x1, x2, x3 = elem_x
+        # parallel-axis term: m * ((x.x) I3 - x x^T)
         mxx = mass * np.array([
-            [x1 * x1, -x1 * x2, -x1 * x3],
-            [-x2 * x1, x2 * x2, -x2 * x3],
-            [-x3 * x1, x3 * x2, x3 * x3],
+            [x2 * x2 + x3 * x3, -x1 * x2, -x1 * x3],
+            [-x2 * x1, x1 * x1 + x3 * x3, -x2 * x3],
+            [-x3 * x1, -x3 * x2, x1 * x1 + x2 * x2],
         ])
         Tr = np.array([
             [0, x3, -x2],
@@ -356,7 +353,7 @@ def conm2_fill_Mbb(model: BDF, mass_total: float,
         ], dtype="float64")
         mx = Tr * mass
         I = mxx + np.array([
-            [I11, -I21, I31],
+            [I11, -I21, -I31],
             [-I21, I22, -I32],
             [-I31, -I32, I33],
         ])

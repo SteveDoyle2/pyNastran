@@ -57,6 +57,13 @@ integrals ``Ixy = sum(m*dx*dy)``.  The tensor is therefore assembled as::
 which is the form ``_mass_properties_total`` builds.  This is the physically
 correct ``[I] = sum m ((r.r) I3 - r r.T)``; verified against that closed form.
 
+CONM2 card values follow QRG CONM2 remark 5: ``I21 = int(rho x1 x2 dV)`` (a
+positive integral) and Nastran supplies the negative sign when it forms the
+matrix (``-I21`` off-diagonal).  A CONM2's I21/I31/I32 therefore map directly
+to Ixy/Ixz/Iyz in the packed array here, and to ``-I21`` etc. in the tensor.
+``pyNastran.bdf.mesh_utils.mass_properties`` uses the same packed convention
+(fixed 2026-11-17; it previously packed a CONM2's own products as ``-I21``).
+
 Assumptions
 -----------
 - **Rigid body.**  Only the six rigid-body accelerations are solved for;
@@ -85,8 +92,6 @@ Limitations
   See the guard in ``inertia_relief``.
 - The self-inertia correction is currently inert -- see the "Known defects"
   note on ``inertia_relief`` below.
-- ``get_mass_properties_array`` does not yet read the model; it returns
-  hardcoded values.
 
 Defects fixed 2026-09-21
 ------------------------
@@ -129,155 +134,34 @@ coincident-node, large-magnitude, and non-zero-self-inertia cases.
 
 Remaining limitations
 ---------------------
-- ``get_mass_properties_array`` still returns hardcoded stub data, so
-  ``inertia_relief_from_model`` does not yet work against a real model.
 - The ``mxyzt_delta_self`` branch is still multiplied by ``0.`` and remains
   inert; the self-inertia contribution is now handled in the ``mxyzt_dm``
   term instead.
 - ``_mass_properties_total`` skips diagonalization when
-  ``epsilon/delta <= 0.001``, so very small products of inertia are treated
-  as exactly zero.
+  ``epsilon/delta <= 0.001`` (the Nastran GPWG check), so very small products
+  of inertia are intentionally treated as zero.
+
+Rotational relief as forces (2026-11-17)
+----------------------------------------
+The angular-acceleration relief on each lumped mass is returned as the
+tangential nodal *force* ``-m (alpha x d)`` in ``dforce``, consistent with
+``inertia_loads.inertia_loads``.  It was previously returned as the
+statically-equivalent nodal *moment* ``-m d x (alpha x d)``, which grids with
+no rotational stiffness (solids, rods) cannot react.  ``dmoment`` now holds
+only the self-inertia term ``-[I0] alpha``.
+
+Interface
+---------
+Array-only: nothing here imports ``pyNastran.bdf``.  Model adapters build the
+``(mass, xyz, inertia)`` arrays and call ``inertia_relief``; see
+``inertia_relief_vectorized.py`` for the ``bdf_vectorized3`` adapter.
 
 """
 
 from __future__ import annotations
 import warnings
-from typing import TYPE_CHECKING
 
 import numpy as np
-from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
-
-if TYPE_CHECKING:
-    from pyNastran.bdf.bdf import BDF
-
-
-def get_mass_properties_array(model: BDF) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
-    Intended to extract per-node lumped mass, location, and self-inertia from
-    a BDF model.
-
-    .. warning::
-        **NOT IMPLEMENTED.**  This function calls ``mass_properties(model)``
-        and then immediately discards the result, overwriting ``mass``, ``cg``,
-        and ``inertia`` with hardcoded 5-node dummy values.  It returns the
-        same stub data for every model, and ``inertia`` is always zeros.
-        Anything built on this (notably ``inertia_relief_from_model``) is
-        exercising the stub, not the model.
-
-        A real implementation needs to walk the CONM2/CMASSi cards and the
-        element/property mass, which is what
-        ``pyNastran.bdf.mesh_utils.mass_properties.mass_properties_breakdown``
-        already does on a per-element basis.
-
-    Parameters
-    ----------
-    model : BDF
-        the model (currently ignored)
-
-    Returns
-    -------
-    mass : (nnode,) float ndarray
-        hardcoded [1., 2., 3., 4., 5.]
-    cg : (nnode,3) float ndarray
-        hardcoded node locations
-    inertia : (nnode,6) float ndarray
-        always zeros
-
-    """
-    # from pyNastran.bdf.bdf import read_bdf
-    mass, cg, inertia = mass_properties(model)
-    nnode = 5
-    mass = np.array([1.0, 2.0, 3.0, 4.0, 5])
-    cg = np.array(
-        [
-            [0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0],
-            [3.0, 0.0, 0.0],
-            [2.0, 1.0, 0.0],
-            [2.0, 0.0, 0.0],
-        ]
-    )
-    # Ixx, Iyy, Izz, Ixy, Ixz, Iyz = inertia
-    inertia = np.zeros((nnode, 6), dtype="float64")
-    return mass, cg, inertia
-
-
-def get_eigenvalues(imat: np.ndarray, debug: bool = False):  # pragma: no cover
-    """
-    Finds the principal inertias by numerical optimization rather than by
-    eigendecomposition.
-
-    Parameterizes a rotation by two vectors ``i`` and ``j``, builds an
-    orthonormal triad via ``k = i x j``, and minimizes the sum of the squared
-    off-diagonal terms (less the squared diagonal terms) of ``T @ imat @ T.T``.
-
-    .. note::
-        This is a **cross-check / scratch routine**, not the production path.
-        ``_mass_properties_total`` uses ``np.linalg.eigh``, which is exact,
-        faster, and guaranteed orthonormal for a symmetric matrix.  This
-        function is only reachable from the dead ``if debug and 0:`` block.
-
-    Limitations
-    -----------
-    - The triad is built from ``i`` and ``j`` without re-orthogonalizing ``j``
-      against ``i``, so ``T`` is not guaranteed orthonormal and the similarity
-      transform is not guaranteed to preserve the eigenvalues.
-    - The objective mixes two competing terms and is unbounded below as the
-      diagonal grows, so the optimizer can wander; ``scipy.optimize.minimize``
-      is run from a single fixed start with no convergence check.
-    - Returns ``np.linalg.eigvals`` (general, possibly complex) of the rotated
-      matrix rather than ``eigvalsh``, so results may carry tiny imaginary
-      parts.
-
-    """
-    x0 = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-    import scipy
-
-    def func(values):
-        i = values[:3]
-        j = values[3:]
-        i /= np.linalg.norm(i)
-        j /= np.linalg.norm(j)
-        k = np.cross(i, j)
-        k /= np.linalg.norm(k)
-        if np.abs(k).max() == 0.0:
-            raise RuntimeError(k)
-        T = np.vstack([i, j, k])
-        imat2 = T @ imat @ T.T
-        # imat2 = T.T @ imat @ T
-        obj = imat2[0, 1] ** 2 + imat2[0, 2] ** 2 + imat2[1, 2] ** 2
-        obj -= imat2[0, 0] ** 2 + imat2[1, 1] ** 2 + imat2[2, 2] ** 2
-        return obj
-
-    bounds = [
-        [-1.0, 1.0],
-        [-1.0, 1.0],
-        [-1.0, 1.0],
-        [-1.0, 1.0],
-        [-1.0, 1.0],
-        [-1.0, 1.0],
-    ]
-    out = scipy.optimize.minimize(func, x0, bounds=bounds)
-    # out = scipy.optimize.fmin(func, out)
-    if debug:  # pragma: no cover
-        print(out)
-    values = out.x
-    i = values[:3]
-    j = values[3:]
-    i /= np.linalg.norm(i)
-    j /= np.linalg.norm(j)
-    k = np.cross(i, j)
-    k /= np.linalg.norm(k)
-    T = np.vstack([i, j, k])
-    imat2 = T @ imat @ T.T
-    # imat2 = T.T @ imat @ T
-    T2 = T**2
-    if debug:  # pragma: no cover
-        print(T2.sum(axis=0), T2.sum(axis=1))
-        print(f"T:\n{T}")
-        print(f"imat2:\n{imat2}")
-    return np.linalg.eigvals(imat2)
-    # return np.diag(imat2)
 
 
 def _mass_properties_total(
@@ -295,10 +179,11 @@ def _mass_properties_total(
         [-Ixz  -Iyz   Izz]
 
     Diagonalization is skipped when the body is already close to principal:
-    the test is ``norm(off-diagonals) / norm(diagonal) > 0.001``, mirroring the
+    the test is ``norm(off-diagonals) / norm(diagonal) > 0.001``, which is the
     Nastran GPWG epsilon/delta check, and emits the matching UWM 3042 text when
-    it trips.  Below that threshold ``S`` is returned as the identity, so small
-    products of inertia are silently treated as zero.
+    it trips.  Below that threshold ``S`` is returned as the identity and the
+    small products of inertia are intentionally treated as zero, consistent
+    with Nastran.
 
     Parameters
     ----------
@@ -309,8 +194,7 @@ def _mass_properties_total(
     inertia : (nnode,6) float ndarray
         per-node self-inertia [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
     debug : bool; default=False
-        prints the tensor and compares the closed-form eigenvalues against
-        the optimizer in ``get_eigenvalues``
+        prints the assembled inertia tensor
 
     Returns
     -------
@@ -331,8 +215,10 @@ def _mass_properties_total(
 
     Notes
     -----
-    - ``eigenvalues`` is computed via ``np.linalg.eigvals`` and then discarded
-      unless ``debug``; the ``if debug and 0:`` guard makes that block dead.
+    - The epsilon/delta threshold is intentional (Nastran GPWG behavior).
+      Because ``inertia_relief`` only uses ``diag(Mtt)``, products of inertia
+      below the threshold leave a small moment residual (order 1e-3 of the
+      applied moment).
     - ``np.linalg.eigh`` sorts eigenvalues ascending, so the principal axis
       ordering is by magnitude and does **not** track the global x/y/z order.
       A near-axisymmetric body has a degenerate eigenvalue pair whose
@@ -341,15 +227,10 @@ def _mass_properties_total(
 
     """
     mass_total = mass.sum()
-    # assert np.allclose(mass_total, 5.), mass_total
 
     cg_total = (xyz * mass[:, np.newaxis]).sum(axis=0) / mass_total
     assert len(cg_total) == 3, cg_total
-    # print(f'mass = {mass}')
-    # print(f'cg = {cg_total}')
-    # print(f'r  = {np.linalg.norm(cg_total):g}')
     inertia_totali = inertia.sum(axis=0)
-    # print(f'inertia_totali = {inertia_totali}')
     assert len(inertia_totali) == 6, inertia_totali
 
     dx = xyz[:, 0] - cg_total[np.newaxis, 0]
@@ -369,17 +250,12 @@ def _mass_properties_total(
             [-ixz, -iyz, izz],
         ]
     )
-    eigenvalues = np.linalg.eigvals(inertia_mat)
-    if debug and 0:
-        print(f"inertia_mat:\n{str(inertia_mat)}")
-        eigenvalues_opt = get_eigenvalues(inertia_mat)
-        print(f"eigenvalues_opt = {eigenvalues_opt}")
-        print(f"eigenvalues = {eigenvalues}")
+    if debug:  # pragma: no cover
+        print(f"inertia_mat:\n{inertia_mat}")
     Mtt_ = inertia_mat
-    Mtd = np.diag(Mtt_)
-    delta = np.linalg.norm(Mtd)
-    e_ = [Mtt_[0, 1], Mtt_[0, 2], Mtt_[1, 2]]
-    epsilon = np.linalg.norm(e_)
+    # Nastran GPWG epsilon/delta check; the 0.001 threshold is intentional
+    delta = np.linalg.norm(np.diag(Mtt_))
+    epsilon = np.linalg.norm([Mtt_[0, 1], Mtt_[0, 2], Mtt_[1, 2]])
     if epsilon / delta > 0.001:
         unused_eigvals, S = np.linalg.eigh(Mtt_)
         # eigh returns an orthogonal matrix but not necessarily a proper
@@ -396,19 +272,11 @@ def _mass_properties_total(
             "*** USER WARNING MESSAGE 3042 MODULE = GPWG\n"
             f"INCONSISTENT SCALAR MASSES HAVE BEEN USED. EPSILON/DELTA = {epsilon / delta:.7E}\n"
         )
-        # model.log.warning(msg)
         print(msg)
         Mtt = S.T @ Mtt_ @ S  # Mt
     else:
         S = np.eye(3, dtype=Mtt_.dtype)
         Mtt = Mtt_.copy()
-    # print(f'S:\n{S}')
-
-    # inertia_mat = np.array([
-    #     [ixx, -ixy, -ixz],
-    #     [-ixy, iyy, -iyz],
-    #     [-ixz, -iyz, izz],
-    # ])
     inertia_total = np.array(
         [
             Mtt[0, 0],
@@ -422,42 +290,6 @@ def _mass_properties_total(
     assert Mtt.shape == (3, 3), Mtt.shape
     assert inertia_total.shape == (6,), inertia_total.shape
     return mass_total, cg_total, inertia_total, Mtt, S
-
-
-def inertia_relief_from_model(model: BDF) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Convenience wrapper: pull mass properties from a model and run inertia
-    relief on it.
-
-    .. warning::
-        **NOT USABLE AGAINST A REAL MODEL YET.**  Two placeholders block it:
-        ``get_mass_properties_array`` ignores ``model`` and returns hardcoded
-        stub data, and the applied loads here are hardcoded to a unit force in
-        every direction at every node (``force = np.ones((nnode, 3))``) with
-        zero moment, rather than being read from the model's load cases.
-
-        A real version needs to take a load case id (or an already-assembled
-        load vector) as an argument.
-
-    Parameters
-    ----------
-    model : BDF
-        the model (currently ignored)
-
-    Returns
-    -------
-    dforce : (nnode,3) float ndarray
-        the inertial force increment
-    dmoment : (nnode,3) float ndarray
-        the inertial moment increment
-
-    """
-    mass, xyz, inertia = get_mass_properties_array(model)
-    nnode = len(mass)
-    force = np.ones((nnode, 3))
-    moment = np.ones((nnode, 3)) * 0
-    dforce, dmoment = inertia_relief(mass, xyz, inertia, force, moment)
-    return dforce, dmoment
 
 
 def _get_transformed_self_inertia(inertia: np.ndarray, S: np.ndarray) -> np.ndarray:
@@ -552,14 +384,17 @@ def inertia_relief(
         weight to mass conversion
         1/g when the caller passes weight rather than mass (PARAM,WTMASS)
     debug : bool; default=False
-        prints the assembled inertia tensor and its eigenvalues
+        prints the assembled inertia tensor
 
     Returns
     -------
     dforce : (nnode,3) float ndarray
-        the inertial force increment, in the global frame
+        the inertial force increment, in the global frame:
+        ``-m * (a + alpha x d)`` with ``d`` the offset from the cg
     dmoment : (nnode,3) float ndarray
-        the inertial moment increment, in the global frame
+        the inertial moment increment, in the global frame:
+        ``-[I0] alpha`` from each node's self-inertia only (zero for pure
+        point masses)
 
     The caller is expected to sum these onto the applied loads::
 
@@ -571,10 +406,9 @@ def inertia_relief(
         sum(force_out) ~= 0
         sum(moment_out) + sum(r_p × force_out) ~= 0
 
-    where ``r_p = xyz - p``.  ``dmoment`` is the pure d'Alembert angular-
-    acceleration correction; it does **not** include ``r × dforce`` couples,
-    so callers compute force-arm moments themselves (as section cuts and
-    monitor stations naturally do).
+    where ``r_p = xyz - p``.  ``dmoment`` does **not** include ``r × dforce``
+    couples, so callers compute force-arm moments themselves (as section cuts
+    and monitor stations naturally do).
 
     Assumptions and limitations
     ---------------------------
@@ -602,11 +436,6 @@ def inertia_relief(
     inertia_self = _get_transformed_self_inertia(inertia, S)
     assert inertia_total.shape == (6,), inertia_total.shape
 
-    # TODO: Should this be S.T?
-    # Ft = S @ F
-    # print(f'xyz:\n{xyz}')
-    # print(f'cg_total = {cg_total}')
-    # print(f'inertia_self = {inertia_self}')
     dxyz = xyz - cg_total[np.newaxis, :]
 
     # Transform forces/moments/offsets into the principal inertia frame.
@@ -624,7 +453,6 @@ def inertia_relief(
     shape = fxyzt.shape
     dtype = fxyzt.dtype
 
-    # print(f'Mtt:\n{str(Mtt)}')
     assert cg_total.shape == (3,), cg_total.shape
     assert inertia_total.shape == (6,), inertia_total.shape
 
@@ -641,36 +469,22 @@ def inertia_relief(
     assert len(inertia_final) == 3, inertia_final
 
     fxyzt_total = fxyzt.sum(axis=0)
-    # print(f'fxyzt_total = {fxyzt_total}')
     assert len(fxyzt_total) == 3, fxyzt_total
     # F = m*a
     accelt = fxyzt_total / mass_total
-    # print(f'accelt = {accelt}')
 
     fxyzt_delta = -mass[:, np.newaxis] * accelt[np.newaxis, :]
     fxyzt_out = fxyzt + fxyzt_delta
-    # if np.abs(fxyzt_out).max() > 0:
-    #     print(f'fxyzt_out:\n{fxyzt_out}')
-    # print(f'dxyzt =\n{dxyzt}')
 
     # this is the moment due to applied forces
     # was fxyzt_delta:
     # - fails the force_linear test -> fxyzt_out
     mxyzt_df = np.cross(dxyzt, fxyzt_out, axis=1)
-    # print(f'mxyzt_delta0 = {mxyzt_delta0}')
-    # if np.abs(mxyzt_df).max() > 0:
-    #     print(f'dxyzt:\n{dxyzt}')
-    #     print(f'fxyzt:\n{fxyzt}')
-    #     print(f'mxyzt_df:\n{mxyzt_df}')
 
-    # print(f'mxyzt_df_total = {mxyzt_df.sum(axis=0)}')
     assert fxyzt.shape == mxyzt.shape, (fxyzt.shape, mxyzt.shape)
 
     mxyzt1 = mxyzt + mxyzt_df
     mxyzt1_total = mxyzt1.sum(axis=0)
-    # print(f' mxyzt_total        = {mxyzt.sum(axis=0)}')
-    # print(f'+mxyzt_df_total = {mxyzt_df.sum(axis=0)}')
-    # print(f'=mxyzt1_total       = {mxyzt1_total}')
 
     # M = I*alpha = I0*alpha + m*r^2*alpha
     #
@@ -684,17 +498,14 @@ def inertia_relief(
         # the principal inertias, but mehhh...
         alphat_self = np.zeros(3, dtype="float64")
         alphat_self[ipos] = mxyzt1_total[ipos] / inertia_final[ipos]
-        # print(f'alphat (rad/s^2) = {alphat_self}')
 
         # TODO: should distribute better to nodes
         #       this isn't biased by mass or anything...
         mxyzt_delta_self = -(alphat_self * inertia_final * 0.0)[np.newaxis, :]
-        # print(f'mxyzt_delta_self:\n{mxyzt_delta_self}')
     else:
         mxyzt_delta_self = np.zeros(shape, dtype=dtype)
 
     mxyzt2 = mxyzt + mxyzt_df + mxyzt_delta_self
-    # print(f'mxyzt2:\n{mxyzt2}')
     mxyzt2_total = mxyzt2.sum(axis=0)
 
     # Don't divide by ~0.
@@ -729,16 +540,25 @@ def inertia_relief(
             stacklevel=2,
         )
 
-    # d'Alembert moment from the rigid-body angular acceleration.
+    # d'Alembert force from the rigid-body angular acceleration.
     #
-    # The restoring moment on a point mass is the FULL tensor form
-    #     -m * ((alpha x d) x d)
-    # which couples the axes. The previous diagonal-only form
-    #     -alpha[i] * m * (d_j^2 + d_k^2)
-    # is just the diagonal of the inertia tensor and drops the products of
-    # inertia, so it only balances when the body already lies along the
-    # global axes. On the rotated bar it left a residual of ~4.8.
-    mxyzt_dm = -mass[:, np.newaxis] * np.cross(np.cross(dxyzt, alphat_moment[np.newaxis, :]), dxyzt)
+    # A point mass at d from the cg has the tangential acceleration alpha x d,
+    # so its inertial load is the FORCE
+    #     -m * (alpha x d)
+    # applied at the node. These sum to zero (sum(m*d) = 0 about the cg) and
+    # their moment about the cg is -sum(m d x (alpha x d)) = -[I_pp] alpha,
+    # the full tensor (products of inertia included).
+    #
+    # This was previously returned as the equivalent nodal MOMENT
+    # -m * d x (alpha x d). That is statically equivalent for the free body,
+    # but a point mass has no rotary inertia of its own, and grids with no
+    # rotational stiffness (solids, rods) cannot react a nodal moment, so the
+    # relief would be lost there.
+    fxyzt_alpha = -mass[:, np.newaxis] * np.cross(alphat_moment[np.newaxis, :], dxyzt)
+    fxyzt_delta = fxyzt_delta + fxyzt_alpha
+
+    # Only the self-inertia of each lumped mass produces a nodal moment.
+    mxyzt_dm = np.zeros(shape, dtype=dtype)
 
     # Self-inertia of each lumped mass (its own I0*alpha, no parallel axis).
     #
@@ -760,15 +580,14 @@ def inertia_relief(
         # rotate into the principal frame: I_t = S.T @ I @ S
         imat_t = np.einsum("ij,njk,kl->nil", S.T, imat_n, S)
         mxyzt_dm = mxyzt_dm - np.einsum("nij,j->ni", imat_t, alphat_moment)
-    # print(f'mxyzt_dm_total = {mxyzt_dm.sum(axis=0)}')
 
     # mxyzt_df is the per-node r×F couple about the CG — needed internally
     # to solve for alpha, but NOT part of the returned dmoment.  Including
     # it would bake force-arm moments into the nodal moment correction,
     # which forces every caller that computes moments about a different
     # point (section cuts, monitor stations) to reverse-engineer and
-    # subtract it.  Returning only the pure d'Alembert angular-acceleration
-    # correction (mxyzt_dm) keeps the output physically clean:
+    # subtract it.  Returning only the self-inertia I0*alpha correction
+    # (mxyzt_dm) keeps the output physically clean:
     #   sum(moment + dmoment) + sum(r × (force + dforce)) == 0
     # about any reference point.
     mxyzt_delta = mxyzt_delta_self + mxyzt_dm
@@ -779,12 +598,130 @@ def inertia_relief(
     fxyz_delta_out = np.einsum("nij,nj->ni", St[np.newaxis, :], fxyzt_delta)
     mxyz_delta_out = np.einsum("nij,nj->ni", St[np.newaxis, :], mxyzt_delta)
 
-    # St = S.T  # also tried S instead of S.T
-    # fxyz_delta_out = np.einsum('nij,ni->nj',St[np.newaxis,:], fxyzt_delta)
-    # mxyz_delta_out = np.einsum('nij,ni->nj',St[np.newaxis,:], mxyzt_delta)
-
     return fxyz_delta_out, mxyz_delta_out
 
 
-if __name__ == "__main__":  # pragma: no cover
-    inertia_relief_from_model(None)
+def lumped_blocks_to_point_masses(
+    mass_blocks: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Converts per-grid 6x6 rigid mass blocks into equivalent point masses.
+
+    A 6x6 rigid-body mass block about a grid is exactly equivalent to a single
+    mass ``m`` located at an offset ``e`` from the grid with a self-inertia
+    ``I0`` about that offset point::
+
+        [ m I3       m skew(e).T             ]
+        [ m skew(e)  I0 + m((e.e) I3 - e e.T)]
+
+    so a CONM2 offset (or several masses lumped at one grid) is represented
+    without loss for rigid-body purposes.
+
+    Parameters
+    ----------
+    mass_blocks : (ngrid,6,6) float ndarray
+        the diagonal 6x6 block of the basic-frame mass matrix for each grid,
+        ordered [T1, T2, T3, R1, R2, R3]
+
+    Returns
+    -------
+    mass : (ngrid,) float ndarray
+        the translational mass; the mean of the T1/T2/T3 diagonal
+    offset : (ngrid,3) float ndarray
+        the offset ``e`` from the grid to the mass cg (0 where mass is 0)
+    inertia : (ngrid,6) float ndarray
+        self-inertia about the mass cg, packed as
+        [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] (positive-integral products)
+
+    Notes
+    -----
+    - A block whose T1/T2/T3 masses differ (e.g. a CMASS on one DOF) has no
+      single point-mass equivalent; the mean is used.  Callers should check
+      ``mass_blocks[:, :3, :3]`` if they care.
+    - The rotational block is the tensor, so its off-diagonals are
+      ``-I21``-style terms (QRG CONM2 remark 5); they are negated when packed
+      so ``inertia`` holds the positive integrals ``Ixy = int(rho x y dV)``.
+    - The first moment ``m e`` is read from the lower-left (``R x T``) block
+      using the CONM2 sign convention in ``mass_matrix._add_conm2``:
+      ``M[3,1] = -m e3, M[3,2] = m e2, M[4,2] = -m e1``.
+
+    """
+    nblock = mass_blocks.shape[0]
+    assert mass_blocks.shape == (nblock, 6, 6), mass_blocks.shape
+    mass = (mass_blocks[:, 0, 0] + mass_blocks[:, 1, 1] + mass_blocks[:, 2, 2]) / 3.0
+
+    # first moment m*e from the symmetric halves of the R x T coupling block
+    rt = 0.5 * (mass_blocks[:, 3:, :3] + np.swapaxes(mass_blocks[:, :3, 3:], 1, 2))
+    first_moment = np.column_stack([-rt[:, 1, 2], rt[:, 0, 2], -rt[:, 0, 1]])
+    offset = np.zeros((nblock, 3), dtype="float64")
+    imass = mass != 0.0
+    offset[imass] = first_moment[imass] / mass[imass, np.newaxis]
+
+    # remove the parallel-axis term to get the inertia about the mass cg
+    e = offset
+    ee = np.einsum("ni,nj->nij", e, e)
+    parallel = mass[:, np.newaxis, np.newaxis] * (
+        np.einsum("ni,ni->n", e, e)[:, np.newaxis, np.newaxis] * np.eye(3)[np.newaxis, :, :] - ee
+    )
+    rr = mass_blocks[:, 3:, 3:]
+    i0 = 0.5 * (rr + np.swapaxes(rr, 1, 2)) - parallel
+    inertia = np.column_stack(
+        [i0[:, 0, 0], i0[:, 1, 1], i0[:, 2, 2], -i0[:, 0, 1], -i0[:, 0, 2], -i0[:, 1, 2]]
+    )
+    return mass, offset, inertia
+
+
+def inertia_relief_6x6(
+    mass_blocks: np.ndarray,
+    xyz: np.ndarray,
+    force: np.ndarray,
+    moment: np.ndarray,
+    debug: bool = False,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Inertia relief from per-grid 6x6 lumped mass blocks.
+
+    This is the model-agnostic entry point for a lumped mass matrix (e.g. a
+    block-diagonal MGG in the basic frame).  Each block is converted to a
+    point mass at its own cg (``lumped_blocks_to_point_masses``), the applied
+    loads are moved to those points, ``inertia_relief`` is solved, and the
+    relief is moved back to the grids::
+
+        M_p = M_g - e x F         (grid -> mass cg)
+        dM_g = dM_p + e x dF      (mass cg -> grid)
+
+    Parameters
+    ----------
+    mass_blocks : (ngrid,6,6) float ndarray
+        per-grid 6x6 mass blocks in the basic frame (already scaled by wtmass)
+    xyz : (ngrid,3) float ndarray
+        grid locations in the basic frame
+    force : (ngrid,3) float ndarray
+        applied grid forces in the basic frame
+    moment : (ngrid,3) float ndarray
+        applied grid moments in the basic frame
+    debug : bool; default=False
+        passed to ``inertia_relief``
+
+    Returns
+    -------
+    dforce : (ngrid,3) float ndarray
+        the inertial force increment at each grid, basic frame
+    dmoment : (ngrid,3) float ndarray
+        the inertial moment increment at each grid, basic frame
+
+    Notes
+    -----
+    - Only the diagonal 6x6 blocks are used; mass coupling *between* grids
+      (e.g. a CMASS2 connecting two grids) is ignored.
+      TODO: fold off-block-diagonal mass terms into the rigid-body properties.
+
+    """
+    mass, offset, inertia = lumped_blocks_to_point_masses(mass_blocks)
+    xyz_mass = xyz + offset
+    moment_mass = moment - np.cross(offset, force)
+    dforce, dmoment_mass = inertia_relief(
+        mass, xyz_mass, inertia, force, moment_mass, wtmass=1.0, debug=debug
+    )
+    dmoment = dmoment_mass + np.cross(offset, dforce)
+    return dforce, dmoment

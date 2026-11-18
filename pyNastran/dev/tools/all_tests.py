@@ -1,5 +1,7 @@
 import unittest
 from pyNastran.dev.tools.inrel.test_inrel import TestInrel
+from pyNastran.dev.tools.inrel.test_inertia_loads import TestInertiaLoads
+from pyNastran.dev.tools.inrel.test_inertia_relief_vectorized import TestInertiaReliefVectorized
 from pyNastran.dev.tools.test_huth import TestHuth
 from pyNastran.dev.tools.pressure_map.test_pressure_map import (
     TestPressureMap,

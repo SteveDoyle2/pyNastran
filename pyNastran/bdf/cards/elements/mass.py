@@ -1451,8 +1451,18 @@ class CONM2(PointMassElement):
 
     def Inertia(self) -> np.ndarray:
         """
-        Returns the 3x3 inertia matrix
-        .. warning:: doesnt handle offsets or coordinate systems
+        Returns the 3x3 inertia tensor about the CONM2 cg in the basic frame
+
+        Notes
+        -----
+        - Per QRG CONM2 remark 5, the card values are the positive integrals
+          (I21 = int(rho x1 x2 dV)) and the negative off-diagonal signs are
+          supplied automatically, so this returns the tensor with -I21,
+          -I31, -I32 off-diagonal.  It is NOT the packed
+          [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] form; negate the off-diagonals to
+          get that.
+        - Per QRG CONM2 remark 6, a cylindrical/spherical CID is used as the
+          local Cartesian system defined by its axes.
 
         """
         I = self.I
@@ -1465,21 +1475,13 @@ class CONM2(PointMassElement):
         if cid in [0, -1]:
             return inertia
         else:
-            # transform to global
-            #dx = self.cid_ref.transform_node_to_global(self.X)
-            coord_type = self.cid_ref.type
-            if coord_type not in ['CORD1R', 'CORD2R']:
-                warnings.warn(f'CONM2 (eid={self.eid}) inertia method for {coord_type} CID = {cid} is not implemented')
-                return np.zeros((3, 3))
-            else:
-                # about CG matches FEMAP (outside of the flipped signs I applied above)
-                # TODO: hasn't been verified about the origin, but should be ok
-                xform = self.cid_ref.beta()  # T_LG: transform (local to global)
-                # T_GL = T_LG.T
-                inertia2 = xform.T @ inertia @ xform  # M_GG = T_GL @ M_LL @ T_LG
-                # warnings.warn(f'CONM2 (eid={self.eid}) inertia method for {coord_type} cid={self.cid} is not validated\n'
-                #               f'inertia={inertia} xform(local->global)={xform} inertia2={inertia2}')
-            return inertia2  # correct for offset using dx; I don't think so???
+            # Rotate to basic.  QRG CONM2 remark 6: a cylindrical/spherical
+            # CID is used as the local Cartesian system of its axes, so beta()
+            # applies to every coordinate type.  The inertia is about the cg,
+            # so the offset does not enter here.
+            xform = self.cid_ref.beta()  # T_LG: rows are the local axes in basic
+            inertia2 = xform.T @ inertia @ xform  # M_GG = T_GL @ M_LL @ T_LG
+            return inertia2
 
     def offset(self, xyz_nid: np.ndarray) -> np.ndarray:
         cid = self.Cid()
@@ -1501,13 +1503,11 @@ class CONM2(PointMassElement):
             # If CID > 0, then X1, X2, and X3 are defined by a local Cartesian system, even
             # if CID references a spherical or cylindrical coordinate system. This is similar
             # to the manner in which displacement coordinate systems are defined.
-            # this statement is not supported...
-
-            # convert self.X into the global frame
-            x = self.cid_ref.transform_node_to_global(self.X)
-
-            # self.X is an offset
-            dx = x - self.cid_ref.origin
+            #
+            # So rotate the offset by the coordinate axes only; don't use
+            # transform_node_to_global, which reads X as (r, theta, z) for a
+            # CORD2C.
+            dx = self.cid_ref.beta().T @ np.asarray(self.X, dtype='float64')
 
             # the actual position of the CONM2
             X2 = xyz_nid + dx
@@ -1537,16 +1537,12 @@ class CONM2(PointMassElement):
             # If CID > 0, then X1, X2, and X3 are defined by a local Cartesian system, even
             # if CID references a spherical or cylindrical coordinate system. This is similar
             # to the manner in which displacement coordinate systems are defined.
-            # this statement is not supported...
             cid_ref = self.cid_ref
             if cid_ref is None:
                 raise RuntimeError(f'CONM2 error eid={self.eid} cid={self.cid}; '
                                    f'cid_ref is None\n{str(self)}')
-            # convert self.X into the global frame
-            x = cid_ref.transform_node_to_global(self.X)
-
-            # self.X is an offset
-            dx = x - self.cid_ref.origin
+            # rotate the offset by the coordinate axes only (see offset())
+            dx = cid_ref.beta().T @ np.asarray(self.X, dtype='float64')
 
             # the actual position of the CONM2
             X2 = self.nid_ref.get_position() + dx
@@ -1579,13 +1575,8 @@ class CONM2(PointMassElement):
             # If CID > 0, then X1, X2, and X3 are defined by a local Cartesian system, even
             # if CID references a spherical or cylindrical coordinate system. This is similar
             # to the manner in which displacement coordinate systems are defined.
-            # this statement is not supported...
-
-            # convert self.X into the global frame
-            x = cid_ref.transform_node_to_global(self.X)
-
-            # self.X is an offset
-            dx = x - cid_ref.origin
+            # rotate the offset by the coordinate axes only (see offset())
+            dx = cid_ref.beta().T @ np.asarray(self.X, dtype='float64')
 
             # the actual position of the CONM2
             X2 = nid_ref.get_position() + dx

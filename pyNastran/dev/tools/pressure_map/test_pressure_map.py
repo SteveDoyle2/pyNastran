@@ -16,7 +16,7 @@ from pyNastran.dev.tools.pressure_map.pressure_map import (
     pressure_map, pressure_filename_to_fa2j, pressure_filename_to_wkk_diag,
     map_panel_force_moment_centroid, pressure_map_to_panel_model,
     pressure_map_to_structure_model, pressure_map_to_lcp_model,
-    _check_lcp_group_location)
+    _check_lcp_group_location, _setup_panel_groups)
 from pyNastran.dev.tools.pressure_map.setup_aero import (
     get_aero_model, get_aero_pressure_centroid, log_aero_force_moment)
 
@@ -2068,6 +2068,651 @@ def _two_region_cart3d(log: SimpleLogger, keep_region: int=0) -> Cart3D:
         model.regions = model.regions[ikeep]
         model.loads = {'Cp': model.loads['Cp'][ikeep]}
     return model
+
+
+class _CaeroMapping(unittest.TestCase):
+    """Shared helpers for the CAERO-like panel_model tests (no tests here)."""
+
+    def _map_caero(self, caeros: list[dict],
+                   aero_caeros: list[dict] | None = None,
+                   fin: bool = False,
+                   panel_map_method: str = 'nearest_aerobox_refined_3d',
+                   panel_groups: dict[str, dict] | None = None,
+                   reference_point: np.ndarray | None = None,
+                   ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, float, str]:
+        """Maps a linear Cp field and computes the exact per-panel load.
+
+        aero_caeros : a different (e.g., larger) aero planform; the owner of
+            each aero element is then found by brute force (inside a panel,
+            else the panel with the nearest edge)
+        fin : swap y and z, so the panels are a vertical fin (XZ plane)
+        panel_groups : {name: {'regions': [...], 'x_rotation': deg}}; the
+            group's eids are the boxes owned by those regions' aero elements
+
+        Returns
+        -------
+        eids, actual, expected, rel_err : per panel
+        force_ratio : mapped / aero total normal force
+        text : the log
+        """
+        log, msgs = _capture_log()
+        structure, aero, owner_eid = _caero1_like_models(log, caeros)
+        if aero_caeros is not None:
+            unused_structure, aero, unused_owner = _caero1_like_models(
+                log, aero_caeros, nrefine=7)
+            owner_eid = _brute_force_owner_eids(structure, aero)
+        if fin:
+            for node in structure.nodes.values():
+                node.xyz = node.xyz[[0, 2, 1]]
+            aero.points = aero.points[:, [0, 2, 1]]
+        eids = np.array(sorted(structure.elements), dtype='int32')
+        if panel_groups is not None:
+            panel_groups = {
+                name: dict(group, eids=np.unique(
+                    owner_eid[np.isin(aero.regions, group['regions'])]))
+                for name, group in panel_groups.items()}
+        out = pressure_map_to_panel_model(
+            aero, structure, eids,
+            reference_point=np.zeros(3) if reference_point is None else reference_point,
+            map_type='force_moment', qinf=1.0,
+            panel_map_method=panel_map_method,
+            panel_groups=panel_groups)
+
+        cp = aero.loads['Cp']
+        area = _cart3d_tri_area(aero)
+        panel_force = np.bincount(owner_eid, weights=cp * area)
+        panel_area = np.array([structure.elements[eid].Area() for eid in eids])
+        expected = panel_force[eids] / panel_area
+        p = {load.eids[0]: load.pressure for load in out.loads[1]}
+        actual = np.array([p[eid] for eid in eids])
+        rel_err = np.abs(actual - expected) / np.abs(expected)
+        force_ratio = (actual * panel_area).sum() / (cp * area).sum()
+        return eids, actual, expected, rel_err, force_ratio, '\n'.join(msgs)
+
+    def _check_caero_mapping(self, caeros: list[dict], label: str,
+                             aero_caeros: list[dict] | None = None,
+                             fin: bool = False,
+                             expect_overlap: bool = False) -> str:
+        """Asserts the default mapping is exact (rel 1e-8) and conserves force.
+
+        Returns the log text.
+        """
+        eids, actual, expected, rel_err, force_ratio, text = self._map_caero(
+            caeros, aero_caeros=aero_caeros, fin=fin)
+        imax = rel_err.argmax()
+        self.assertLess(
+            rel_err.max(), 1e-8,
+            msg=f'{label}: eid={eids[imax]} p={actual[imax]:.5f} '
+                f'expected={expected[imax]:.5f}; '
+                f'{np.sum(rel_err > 1e-8)}/{len(eids)} panels wrong')
+        self.assertAlmostEqual(force_ratio, 1.0, delta=1e-10, msg=label)
+        overlap_msg = 'overlap in the projected view'
+        if expect_overlap:
+            self.assertIn(overlap_msg, text, msg=label)
+        else:
+            self.assertNotIn(overlap_msg, text, msg=label)
+        return text
+
+
+class TestPanelModelDensityBug(_CaeroMapping):
+    """Nearest-centroid mapping fails when structural panel sizes differ greatly."""
+
+    def _build_10_to_1_structure(self, log: SimpleLogger) -> BDF:
+        """Two z-panels: small 1x1 at x=[0,1], large 10x1 at x=[1,11]."""
+        model = BDF(log=log)
+        model.add_grid(1, [0., 0., 0.])
+        model.add_grid(2, [1., 0., 0.])
+        model.add_grid(3, [1., 1., 0.])
+        model.add_grid(4, [0., 1., 0.])
+        model.add_grid(5, [11., 0., 0.])
+        model.add_grid(6, [11., 1., 0.])
+        model.add_cquad4(1, 10, [1, 2, 3, 4])   # small: area=1
+        model.add_cquad4(2, 10, [2, 5, 6, 3])   # large: area=10
+        model.add_pshell(10, mid1=100, t=0.1)
+        model.add_mat1(100, 1.0e7, None, 0.3)
+        model.cross_reference()
+        return model
+
+    def _uniform_cp_aero(self, log: SimpleLogger,
+                         xmax: float = 11.,
+                         nx: int = 110,
+                         ny: int = 10) -> Cart3D:
+        """Fine Cart3D mesh with Cp=1 covering [0, xmax] x [0, 1] at z=0.01."""
+        x = np.linspace(0., xmax, nx + 1)
+        y = np.linspace(0., 1., ny + 1)
+        xg, yg = np.meshgrid(x, y, indexing='ij')
+        points = np.column_stack([
+            xg.ravel(), yg.ravel(), np.full(xg.size, 0.01)])
+        tris = []
+        for i in range(nx):
+            for j in range(ny):
+                n1 = i * (ny + 1) + j
+                n2 = n1 + (ny + 1)
+                tris.extend([(n1, n2, n2 + 1), (n1, n2 + 1, n1 + 1)])
+        aero = Cart3D(log=log)
+        aero.points = points
+        aero.regions = np.ones(len(tris), dtype='int32')
+        aero.elements = np.array(tris, dtype='int32')
+        aero.loads = {'Cp': np.ones(len(tris))}
+        return aero
+
+    def test_10_to_1_chordwise_uniform_cp(self):
+        """Uniform Cp=1 must give p=1.0 on both panels regardless of size ratio.
+
+        Correct:  p_small = p_large = 1.0
+        Panel centroids: small at x=0.5, large at x=6.0.
+        Old bug: Voronoi boundary at x=3.25 instead of x=1.0, so the small
+        panel captures aero from x=[0, 3.25] (3.25x its own area).
+        Tolerance: 5% for mesh discretization.
+        """
+        log = SimpleLogger(level='warning')
+        structure = self._build_10_to_1_structure(log)
+        aero = self._uniform_cp_aero(log)
+
+        out = pressure_map_to_panel_model(
+            aero, structure,
+            np.array([1, 2], dtype='int32'),
+            reference_point=np.zeros(3),
+            map_type='force_moment', qinf=1.0)
+
+        p = {load.eids[0]: load.pressure
+             for load in out.loads[1]}
+        self.assertAlmostEqual(p[1], 1.0, delta=0.05,
+            msg=f'small panel p={p[1]:.3f}, expected 1.0')
+        self.assertAlmostEqual(p[2], 1.0, delta=0.05,
+            msg=f'large panel p={p[2]:.3f}, expected 1.0')
+
+    def test_panel_map_methods(self):
+        """Fidelity ordering of panel_map_method on a 60 deg swept, 10:1 chord CAERO1.
+
+        nearest_aerobox_centroid: wrong (ignores size ratio and sweep)
+        nearest_aerobox_refined: better, but approximate for sweep
+        nearest_aerobox_refined_3d: exact (rel 1e-8)
+        All three conserve the total normal force (rel 1e-10).
+        The old names ('centroid', 'subpanel', 'contain') are rejected.
+        """
+        tan60 = np.tan(np.radians(60.))
+        caeros = [
+            dict(p1=[0., 0., 0.], x12=6., p4=[6. * tan60, 6., 0.], x43=3.,
+                 uchord=np.array([0., 0.05, 0.1, 1.0]),
+                 vspan=np.array([0., 0.1, 0.5, 1.0])),
+        ]
+        centroid = 'nearest_aerobox_centroid'
+        refined = 'nearest_aerobox_refined'
+        refined_3d = 'nearest_aerobox_refined_3d'
+        max_err = {}
+        for method in (centroid, refined, refined_3d):
+            unused_eids, unused_actual, unused_expected, rel_err, force_ratio, text = (
+                self._map_caero(caeros, panel_map_method=method))
+            self.assertIn(f"panel_map_method={method!r}", text)
+            self.assertAlmostEqual(force_ratio, 1.0, delta=1e-10, msg=method)
+            max_err[method] = rel_err.max()
+        self.assertGreater(max_err[centroid], 0.1, msg=max_err)
+        self.assertLess(max_err[refined], max_err[centroid], msg=max_err)
+        self.assertGreater(max_err[refined], 1e-8, msg=max_err)
+        self.assertLess(max_err[refined_3d], 1e-8, msg=max_err)
+
+        for bad_method in ('bad', 'centroid', 'subpanel', 'contain'):
+            with self.assertRaises(AssertionError, msg=bad_method):
+                self._map_caero(caeros, panel_map_method=bad_method)
+
+    def test_overlapping_caero1_t_tail(self):
+        """Horizontal tail 3 above a swept wing, overlapping it in the XY view.
+
+        The wing has 0.5-size boxes, the tail 2x1 boxes; each surface's aero
+        mesh sits 0.01 above its own panels, so the nearest panel in 3D is
+        the right one.  Without overlap handling the tail loads land on the
+        wing (or vice versa).
+        Tolerance: rel 1e-8 per panel; total Fz conserved to 1e-10.
+        """
+        tan30 = np.tan(np.radians(30.))
+        caeros = [
+            dict(p1=[0., 0., 0.], x12=4., p4=[4. * tan30, 4., 0.], x43=4.,
+                 uchord=np.linspace(0., 1., 9), vspan=np.linspace(0., 1., 9)),
+            dict(p1=[2., 0., 3.], x12=4., p4=[2. + 2. * tan30, 2., 3.], x43=4.,
+                 uchord=np.linspace(0., 1., 3), vspan=np.linspace(0., 1., 3)),
+        ]
+        self._check_caero_mapping(caeros, 'T-tail overlap', expect_overlap=True)
+
+    def test_leading_edge_and_tip_overhang(self):
+        """Aero planform extends 0.5 ahead of the swept LE and 0.5 past the tip.
+
+        Overhanging aero elements go to the panel with the nearest edge
+        (checked by brute force over all panels); the aero mesh is not
+        aligned with the boxes.
+        Tolerance: rel 1e-8 per panel; total Fz conserved to 1e-10.
+        """
+        tan30 = np.tan(np.radians(30.))
+        caeros = [
+            dict(p1=[0., 0., 0.], x12=4., p4=[4. * tan30, 4., 0.], x43=3.,
+                 uchord=np.linspace(0., 1., 5), vspan=np.linspace(0., 1., 4)),
+            dict(p1=[4. * tan30, 4., 0.], x12=3., p4=[6. * tan30, 6., 0.], x43=2.,
+                 uchord=np.array([0., 0.05, 0.1, 1.]), vspan=np.linspace(0., 1., 3)),
+        ]
+        aero_caeros = [
+            dict(p1=[-0.5, 0., 0.], x12=4.5, p4=[6.5 * tan30 - 0.5, 6.5, 0.], x43=2.25,
+                 uchord=np.linspace(0., 1., 7), vspan=np.linspace(0., 1., 9)),
+        ]
+        text = self._check_caero_mapping(caeros, 'LE/tip overhang', aero_caeros=aero_caeros)
+        self.assertIn("panel_dim='z'", text)
+        self.assertIn('aero elements are outside the structural panels', text)
+        self.assertIn('0 are farther than the largest panel side', text)
+
+    def test_far_aero_elements_logged(self):
+        """An aero element 50 past the only panel is still mapped and is logged as far."""
+        log, msgs = _capture_log()
+        structure = _one_quad_structure(log)
+        aero = _two_tri_cart3d(log)
+        aero.points = aero.points.copy()
+        far_points = aero.points[aero.elements[1]] + [50., 0., 0.]
+        aero.points = np.vstack([aero.points, far_points])
+        nnodes = len(aero.points)
+        aero.elements = np.vstack([aero.elements, [[nnodes - 3, nnodes - 2, nnodes - 1]]])
+        aero.regions = np.ones(len(aero.elements), dtype='int32')
+        aero.loads = {'Cp': np.ones(len(aero.elements))}
+        pressure_map_to_panel_model(
+            aero, structure, np.array([1], dtype='int32'),
+            reference_point=np.zeros(3), map_type='force_moment', qinf=1.0)
+        text = '\n'.join(msgs)
+        self.assertIn('1 are farther than the largest panel side', text)
+
+    def test_swept_fin_y_panels(self):
+        """Vertical fin (XZ plane) with 1:10:1 box sizes and 35 deg sweep.
+
+        y-panels must be mapped in the XZ plane (an XY projection collapses
+        the fin to a line).
+        Tolerance: rel 1e-8 (any misassigned aero element fails).
+        """
+        tan35 = np.tan(np.radians(35.))
+        caeros = [
+            dict(p1=[0., 0., 0.], x12=6., p4=[2. * tan35, 2., 0.], x43=5.,
+                 uchord=np.linspace(0., 1., 11), vspan=np.linspace(0., 1., 3)),
+            dict(p1=[2. * tan35, 2., 0.], x12=5., p4=[6. * tan35, 6., 0.], x43=3.,
+                 uchord=np.linspace(0., 1., 2), vspan=np.linspace(0., 1., 2)),
+        ]
+        self._check_caero_mapping(caeros, 'swept fin', fin=True)
+
+    def test_swept_two_caero1_density_mismatch(self):
+        """Two adjoining 45 deg swept CAERO1s; inboard 4x2 boxes, outboard 0.4x0.8 boxes.
+
+        Cp = 1 + 0.3*x + 0.2*y; the aero mesh is aligned with every box, so
+        the exact per-panel pressure is the area-weighted Cp of the aero
+        elements inside the box.
+        Tolerance: rel 1e-8 (any misassigned aero element fails).
+        """
+        tan45 = 1.0
+        caeros = [
+            dict(p1=[0., 0., 0.], x12=4., p4=[4. * tan45, 4., 0.], x43=4.,
+                 uchord=np.linspace(0., 1., 2), vspan=np.linspace(0., 1., 3)),
+            dict(p1=[4. * tan45, 4., 0.], x12=4., p4=[8. * tan45, 8., 0.], x43=2.,
+                 uchord=np.linspace(0., 1., 11), vspan=np.linspace(0., 1., 6)),
+        ]
+        self._check_caero_mapping(caeros, 'swept 45, 2 CAERO1')
+
+    def test_swept_60deg_chordwise_10_to_1(self):
+        """60 deg swept, tapered CAERO1 with 10:1 chordwise spacing (LCHORD-like).
+
+        Chord fractions [0, 0.05, 0.1, 1.0] give boxes 0.05c, 0.05c, 0.9c.
+        Tolerance: rel 1e-8 (any misassigned aero element fails).
+        """
+        tan60 = np.tan(np.radians(60.))
+        caeros = [
+            dict(p1=[0., 0., 0.], x12=6., p4=[6. * tan60, 6., 0.], x43=3.,
+                 uchord=np.array([0., 0.05, 0.1, 1.0]),
+                 vspan=np.array([0., 0.1, 0.5, 1.0])),
+        ]
+        self._check_caero_mapping(caeros, 'swept 60, 10:1 chord')
+
+    def test_swept_three_caero1_with_gap_in_density(self):
+        """Wing root/mid/tip CAERO1s at 35 deg sweep with 1:10:1 box size ratios.
+
+        Tolerance: rel 1e-8 (any misassigned aero element fails).
+        """
+        tan35 = np.tan(np.radians(35.))
+        caeros = [
+            dict(p1=[0., 0., 0.], x12=10., p4=[3. * tan35, 3., 0.], x43=9.,
+                 uchord=np.linspace(0., 1., 11), vspan=np.linspace(0., 1., 4)),
+            dict(p1=[3. * tan35, 3., 0.], x12=9., p4=[9. * tan35, 9., 0.], x43=7.,
+                 uchord=np.linspace(0., 1., 2), vspan=np.linspace(0., 1., 2)),
+            dict(p1=[9. * tan35, 9., 0.], x12=7., p4=[12. * tan35, 12., 0.], x43=6.,
+                 uchord=np.linspace(0., 1., 11), vspan=np.linspace(0., 1., 4)),
+        ]
+        self._check_caero_mapping(caeros, 'swept 35, 3 CAERO1')
+
+
+class TestPanelQuarterChordForceMoment(unittest.TestCase):
+    """force_sid / moment_sid are the box force and pitching moment about its 1/4 chord"""
+
+    def _check_constant_pressure(self, caeros: list[dict], label: str, fin: bool = False,
+                                 panel_groups: dict[str, dict] | None = None) -> None:
+        """Constant Cp=0.7 over every box (aero mesh aligned with the boxes).
+
+        For each box (G1..G4 = CAERO box order):
+          force_sid  = pressure_sid * A
+          moment_sid = -(x_centroid - x_qc) * force   (z-panels: My)
+                       +(x_centroid - x_qc) * force   (y-panels: Mz)
+        where x_qc = x of the leading-edge midpoint + mid-span chord / 4, and
+        x_centroid is the box's area centroid.
+        Tolerance: rel 1e-10.
+        """
+        log = SimpleLogger(level='warning')
+        structure, aero, owner_eid = _caero1_like_models(log, caeros)
+        aero.loads['Cp'] = np.full(len(aero.elements), 0.7)
+        if fin:
+            for node in structure.nodes.values():
+                node.xyz = node.xyz[[0, 2, 1]]
+            aero.points = aero.points[:, [0, 2, 1]]
+        eids = np.array(sorted(structure.elements), dtype='int32')
+        if panel_groups is not None:
+            panel_groups = {
+                name: dict(group, eids=np.unique(
+                    owner_eid[np.isin(aero.regions, group['regions'])]))
+                for name, group in panel_groups.items()}
+        out = pressure_map_to_panel_model(
+            aero, structure, eids, reference_point=np.zeros(3),
+            map_type='force_moment', qinf=1.0, panel_groups=panel_groups)
+        values = {(sid, load.eids[0]): load.pressure
+                  for sid, loads in out.loads.items() for load in loads}
+
+        for eid in eids:
+            elem = structure.elements[eid]
+            xyz = np.array([structure.nodes[nid].xyz for nid in elem.node_ids])
+            pressure = values[(1, eid)]
+            force = values[(2, eid)]
+            moment = values[(3, eid)]
+            self.assertAlmostEqual(abs(pressure), 0.7, delta=1e-10, msg=f'{label} eid={eid}')
+            self.assertAlmostEqual(force / (pressure * elem.Area()), 1.0, delta=1e-10,
+                                   msg=f'{label} eid={eid}')
+
+            p1, p2, p3, p4 = xyz
+            p14 = (p1 + p4) / 2.
+            p23 = (p2 + p3) / 2.
+            x_qc = p14[0] + (p23[0] - p14[0]) / 4.
+            # area centroid of the (planar) box: two triangles, 1-2-3 and 1-3-4
+            area_123 = 0.5 * np.linalg.norm(np.cross(p2 - p1, p3 - p1))
+            area_134 = 0.5 * np.linalg.norm(np.cross(p3 - p1, p4 - p1))
+            x_centroid = ((p1 + p2 + p3)[0] * area_123 + (p1 + p3 + p4)[0] * area_134) / (
+                3. * (area_123 + area_134))
+            sign = 1. if fin else -1.
+            expected = sign * (x_centroid - x_qc) * force
+            self.assertAlmostEqual(moment, expected, delta=1e-10 * abs(force) * 10.,
+                                   msg=f'{label} eid={eid}: moment={moment} expected={expected}')
+
+    def test_constant_pressure_swept_tapered_wing(self):
+        """35 deg swept, tapered wing with 1:10 chordwise boxes."""
+        tan35 = np.tan(np.radians(35.))
+        caeros = [dict(p1=[0., 0., 0.], x12=6., p4=[6. * tan35, 6., 0.], x43=3.,
+                       uchord=np.array([0., 0.1, 1.]), vspan=np.linspace(0., 1., 4))]
+        self._check_constant_pressure(caeros, 'wing')
+
+    def test_constant_pressure_fin(self):
+        """Same boxes as a vertical fin (y-panels; Mz about the 1/4 chord)."""
+        tan35 = np.tan(np.radians(35.))
+        caeros = [dict(p1=[0., 0., 0.], x12=6., p4=[6. * tan35, 6., 0.], x43=3.,
+                       uchord=np.array([0., 0.1, 1.]), vspan=np.linspace(0., 1., 4))]
+        self._check_constant_pressure(caeros, 'fin', fin=True)
+
+    def test_constant_pressure_vtail_group(self):
+        """V-tail boxes mapped in a rotated panel group (moment in the group frame)."""
+        caeros = _wing_vtail_caeros(40.)
+        panel_groups = {
+            'vtail_left': {'regions': [2], 'x_rotation': -40.},
+            'vtail_right': {'regions': [3], 'x_rotation': -140.},
+        }
+        self._check_constant_pressure(caeros, 'vtail', panel_groups=panel_groups)
+
+
+BALANCE_PANEL = 'Force/Moment Balance: Aero vs Mapped Structure (panel_model)'
+BALANCE_PANEL_GROUP = 'Force/Moment Balance: Aero vs Mapped Structure (panel_model; group={})'
+
+
+def _wing_vtail_caeros(tail_rotation: float = 40.) -> list[dict]:
+    """
+    region 1: swept wing at z=0, y=0..6
+    region 2: left V-tail; built in the XY plane, then rotated +tail_rotation
+              about x (up and to +y)
+    region 3: right V-tail; rotated 180-tail_rotation (up and to -y, with
+              the box normals pointing down/outboard)
+    The tails have 1:10 chordwise boxes.
+    """
+    tan30 = np.tan(np.radians(30.))
+    tail = dict(p1=[8., 0.5, 0.], x12=3., p4=[8. + 2.5 * tan30, 3., 0.], x43=2.,
+                uchord=np.array([0., 0.1, 1.]), vspan=np.linspace(0., 1., 4))
+    return [
+        dict(p1=[0., 0., 0.], x12=4., p4=[6. * tan30, 6., 0.], x43=2.,
+             uchord=np.linspace(0., 1., 5), vspan=np.linspace(0., 1., 7), region=1),
+        dict(tail, region=2, x_rotation=tail_rotation),
+        dict(tail, region=3, x_rotation=180. - tail_rotation),
+    ]
+
+
+class TestPanelGroups(_CaeroMapping):
+    """panel_groups: map aero regions onto panels in a frame rotated about x"""
+
+    def test_vtail_panel_groups(self):
+        """Wing + V-tail canted 40 deg from horizontal, each tail as a rotated group.
+
+        Without groups, the tail boxes are z-panels that only get Fz, so their
+        pressure is low by cos(40 deg) = 0.77 (checked: >20% error).
+        With groups (x_rotation=-40 / -140), every box's pressure is the exact
+        normal-force average, and the basic-frame force and moment balance
+        (overall and per group) match the aero totals.
+        Tolerance: rel 1e-8 per box; total normal force 1e-10; balance
+        tables LOG_TOL (6 significant figures).
+        """
+        caeros = _wing_vtail_caeros(40.)
+        reference_point = np.array([5., 1., 2.])
+        unused_eids, unused_actual, unused_expected, rel_err, unused_ratio, unused_text = (
+            self._map_caero(caeros, reference_point=reference_point))
+        self.assertGreater(rel_err.max(), 0.2)
+
+        panel_groups = {
+            'vtail_left': {'regions': [2], 'x_rotation': -40.},
+            'vtail_right': {'regions': [3], 'x_rotation': -140.},
+        }
+        eids, actual, expected, rel_err, force_ratio, text = self._map_caero(
+            caeros, panel_groups=panel_groups, reference_point=reference_point)
+        imax = rel_err.argmax()
+        self.assertLess(rel_err.max(), 1e-8,
+                        msg=f'eid={eids[imax]} p={actual[imax]} expected={expected[imax]}')
+        self.assertAlmostEqual(force_ratio, 1.0, delta=1e-10)
+
+        self.assertIn("panel group 'vtail_left': regions=[2]", text)
+        self.assertIn('max tilt from XY=0.0 deg', text)
+        for title in [BALANCE_PANEL] + [BALANCE_PANEL_GROUP.format(name)
+                                        for name in ('default', 'vtail_left', 'vtail_right')]:
+            bal = _parse_balance([text], title)
+            np.testing.assert_allclose(bal['struct_f'], bal['aero_f'], err_msg=title, **LOG_TOL)
+            np.testing.assert_allclose(bal['struct_m'], bal['aero_m'], err_msg=title, **LOG_TOL)
+        # the tails carry side force in the basic frame
+        bal = _parse_balance([text], BALANCE_PANEL_GROUP.format('vtail_left'))
+        self.assertGreater(abs(bal['struct_f'][1]), 0.5 * abs(bal['struct_f'][2]))
+
+    def test_panel_groups_dihedral_wing(self):
+        """A 10 deg dihedral wing rotated flat by its group is exact (no cos error).
+
+        Tolerance: rel 1e-8 per box.
+        """
+        caeros = _wing_vtail_caeros()[:1]
+        caeros[0]['x_rotation'] = 10.
+        unused_eids, unused_actual, unused_expected, rel_err, unused_ratio, unused_text = (
+            self._map_caero(caeros))
+        self.assertGreater(rel_err.max(), 0.01)  # cos(10 deg) = 0.985
+
+        eids, actual, expected, rel_err, unused_ratio, text = self._map_caero(
+            caeros, panel_groups={'wing': {'regions': [1], 'x_rotation': -10.}})
+        self.assertLess(rel_err.max(), 1e-8)
+        self.assertNotIn("panel group 'default'", text)
+
+    def test_panel_groups_validation(self):
+        """Bad panel_groups raise; missing ids and empty groups warn."""
+        log, msgs = _capture_log()
+        structure_eids = np.array([1, 2, 3, 4])
+        tri_region = np.array([1, 1, 2, 3])
+        quad_region = np.array([], dtype='int32')
+        bad_groups = [
+            ({'default': {'regions': [1], 'eids': [1]}}, 'reserved'),
+            ({'a': {'regions': [1], 'eids': [1], 'angle': 5.}}, 'unknown keys'),
+            ({'a': {'regions': [1], 'eids': [1]}, 'b': {'regions': [1], 'eids': [2]}},
+             'more than one group'),
+            ({'a': {'regions': [1], 'eids': [1]}, 'b': {'regions': [2], 'eids': [1]}},
+             'more than one group'),
+        ]
+        for groups, msg in bad_groups:
+            with self.assertRaisesRegex(ValueError, msg):
+                _setup_panel_groups(groups, structure_eids, tri_region, quad_region, log)
+
+        groups = _setup_panel_groups(
+            {'tail': {'regions': [2, 99], 'eids': [3, 4, 1000], 'x_rotation': 45}},
+            structure_eids, tri_region, quad_region, log)
+        text = '\n'.join(msgs)
+        self.assertIn("panel group 'tail' has missing aero regions; [99]", text)
+        self.assertIn("panel group 'tail' has 1 eids that aren't mapped", text)
+        self.assertEqual(list(groups), ['default', 'tail'])
+        self.assertEqual(groups['default']['regions'], [1, 3])
+        self.assertEqual(groups['default']['ieid'].tolist(), [0, 1])
+        self.assertEqual(groups['tail']['itri'].tolist(), [2])
+        self.assertEqual(groups['tail']['ieid'].tolist(), [2, 3])
+        self.assertEqual(groups['tail']['x_rotation'], 45.)
+
+        # a group with aero but no panels: its load is dropped, with a warning
+        log, msgs = _capture_log()
+        structure = _one_quad_structure(log)
+        aero = _two_region_cart3d(log)
+        pressure_map_to_panel_model(
+            aero, structure, np.array([1], dtype='int32'), reference_point=np.zeros(3),
+            map_type='force_moment', qinf=1.0,
+            panel_groups={'tail': {'regions': [2], 'eids': []}})
+        self.assertIn("panel group 'tail' has 1 aero elements, but no panels", '\n'.join(msgs))
+
+
+def _caero1_like_models(log: SimpleLogger,
+                        caeros: list[dict],
+                        nrefine: int = 4) -> tuple[BDF, Cart3D, np.ndarray]:
+    """
+    Builds CQUAD4 boxes laid out like CAERO1 panels and an aligned Cart3D mesh.
+
+    Each caero dict has p1/x12 (root LE point/chord), p4/x43 (tip LE
+    point/chord), and uchord/vspan (box division fractions, like LCHORD/LSPAN).
+    Optional: region (aero region id; default=1) and x_rotation (degrees,
+    right-handed about +x through the origin, applied to the boxes and their
+    aero mesh after they are built; e.g., to make a V-tail).
+    Every box is split into nrefine x nrefine aero cells (2 tris each), so the
+    owning box of each aero tri is known exactly.
+
+    Returns
+    -------
+    structure : BDF
+    aero : Cart3D
+        Cp = 1 + 0.3*x + 0.2*y at the tri centroids
+    owner_eid : (ntri,) int ndarray
+        the structural eid that geometrically contains each aero tri
+    """
+    structure = BDF(log=log)
+    structure.add_pshell(10, mid1=100, t=0.1)
+    structure.add_mat1(100, 1.0e7, None, 0.3)
+    points = []
+    tris = []
+    owners = []
+    regions = []
+    nid = 1
+    eid = 1
+    npoints = 0
+    for caero in caeros:
+        p1 = np.array(caero['p1'], dtype='float64')
+        p4 = np.array(caero['p4'], dtype='float64')
+        x12 = caero['x12']
+        x43 = caero['x43']
+        uchord = caero['uchord']
+        vspan = caero['vspan']
+        theta = np.radians(caero.get('x_rotation', 0.))
+        rotation = np.array([[1., 0., 0.],
+                             [0., np.cos(theta), -np.sin(theta)],
+                             [0., np.sin(theta), np.cos(theta)]])
+
+        def xyz(u: np.ndarray, v: np.ndarray, dz: float = 0.) -> np.ndarray:
+            chord = x12 + v * (x43 - x12)
+            le = p1[None, :] + v[:, None] * (p4 - p1)[None, :]
+            le[:, 0] += u * chord
+            le[:, 2] += dz
+            return le @ rotation.T
+
+        nchord = len(uchord) - 1
+        nspan = len(vspan) - 1
+        ug, vg = np.meshgrid(uchord, vspan, indexing='ij')
+        nid0 = nid
+        for xyzi in xyz(ug.ravel(), vg.ravel()):
+            structure.add_grid(nid, xyzi)
+            nid += 1
+        eid0 = eid
+        for i in range(nchord):
+            for j in range(nspan):
+                n1 = nid0 + i * (nspan + 1) + j
+                n2 = n1 + (nspan + 1)
+                structure.add_cquad4(eid, 10, [n1, n2, n2 + 1, n1 + 1])
+                eid += 1
+
+        ua = np.hstack([np.linspace(uchord[i], uchord[i + 1], nrefine + 1)[:-1]
+                        for i in range(nchord)] + [uchord[-1:]])
+        va = np.hstack([np.linspace(vspan[j], vspan[j + 1], nrefine + 1)[:-1]
+                        for j in range(nspan)] + [vspan[-1:]])
+        ug, vg = np.meshgrid(ua, va, indexing='ij')
+        xyz_aero = xyz(ug.ravel(), vg.ravel(), dz=0.01)
+        points.append(xyz_aero)
+        na = len(ua) - 1
+        ma = len(va) - 1
+        for i in range(na):
+            for j in range(ma):
+                n1 = npoints + i * (ma + 1) + j
+                n2 = n1 + (ma + 1)
+                tris.extend([(n1, n2, n2 + 1), (n1, n2 + 1, n1 + 1)])
+                owner = eid0 + (i // nrefine) * nspan + (j // nrefine)
+                owners.extend([owner, owner])
+        regions.extend([caero.get('region', 1)] * (2 * na * ma))
+        npoints += len(xyz_aero)
+
+    structure.cross_reference()
+    aero = Cart3D(log=log)
+    aero.points = np.vstack(points)
+    aero.elements = np.array(tris, dtype='int32')
+    aero.regions = np.array(regions, dtype='int32')
+    centroid = aero.points[aero.elements].mean(axis=1)
+    aero.loads = {'Cp': 1.0 + 0.3 * centroid[:, 0] + 0.2 * centroid[:, 1]}
+    return structure, aero, np.array(owners, dtype='int64')
+
+
+def _brute_force_owner_eids(structure: BDF, aero: Cart3D) -> np.ndarray:
+    """
+    Reference owner of each aero tri (XY projection): the panel containing
+    the centroid, else the panel with the closest edge.  Checks every panel.
+    """
+    centroid = aero.points[aero.elements].mean(axis=1)[:, :2]
+    eids = np.array(sorted(structure.elements))
+    distance = np.zeros((len(centroid), len(eids)))
+    for j, eid in enumerate(eids):
+        quad = np.array([structure.nodes[nid].xyz[:2]
+                         for nid in structure.elements[eid].node_ids])
+        signed = []
+        dmin = np.full(len(centroid), np.inf)
+        for i in range(4):
+            a = quad[i]
+            b = quad[(i + 1) % 4]
+            ab = b - a
+            ap = centroid - a
+            signed.append(ab[0] * ap[:, 1] - ab[1] * ap[:, 0])
+            t = np.clip(ap @ ab / (ab @ ab), 0., 1.)
+            dmin = np.minimum(dmin, np.linalg.norm(ap - t[:, None] * ab, axis=1))
+        signed = np.array(signed)
+        is_inside = np.all(signed >= 0., axis=0) | np.all(signed <= 0., axis=0)
+        distance[:, j] = np.where(is_inside, 0., dmin)
+    return eids[distance.argmin(axis=1)]
+
+
+def _cart3d_tri_area(aero: Cart3D) -> np.ndarray:
+    """Tri areas of a Cart3D model."""
+    xyz = aero.points[aero.elements]
+    return 0.5 * np.linalg.norm(
+        np.cross(xyz[:, 1] - xyz[:, 0], xyz[:, 2] - xyz[:, 0]), axis=1)
 
 
 if __name__ == '__main__':  # pragma: no cover

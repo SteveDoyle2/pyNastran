@@ -198,12 +198,163 @@ Example::
         xyz_units_in='in', xyz_units_out='in', pressure_units='psi',
         force_sid=2, moment_sid=3, load_sid=6,
         pressure_filename='lcp.bdf')
+
+panel_model: aero surface -> flat CAERO-like boxes
+...................................................
+method='panel_model' maps the aero surface onto flat CQUAD4 boxes laid
+out like CAERO1 panels (e.g., from export_caero_mesh).  Each box gets one
+PLOAD2 pressure.
+
+Load paths (by design)
+,,,,,,,,,,,,,,,,,,,,,,
+ - Each box is classified by the largest component of its normal:
+   z-normal boxes ("z-panels") are mapped in the XY plane and carry Fz
+   (lift, pitching moment); y-normal boxes ("y-panels") are mapped in the
+   XZ plane and carry Fy (side force, yawing moment).  x-normal boxes
+   raise an AssertionError.
+ - Every aero element goes through both passes: all of its Fz lands on a
+   z-panel and all of its Fy on a y-panel, because all load must land on a
+   panel.  So wing/fuselage side force lands on the fin, and fuselage
+   top/bottom Fz lands on the wing root.  map_directions='z' or 'y' drops
+   the other component entirely.
+ - Fx (drag) is not mapped; the boxes are pressure-only.
+ - Upper and lower aero surfaces both project onto the same box, so the
+   box gets the net (Cp jump) load.
+
+Mapping methods (panel_map_method)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Each aero element is assigned whole to one box by its centroid (no area
+splitting), so an element straddling two boxes puts all its load on one.
+The error scales with (aero element size / box size); use an aero mesh
+finer than the boxes.  The method only picks the box; it doesn't change
+where the load acts (the force/moment are always about the 1/4 chord).
+
+ - 'nearest_aerobox_centroid' (fidelity 1/10): nearest box centroid.
+   Wrong when neighboring boxes differ in size or are swept: a 1:10
+   chordwise pair put 3.25x the load on the small box, and a 60 deg swept
+   CAERO1 with 1:10 chordwise boxes was off by up to 746% on one box.
+ - 'nearest_aerobox_refined' (fidelity 3/10): nearest centroid of a
+   refined mesh of roughly equal sub-boxes.  Fixes size ratios, but the
+   swept edges don't follow the nearest-centroid boundaries: up to 7%
+   error on the same 60 deg case.
+ - 'nearest_aerobox_refined_3d' (fidelity 6/10, default): exact
+   point-in-box test on the boxes of the nearest refined sub-boxes.  Exact
+   for any size ratio or sweep when the aero element centroids lie inside
+   the boxes.  "3d" because overlapping boxes are resolved by 3D distance.
+
+'nearest_aerobox_refined_3d' edge cases:
+ - Aero elements outside every box (e.g., a leading edge or tip that's in
+   the aero model, but not the structural model) go to the box with the
+   nearest edge.  Force is conserved; the moment shifts by about
+   force * distance.  Their count, force, and distance are logged (info,
+   not a warning: in the y pass, far wing elements are expected).
+ - Only the boxes of the 8 nearest sub-box centroids are tested.  If the
+   containing box isn't among them, the element goes to the nearest-edge
+   candidate instead (near the right place, but maybe the wrong box).
+   This can happen when the sub-box cap below kicks in.
+ - Sub-boxes are sized to the smallest box side in the pass, so one tiny
+   box refines everything.  Above ~2M sub-boxes the size is coarsened
+   (warning), which weakens the size-ratio fix.
+ - An element exactly on a shared edge goes to the nearer candidate.
+ - Overlap: if boxes overlap in the projected view (a T-tail above the
+   wing; left and right fuselage sides in the XZ view), every element in
+   that pass goes to the box with the smallest 3D distance,
+   hypot(in-plane distance (0 if inside), distance to the box's plane).
+   A warning lists the overlapping box ids.  This path is slower.
+ - Overlap is found by testing sub-box centroids against nearby boxes, so
+   overlaps narrower than about half a sub-box aren't detected and are
+   handled as if there was no overlap (first candidate wins).
+ - Coplanar overlapping boxes (e.g., duplicated boxes) can't be separated;
+   the load goes to one of them, not split.
+ - Boxes must be convex in the projected view.
+
+Structure requirements
+,,,,,,,,,,,,,,,,,,,,,,
+ - CQUAD4 only (CTRIA3 boxes raise an AssertionError).
+ - CAERO box node order: G1 = inboard leading edge, G2 = inboard trailing
+   edge, G3 = outboard trailing edge, G4 = outboard leading edge, so that
+   x(G2) >= x(G1) and x(G3) >= x(G4) (asserted).  Chord is along x.
+ - Without panel_groups, V-tails (boxes near 45 deg) are classified by the
+   larger normal component and projected onto that one plane; they only
+   get that one force component (40 deg cant: 23% low), and the other
+   component goes to whatever boxes of the other orientation are nearest.
+   Use panel_groups (below).
+
+Rotated panel groups (panel_groups)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+For V-tails (e.g., an F-35), canted fins, or dihedral, put the surface's
+aero regions and boxes in a group and rotate them about x into the XY (or
+XZ) plane::
+
+    panel_groups = {
+        'vtail_left':  {'regions': [3], 'eids': left_eids,  'x_rotation': -40.},
+        'vtail_right': {'regions': [4], 'eids': right_eids, 'x_rotation': -140.},
+    }
+
+ - x_rotation is in degrees, right-handed about +x through the origin
+   (positive takes +y toward +z).  It is applied to the group's aero
+   elements, boxes, and the reference point.  Pick it so the boxes' normals
+   end up along z (or y); the log reports each group's "max tilt from XY"
+   / "from XZ", which should be ~0.  Left and right surfaces need separate
+   groups (+angle / -angle, or 180 deg apart, depending on box normals).
+ - Only rotations about x are supported, since the box chord must stay
+   along x (node order check, quarter-chord moment center).
+ - Each group is mapped on its own: its aero regions only load its boxes,
+   and its boxes only get its regions' load.  Everything else is the
+   'default' group (no rotation), with the usual both-passes behavior.
+   So a V-tail's load no longer spills onto the fin/wing and vice versa.
+ - In the rotated frame, a flat group carries its full normal force
+   (exact, including dihedral).  Any in-plane aero force of the group is
+   only mapped if the group also has boxes of the other orientation;
+   otherwise it is dropped and shows up in the group's balance.
+ - The structural force/moment is rotated back to the basic frame for the
+   balance.  A per-group balance is logged ("... (panel_model;
+   group=NAME)") as well as the total.
+ - pressure_sid / cp_sid are frame independent (a PLOAD2 acts along the
+   box normal).  force_sid / moment_sid / cp_signed_sid values for a
+   rotated group are in the group's rotated frame.
+ - A region or eid in two groups raises a ValueError; ids that aren't in
+   the models are dropped with a warning.  A group with aero elements but
+   no boxes drops that load (warning); boxes with no aero get no load
+   (warning).  'default' is a reserved group name.
+ - Groups don't share a box mesh, so the 'nearest_aerobox_refined_3d'
+   overlap checks are per group.
+
+Output
+,,,,,,
+map_type must be 'force_moment'; 'pressure' (the default of pressure_map
+and pressure_map_to_panel_model) raises a RuntimeError.  All of these are
+PLOAD2 cards, one per box:
+
+ - pressure_sid: p = F_normal / A_box.  This is the Nastran load.
+ - force_sid / moment_sid: the "pressure" field holds the box's normal
+   force / moment (My for z-panels, Mz for y-panels, about the box's
+   quarter chord).  These are data, not loads; don't apply them in a
+   Nastran subcase.
+ - cp_sid: Cp = p / qinf in the PLOAD2 sense (positive along the box
+   normal); cp_signed_sid: Cp in the global sense (positive along +z for
+   z-panels, +y for y-panels), regardless of the box normal.
+
+Known errors in the written loads:
+ - Each PLOAD2 is uniform over its box, so Nastran puts the box's force at
+   the box's area centroid.  The logged "Struct" moment uses the actual
+   aero force distribution within each box, so it matches the aero total
+   even when the deck's moment doesn't; the difference shrinks with box
+   size.
+ - Tilted boxes (dihedral theta): p = Fz / A, but Nastran applies p
+   normal to the box, so the box's vertical force is Fz*cos(theta) (1.5%
+   low at 10 deg) and it also gets a side force Fz*sin(theta).  That side
+   force is in addition to the Fy already sent to the y-panels, so the
+   deck's total side force is roughly doubled.  The logged balance
+   assumes [0, 0, Fz] and doesn't show this.  Workaround: put a constant
+   dihedral surface in a panel group rotated by -dihedral (exact).
+   TODO: handle varying dihedral (one group per dihedral break for now).
 """
 
 from __future__ import annotations
 import os
 from itertools import zip_longest
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 import numpy as np
 
 try:
@@ -235,8 +386,12 @@ from pyNastran.dev.tools.pressure_map.setup_structure import (
 )
 from pyNastran.dev.tools.pressure_map.setup_aero import get_aero_model, get_aero_pressure_centroid
 
-if TYPE_CHECKING:
-    import matplotlib.pyplot as plt
+# panel_model aero -> structural panel assignment; see pressure_map_to_panel_model
+PANEL_MAP_METHODS = (
+    "nearest_aerobox_centroid",
+    "nearest_aerobox_refined",
+    "nearest_aerobox_refined_3d",
+)
 
 
 def pressure_filename_to_fa2j(
@@ -410,6 +565,8 @@ def pressure_map(
     force_to_pressure_tol: float | None = None,
     punch: bool = False,
     log: Optional[SimpleLogger] = None,
+    panel_map_method: str = "nearest_aerobox_refined_3d",
+    panel_groups: dict[str, dict] | None = None,
 ) -> BDF:
     """
     Maps CFD Cp onto a structural model and writes the load deck.
@@ -531,6 +688,12 @@ def pressure_map(
         force to a PLOAD2 when its in-plane part is <= tol*|F|; the rest
         (fin leading edges, base, in-plane fin drag) stay FORCE cards.
         Both go under force_sid.  The dropped in-plane force is logged.
+    panel_map_method : str; default='nearest_aerobox_refined_3d'
+        panel_model only: 'nearest_aerobox_centroid', 'nearest_aerobox_refined',
+        or 'nearest_aerobox_refined_3d'; see ``pressure_map_to_panel_model``
+    panel_groups : dict[str, dict] | None; default=None
+        panel_model only: aero regions + panels mapped in a frame rotated
+        about x (e.g., V-tails); see ``pressure_map_to_panel_model``
 
     +-------------------+----------+-------+---------------+
     | method / map_type | pressure | force | force_moment  |
@@ -544,14 +707,10 @@ def pressure_map(
     *NOTE: panel_model outputs pressure/force/moment as sid=1,2,3. Select what you want.
     LCP writes FORCE (force_sid) + MOMENT (moment_sid) on GRIDs.
 
-    TODO: Support vtail pressure box mapping:
-      - requires:
-        - same aero model
-        - different bdfs
-        - different aero regions
-
     TODO: add support for excluding y/z pressure mapping
-    TODO: consider aero panel dihedral; need to reduce load by cos(theta); do a dot product?
+    TODO: panel_model: dihedral boxes outside a rotated panel group have a
+          cos(theta) / side force error; see the module docstring
+          "panel_model" section
     """
     # assert pressure_filename != 'pressure.bdf', pressure_filename
     assert aero_format in {"cart3d", "fluent", "tecplot"}, aero_format
@@ -631,6 +790,8 @@ def pressure_map(
             pressure_units=pressure_units,
             # idtype=idtype,
             fdtype=fdtype,
+            panel_map_method=panel_map_method,
+            panel_groups=panel_groups,
         )
     # elif method == 'strip_model':
     # make the strips
@@ -1198,6 +1359,8 @@ def pressure_map_to_panel_model(
     pressure_units: str = "",
     # idtype: str='int32',
     fdtype: str = "float64",
+    panel_map_method: str = "nearest_aerobox_refined_3d",
+    panel_groups: dict[str, dict] | None = None,
 ) -> BDF:
     """
     Maps pressure from an aero model to a structural model. assumes:
@@ -1207,9 +1370,51 @@ def pressure_map_to_panel_model(
     Handles:
      - cruiciform (standard) fuselage, horizontal tail, vertical tail
      - total or piece-part mapping
-    Doesn't handle:
-     - vtail: needs a mapping directions or rotation
+     - V-tails / canted tails / dihedral, using panel_groups
+
+    Parameters
+    ----------
+    panel_groups : dict[str, dict] | None; default=None
+        Maps some aero regions onto some panels in a rotated frame::
+
+            panel_groups = {
+                'vtail_left':  {'regions': [3], 'eids': left_eids,  'x_rotation': -40.},
+                'vtail_right': {'regions': [4], 'eids': right_eids, 'x_rotation': 40.},
+            }
+
+        regions : list[int]
+            aero regions that load this group's panels (and no others)
+        eids : list[int]
+            the group's structural panels (a subset of structure_eids)
+        x_rotation : float; default=0.0
+            degrees, right-handed about +x (positive takes +y toward +z),
+            applied to the group's aero and panels before mapping.  Pick it
+            so the group's panels lie in the XY plane (or XZ plane); the
+            logged "max tilt" should then be ~0.
+
+        Everything not in a group is the 'default' group (no rotation).
+        Each group is mapped on its own: its aero regions only load its
+        panels.  Results are rotated back to the basic frame for the
+        balance, and a per-group balance is logged.  A region or eid in two
+        groups raises a ValueError.  See the module docstring "panel_model"
+        section.
+    panel_map_method : str; default='nearest_aerobox_refined_3d'
+        how each aero element centroid is assigned to an aero box, in the
+        box's projected plane (XY for z-panels, XZ for y-panels).  It only
+        picks the box; the force/moment are always about the box's 1/4 chord.
+
+         - 'nearest_aerobox_centroid' (fidelity 1/10): nearest box centroid;
+           fastest.  Wrong when neighboring boxes differ in size (e.g.,
+           10:1) or are swept.
+         - 'nearest_aerobox_refined' (fidelity 3/10): nearest centroid of a
+           refined, roughly uniform sub-box mesh.  Fixes size ratios; still
+           approximate for swept boxes.
+         - 'nearest_aerobox_refined_3d' (fidelity 6/10): exact point-in-box
+           test; points outside all boxes go to the nearest box edge
+           (logged).  If boxes overlap in the projected view (e.g., a T-tail
+           over the wing), the nearest box in 3D is used instead.
     """
+    assert panel_map_method in PANEL_MAP_METHODS, panel_map_method
     aero_format = aero_model.__class__.__name__.lower()
     assert aero_format in {"cart3d", "fluent", "tecplot"}, aero_format
     assert aero_format in {"cart3d", "fluent", "tecplot"}, aero_format
@@ -1313,72 +1518,74 @@ def pressure_map_to_panel_model(
     out = get_mapped_structure(structure_model, structure_eids, fdtype=fdtype)
     structure_eids, structure_area, structure_centroid, structure_normal = out
 
-    # Split structural elements by orientation.
-    #
-    # For each element, find which axis its normal is most aligned with.
-    # imax == 2 → z-normal panels (XY plane, e.g. wing, horizontal tail)
-    # imax == 1 → y-normal panels (XZ plane, e.g. vertical tail, fuselage sides)
-    # imax == 0 → x-normal: not supported (assert below); these would be
-    #             bulkhead-like elements that the panel model doesn't handle.
-    #
-    # Each group is processed in a separate call to _map_pressure_panel_model,
-    # which maps ALL aero elements to the nearest panel of that orientation.
-    abs_normals = np.abs(structure_normal)
-    imax = np.argmax(abs_normals, axis=1)
-    imax_min = imax.min()
-    assert len(imax) == nelements_structure
-    assert imax_min > 0, imax  # no x-normal panels allowed
-
-    iy_structure = np.where(imax == 1)[0]
-    iz_structure = np.where(imax == 2)[0]
-    eids_y = structure_eids[iy_structure]
-    eids_z = structure_eids[iz_structure]
-    assert len(eids_y) or len(eids_z), (eids_y, eids_z)
+    aero_tri_region = aero_dict["tri_region"]
+    aero_quad_region = aero_dict["quad_region"]
+    groups = _setup_panel_groups(
+        panel_groups, structure_eids, aero_tri_region, aero_quad_region, log
+    )
 
     bdf_model_out = BDF(log=structure_model.log)
-    ny_structure = len(iy_structure)
-    nz_structure = len(iz_structure)
-    log.info(
-        f"nstructure={len(structure_eids)} = ny_structure={ny_structure} + nz_structure={nz_structure}"
-    )
-    # Accumulate structural force/moment across both panel orientations.
-    # Safe to sum because each panel type returns only its normal-force
-    # component (z-panels → [0,0,Fz], y-panels → [0,Fy,0]) and the
-    # corresponding moment_normal (Fz-only or Fy-only), so there is
-    # no double-counting of either forces or moments.
+    # Each group is mapped on its own, in its own rotated frame; the
+    # group's structural force/moment are rotated back to the basic frame
+    # and summed.
     total_structure_force = np.zeros(3, dtype=fdtype)
     total_structure_moment = np.zeros(3, dtype=fdtype)
-    if nz_structure > 0 and "z" in map_directions:
-        panel_dim = "z"
-        z_structure_sign = np.sign(structure_normal[iz_structure, 2])
-        struct_force_z, struct_moment_z = _map_pressure_panel_model(
+    for group_name, group in groups.items():
+        itri = group["itri"]
+        iquad = group["iquad"]
+        ieid = group["ieid"]
+        naero = len(itri) + len(iquad)
+        if naero == 0 or len(ieid) == 0:
+            if naero:
+                log.warning(
+                    f"panel group {group_name!r} has {naero} aero elements, but no panels; "
+                    f"its aero load is not mapped"
+                )
+            elif len(ieid):
+                log.warning(
+                    f"panel group {group_name!r} has {len(ieid)} panels, but no aero elements; "
+                    f"they get no load"
+                )
+            continue
+
+        rotation = _x_rotation_matrix(group["x_rotation"])
+        aero_group = {
+            "node_id": aero_node_id,
+            "xyz": _rotate(aero_xyz, rotation),
+            "tri_nodes": aero_tri_nodes[itri],
+            "tri_area": aero_tri_area[itri],
+            "tri_cp": aero_tri_cp[itri],
+            "tri_normal": _rotate(aero_tri_normal[itri], rotation),
+            "tri_centroid": _rotate(aero_tri_centroid[itri], rotation),
+            "tri_force": _rotate(aero_tri_force_coeff_per_q[itri], rotation),
+            "quad_nodes": aero_quad_nodes[iquad],
+            "quad_area": aero_quad_area[iquad],
+            "quad_cp": aero_quad_cp[iquad],
+            "quad_normal": _rotate(aero_quad_normal[iquad], rotation),
+            "quad_centroid": _rotate(aero_quad_centroid[iquad], rotation),
+            "quad_force": _rotate(aero_quad_force_coeff_per_q[iquad], rotation),
+        }
+        log.info(
+            f"panel group {group_name!r}: regions={group['regions']}; {len(ieid)} panels; "
+            f"{naero} aero elements; x_rotation={group['x_rotation']:g} deg"
+        )
+        group_force, group_moment = _map_panel_group(
+            group_name,
             structure_model,
             bdf_model_out,
             map_type,
             map_location,
-            panel_dim,
-            aero_node_id,
-            aero_xyz,
-            aero_tri_nodes,
-            aero_tri_area,
-            aero_tri_cp,
-            aero_tri_normal,
-            aero_tri_centroid,
-            aero_tri_force_coeff_per_q,
-            aero_quad_nodes,
-            aero_quad_area,
-            aero_quad_cp,
-            aero_quad_normal,
-            aero_quad_centroid,
-            aero_quad_force_coeff_per_q,
+            map_directions,
+            aero_group,
             structure_nodes,
-            structure_xyz,
-            structure_eids,
-            structure_area,
-            structure_centroid,
-            iz_structure,
-            z_structure_sign,
-            flip_Cp=flip_Cp_xy,
+            _rotate(structure_xyz, rotation),
+            structure_eids[ieid],
+            structure_area[ieid],
+            _rotate(structure_centroid[ieid], rotation),
+            _rotate(structure_normal[ieid], rotation),
+            rotation @ reference_point,
+            flip_Cp_xy=flip_Cp_xy,
+            flip_Cp_xz=flip_Cp_xz,
             qinf=qinf,
             pressure_sid=pressure_sid,
             force_sid=force_sid,
@@ -1386,57 +1593,41 @@ def pressure_map_to_panel_model(
             cp_sid=cp_sid,
             cp_signed_sid=cp_signed_sid,
             pressure_units=pressure_units,
-            reference_point=reference_point,
             sref=sref,
             bref=bref,
             cref=cref,
+            panel_map_method=panel_map_method,
         )
-        total_structure_force += struct_force_z
-        total_structure_moment += struct_moment_z
-    if ny_structure > 0 and "y" in map_directions:
-        panel_dim = "y"
-        y_structure_sign = np.sign(structure_normal[iy_structure, 1])
-        struct_force_y, struct_moment_y = _map_pressure_panel_model(
-            structure_model,
-            bdf_model_out,
-            map_type,
-            map_location,
-            panel_dim,
-            aero_node_id,
-            aero_xyz,
-            aero_tri_nodes,
-            aero_tri_area,
-            aero_tri_cp,
-            aero_tri_normal,
-            aero_tri_centroid,
-            aero_tri_force_coeff_per_q,
-            aero_quad_nodes,
-            aero_quad_area,
-            aero_quad_cp,
-            aero_quad_normal,
-            aero_quad_centroid,
-            aero_quad_force_coeff_per_q,
-            structure_nodes,
-            structure_xyz,
-            structure_eids,
-            structure_area,
-            structure_centroid,
-            iy_structure,
-            y_structure_sign,
-            flip_Cp=flip_Cp_xz,
-            qinf=qinf,
-            pressure_sid=pressure_sid,
-            force_sid=force_sid,
-            moment_sid=moment_sid,
-            cp_sid=cp_sid,
-            cp_signed_sid=cp_signed_sid,
-            reference_point=reference_point,
-            sref=sref,
-            bref=bref,
-            cref=cref,
-        )
-        total_structure_force += struct_force_y
-        total_structure_moment += struct_moment_y
+        # back to the basic frame (the rotation is about an axis through the
+        # origin and the reference point was rotated too, so M rotates as a vector)
+        group_force = rotation.T @ group_force
+        group_moment = rotation.T @ group_moment
+        total_structure_force += group_force
+        total_structure_moment += group_moment
+        if panel_groups:
+            group_aero_force = qinf * (
+                aero_tri_force_coeff_per_q[itri].sum(axis=0)
+                + aero_quad_force_coeff_per_q[iquad].sum(axis=0)
+            )
+            group_aero_moment = qinf * (
+                aero_tri_moment_coeff_per_q[itri].sum(axis=0)
+                + aero_quad_moment_coeff_per_q[iquad].sum(axis=0)
+            )
+            _log_force_moment_balance(
+                log,
+                f"Force/Moment Balance: Aero vs Mapped Structure (panel_model; group={group_name})",
+                group_aero_force,
+                group_aero_moment,
+                group_force,
+                group_moment,
+                reference_point,
+                qinf,
+                sref,
+                bref,
+                cref,
+                xyz_units=xyz_units,
+                pressure_units=pressure_units,
+            )
 
     # ----- Force/Moment Balance: Aero vs Structure ---------------------
     #
@@ -1477,6 +1668,640 @@ def pressure_map_to_panel_model(
         pressure_units=pressure_units,
     )
     return bdf_model_out
+
+
+def _x_rotation_matrix(angle_deg: float) -> np.ndarray:
+    """Right-handed rotation about +x (positive takes +y toward +z)."""
+    theta = np.radians(angle_deg)
+    c = np.cos(theta)
+    s = np.sin(theta)
+    return np.array([[1.0, 0.0, 0.0], [0.0, c, -s], [0.0, s, c]])
+
+
+def _rotate(xyz: np.ndarray, rotation: np.ndarray) -> np.ndarray:
+    """Rotates (n, 3) row vectors; skips the identity so results are bit-identical."""
+    if np.array_equal(rotation, np.eye(3)):
+        return xyz
+    return xyz @ rotation.T
+
+
+def _setup_panel_groups(
+    panel_groups: dict[str, dict] | None,
+    structure_eids: np.ndarray,
+    aero_tri_region: np.ndarray,
+    aero_quad_region: np.ndarray,
+    log: SimpleLogger,
+) -> dict[str, dict]:
+    """Validates panel_groups and adds the 'default' group (everything else).
+
+    Parameters
+    ----------
+    panel_groups : dict[str, dict] | None
+        {name: {'regions': [...], 'eids': [...], 'x_rotation': deg}};
+        see ``pressure_map_to_panel_model``
+    structure_eids : (neid,) int ndarray
+        the mapped structural element ids
+    aero_tri_region / aero_quad_region : int ndarray
+        the region of each aero element
+
+    Returns
+    -------
+    groups : dict[str, dict]
+        'default' first (if it has anything), then the user groups in order.
+        Each has regions, x_rotation, and index arrays itri, iquad, ieid
+        into the aero tri/quad and structure arrays.
+
+    Raises
+    ------
+    ValueError
+        unknown keys, a group named 'default', or a region/eid in more than
+        one group
+    """
+    if panel_groups is None:
+        panel_groups = {}
+    allowed_keys = {"regions", "eids", "x_rotation"}
+    all_regions = set(np.unique(np.hstack([aero_tri_region, aero_quad_region])).tolist())
+    all_eids = set(structure_eids.tolist())
+    used_regions: set[int] = set()
+    used_eids: set[int] = set()
+
+    user_groups = {}
+    for name, group in panel_groups.items():
+        if name == "default":
+            raise ValueError("panel group name 'default' is reserved for the ungrouped elements")
+        unknown = set(group) - allowed_keys
+        if unknown:
+            raise ValueError(
+                f"panel group {name!r} has unknown keys {sorted(unknown)}; "
+                f"allowed={sorted(allowed_keys)}"
+            )
+        regions = {int(region) for region in group["regions"]}
+        eids = {int(eid) for eid in group["eids"]}
+        duplicate_regions = regions & used_regions
+        duplicate_eids = eids & used_eids
+        if duplicate_regions:
+            raise ValueError(
+                f"panel group {name!r} regions={sorted(duplicate_regions)} "
+                "are in more than one group"
+            )
+        if duplicate_eids:
+            raise ValueError(
+                f"panel group {name!r} has {len(duplicate_eids)} eids in more than one group; "
+                f"e.g., {sorted(duplicate_eids)[:5]}"
+            )
+        used_regions |= regions
+        used_eids |= eids
+
+        missing_regions = sorted(regions - all_regions)
+        missing_eids = sorted(eids - all_eids)
+        if missing_regions:
+            log.warning(f"panel group {name!r} has missing aero regions; {missing_regions}")
+        if missing_eids:
+            log.warning(
+                f"panel group {name!r} has {len(missing_eids)} eids that aren't mapped "
+                f"structural elements; e.g., {missing_eids[:5]}"
+            )
+        user_groups[name] = {
+            "regions": sorted(regions & all_regions),
+            "eids": eids & all_eids,
+            "x_rotation": float(group.get("x_rotation", 0.0)),
+        }
+
+    groups = {}
+    default_regions = sorted(all_regions - used_regions)
+    default_eids = all_eids - used_eids
+    if default_regions or default_eids:
+        groups["default"] = {
+            "regions": default_regions,
+            "eids": default_eids,
+            "x_rotation": 0.0,
+        }
+    groups.update(user_groups)
+
+    for group in groups.values():
+        group["itri"] = np.where(np.isin(aero_tri_region, group["regions"]))[0]
+        group["iquad"] = np.where(np.isin(aero_quad_region, group["regions"]))[0]
+        group["ieid"] = np.where(np.isin(structure_eids, list(group.pop("eids"))))[0]
+    return groups
+
+
+def _map_panel_group(
+    group_name: str,
+    structure_model: BDF,
+    bdf_model_out: BDF,
+    map_type: str,
+    map_location: str,
+    map_directions: str,
+    aero: dict[str, np.ndarray],
+    structure_nodes: np.ndarray,
+    structure_xyz: np.ndarray,
+    structure_eids: np.ndarray,
+    structure_area: np.ndarray,
+    structure_centroid: np.ndarray,
+    structure_normal: np.ndarray,
+    reference_point: np.ndarray,
+    flip_Cp_xy: bool,
+    flip_Cp_xz: bool,
+    qinf: float,
+    pressure_sid: int,
+    force_sid: int,
+    moment_sid: int,
+    cp_sid: int,
+    cp_signed_sid: int,
+    pressure_units: str,
+    sref: float,
+    bref: float,
+    cref: float,
+    panel_map_method: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Maps one panel group's aero elements onto its panels (z pass + y pass).
+
+    All coordinates (aero, structure_xyz/centroid/normal, reference_point)
+    are already in the group's (rotated) frame.
+
+    Returns
+    -------
+    force, moment : (3,) float ndarray
+        the structural force and moment about reference_point, in the
+        group's frame
+    """
+    log = structure_model.log
+    fdtype = structure_area.dtype
+
+    # Split structural elements by orientation.
+    #
+    # For each element, find which axis its normal is most aligned with.
+    # imax == 2 → z-normal panels (XY plane, e.g. wing, horizontal tail)
+    # imax == 1 → y-normal panels (XZ plane, e.g. vertical tail, fuselage sides)
+    # imax == 0 → x-normal: not supported (assert below); these would be
+    #             bulkhead-like elements that the panel model doesn't handle.
+    #
+    # Each orientation is processed in a separate call to
+    # _map_pressure_panel_model, which maps ALL of the group's aero elements
+    # to the nearest panel of that orientation.
+    abs_normals = np.abs(structure_normal)
+    imax = np.argmax(abs_normals, axis=1)
+    assert imax.min() > 0, imax  # no x-normal panels allowed
+
+    iy_structure = np.where(imax == 1)[0]
+    iz_structure = np.where(imax == 2)[0]
+    assert len(iy_structure) or len(iz_structure), (iy_structure, iz_structure)
+    ny_structure = len(iy_structure)
+    nz_structure = len(iz_structure)
+
+    # tilt of each panel from its mapping plane; a large tilt means the
+    # PLOAD2 is applied off-axis (see the module docstring)
+    tilt_z = np.degrees(np.arccos(np.clip(abs_normals[iz_structure, 2], 0.0, 1.0)))
+    tilt_y = np.degrees(np.arccos(np.clip(abs_normals[iy_structure, 1], 0.0, 1.0)))
+    log.info(
+        f"panel group {group_name!r}: nstructure={len(structure_eids)} = "
+        f"nz_structure={nz_structure} (max tilt from XY={tilt_z.max(initial=0.0):.1f} deg) + "
+        f"ny_structure={ny_structure} (max tilt from XZ={tilt_y.max(initial=0.0):.1f} deg)"
+    )
+
+    # Accumulate structural force/moment across both panel orientations.
+    # Safe to sum because each panel type returns only its normal-force
+    # component (z-panels → [0,0,Fz], y-panels → [0,Fy,0]) and the
+    # corresponding moment_normal (Fz-only or Fy-only), so there is
+    # no double-counting of either forces or moments.
+    total_force = np.zeros(3, dtype=fdtype)
+    total_moment = np.zeros(3, dtype=fdtype)
+    passes = [
+        ("z", 2, iz_structure, flip_Cp_xy),
+        ("y", 1, iy_structure, flip_Cp_xz),
+    ]
+    for panel_dim, inormal, istructure, flip_Cp in passes:
+        if len(istructure) == 0 or panel_dim not in map_directions:
+            continue
+        structure_sign = np.sign(structure_normal[istructure, inormal])
+        force, moment = _map_pressure_panel_model(
+            structure_model,
+            bdf_model_out,
+            map_type,
+            map_location,
+            panel_dim,
+            aero["node_id"],
+            aero["xyz"],
+            aero["tri_nodes"],
+            aero["tri_area"],
+            aero["tri_cp"],
+            aero["tri_normal"],
+            aero["tri_centroid"],
+            aero["tri_force"],
+            aero["quad_nodes"],
+            aero["quad_area"],
+            aero["quad_cp"],
+            aero["quad_normal"],
+            aero["quad_centroid"],
+            aero["quad_force"],
+            structure_nodes,
+            structure_xyz,
+            structure_eids,
+            structure_area,
+            structure_centroid,
+            istructure,
+            structure_sign,
+            flip_Cp=flip_Cp,
+            qinf=qinf,
+            pressure_sid=pressure_sid,
+            force_sid=force_sid,
+            moment_sid=moment_sid,
+            cp_sid=cp_sid,
+            cp_signed_sid=cp_signed_sid,
+            pressure_units=pressure_units,
+            reference_point=reference_point,
+            sref=sref,
+            bref=bref,
+            cref=cref,
+            panel_map_method=panel_map_method,
+        )
+        total_force += force
+        total_moment += moment
+    return total_force, total_moment
+
+
+def _refine_panel_centroids_2d(
+    quad_xy: np.ndarray,
+    log: SimpleLogger,
+    max_sub_panels: int = 2_000_000,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Subdivide quad panels into sub-panels of roughly equal size.
+
+    The target sub-panel size is the smallest panel side length, so a
+    10:1 panel becomes ~10 sub-panels and every sub-panel centroid is
+    close to the part of the panel it represents.
+
+    Parameters
+    ----------
+    quad_xy : (npanel, 4, 2) float ndarray
+        projected corners of each panel (CQUAD4 order)
+    log : SimpleLogger
+        the logger
+    max_sub_panels : int; default=2_000_000
+        if exceeded, the target size is increased (coarser refinement)
+
+    Returns
+    -------
+    sub_centroids_xy : (n_sub, 2) float ndarray
+        centroids of the sub-panels
+    sub_to_panel : (n_sub,) int ndarray
+        index into quad_xy for each sub-panel
+
+    Notes
+    -----
+    Side lengths are the distances between opposite edge midpoints, so a
+    swept panel's spanwise length includes the 1/cos(sweep) stretch.
+    """
+    p1, p2, p3, p4 = (quad_xy[:, i, :] for i in range(4))
+    chord = np.linalg.norm((p2 + p3) - (p1 + p4), axis=1) / 2.0
+    span = np.linalg.norm((p3 + p4) - (p1 + p2), axis=1) / 2.0
+    # TODO: one global target means one tiny panel refines everything; a
+    #       per-region target (e.g., per CAERO) would scale better
+    target = min(chord.min(), span.min())
+    assert target > 0.0, f"degenerate panel; min chord={chord.min()} span={span.min()}"
+
+    nc = np.maximum(1, np.rint(chord / target)).astype("int64")
+    ns = np.maximum(1, np.rint(span / target)).astype("int64")
+    nsub_total = int((nc * ns).sum())
+    if nsub_total > max_sub_panels:
+        target *= np.sqrt(nsub_total / max_sub_panels)
+        nc = np.maximum(1, np.rint(chord / target)).astype("int64")
+        ns = np.maximum(1, np.rint(span / target)).astype("int64")
+        log.warning(
+            f"panel refinement capped at ~{max_sub_panels} sub-panels "
+            f"(needed {nsub_total}); target size={target:g}"
+        )
+
+    nsub = nc * ns
+    sub_to_panel = np.repeat(np.arange(len(quad_xy)), nsub)
+    offsets = np.cumsum(nsub) - nsub
+    k = np.arange(nsub.sum()) - offsets[sub_to_panel]
+    nsi = ns[sub_to_panel]
+    u = ((k // nsi) + 0.5) / nc[sub_to_panel]
+    v = ((k % nsi) + 0.5) / nsi
+    u = u[:, None]
+    v = v[:, None]
+    q = quad_xy[sub_to_panel]
+    sub_centroids_xy = (
+        (1 - u) * (1 - v) * q[:, 0]
+        + u * (1 - v) * q[:, 1]
+        + u * v * q[:, 2]
+        + (1 - u) * v * q[:, 3]
+    )
+    return sub_centroids_xy, sub_to_panel
+
+
+def find_owner_panels_2d(
+    quad_xy: np.ndarray,
+    points_xy: np.ndarray,
+    log: SimpleLogger,
+    quad_n: np.ndarray | None = None,
+    points_n: np.ndarray | None = None,
+    eids: np.ndarray | None = None,
+    ncandidates: int = 8,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Find the panel that contains (or is nearest to) each point in 2D.
+
+    Nearest-centroid lookup is wrong when panel sizes differ (a small
+    panel's centroid steals points inside its large neighbor) or when panels
+    are swept (the skewed edges don't match the perpendicular bisectors).
+    Instead:
+
+    1. subdivide panels into similar-size sub-panels
+       (``_refine_panel_centroids_2d``)
+    2. the panels of the ``ncandidates`` nearest sub-panel centroids are
+       candidates, tested in distance order with an exact point-in-quad test
+    3. points inside no candidate (e.g., a leading edge that is in the aero
+       model, but not the structural model) go to the candidate with the
+       smallest point-to-edge distance
+
+    If panels overlap in the projection (e.g., a T-tail above the wing),
+    containment is ambiguous, so every point instead goes to the candidate
+    with the smallest 3D distance:
+    ``hypot(in-plane distance (0 if inside), out-of-plane distance)``.
+    This requires ``quad_n`` and ``points_n``.
+
+    Parameters
+    ----------
+    quad_xy : (npanel, 4, 2) float ndarray
+        projected corners of each (convex) panel
+    points_xy : (npoint, 2) float ndarray
+        projected points to locate (e.g., aero element centroids)
+    log : SimpleLogger
+        the logger
+    quad_n : (npanel, 4) float ndarray; default=None
+        out-of-plane coordinate of the corners (z for z-panels)
+    points_n : (npoint,) float ndarray; default=None
+        out-of-plane coordinate of the points
+    eids : (npanel,) int ndarray; default=None
+        panel ids; only used in the overlap message
+    ncandidates : int; default=8
+        number of nearest sub-panels to test
+
+    Returns
+    -------
+    ipanel : (npoint,) int ndarray
+        index into quad_xy for each point
+    outside_distance : (npoint,) float ndarray
+        in-plane distance from the point to its panel; 0.0 if inside
+
+    Notes
+    -----
+    Containment is orientation independent (all edge cross products share
+    a sign), so panels with +z or -z normals both work.  Points on a shared
+    edge go to the first (nearest) candidate.
+
+    Overlap is detected by testing every sub-panel centroid against the
+    other nearby panels, so overlaps narrower than about half a sub-panel
+    are not detected (and are handled as if there was no overlap).
+    """
+    npoint = len(points_xy)
+    if npoint == 0:
+        return np.zeros(0, dtype="int64"), np.zeros(0, dtype=quad_xy.dtype)
+    sub_centroids_xy, sub_to_panel = _refine_panel_centroids_2d(quad_xy, log)
+    tree = _get_tree(sub_centroids_xy)
+    k = min(ncandidates, len(sub_centroids_xy))
+    unused_dist, isub = tree.query(points_xy, k=k)
+    candidates = sub_to_panel[isub.reshape(npoint, k)]
+
+    edges = np.roll(quad_xy, -1, axis=1) - quad_xy  # (npanel, 4, 2)
+    edge_length = np.linalg.norm(edges, axis=2)
+    tol = 1e-9 * edge_length.max()
+
+    overlap_pairs = _find_overlapping_panels(
+        quad_xy, edges, edge_length, sub_centroids_xy, sub_to_panel, tree, k
+    )
+    if len(overlap_pairs):
+        assert quad_n is not None and points_n is not None, "overlap needs quad_n/points_n"
+        ids = overlap_pairs if eids is None else eids[overlap_pairs]
+        log.warning(
+            f"{len(overlap_pairs)} panel pairs overlap in the projected view "
+            f"(e.g., {ids[:5].tolist()}); mapping to the nearest panel in 3D"
+        )
+        return _find_nearest_panels_3d(
+            quad_xy, quad_n, edges, edge_length, tol, points_xy, points_n,
+            candidates, sub_centroids_xy, sub_to_panel, k,
+        )
+
+    # group 1: points inside a candidate panel
+    ipanel = candidates[:, 0].copy()
+    is_found = np.zeros(npoint, dtype="bool")
+    for j in range(k):
+        iremain = np.where(~is_found)[0]
+        if len(iremain) == 0:
+            break
+        icand = candidates[iremain, j]
+        is_inside = _is_inside_quad_2d(
+            points_xy[iremain], quad_xy[icand], edges[icand], edge_length[icand], tol
+        )
+        ipanel[iremain[is_inside]] = icand[is_inside]
+        is_found[iremain[is_inside]] = True
+
+    # group 2: points outside every candidate -> nearest panel edge
+    outside_distance = np.zeros(npoint, dtype=quad_xy.dtype)
+    iout = np.where(~is_found)[0]
+    if len(iout):
+        best = np.full(len(iout), np.inf)
+        for j in range(k):
+            icand = candidates[iout, j]
+            disti = _point_to_quad_edge_distance_2d(points_xy[iout], quad_xy[icand], edges[icand])
+            is_closer = disti < best
+            best[is_closer] = disti[is_closer]
+            ipanel[iout[is_closer]] = icand[is_closer]
+        outside_distance[iout] = best
+    return ipanel, outside_distance
+
+
+def _is_inside_quad_2d(
+    points: np.ndarray,
+    quads: np.ndarray,
+    edges: np.ndarray,
+    edge_length: np.ndarray,
+    tol: float,
+) -> np.ndarray:
+    """Point-in-convex-quad test for (n,) points paired with (n,) quads.
+
+    tol > 0 accepts points up to tol outside; tol < 0 requires them to be
+    at least |tol| inside.
+    """
+    rel = points[:, None, :] - quads
+    # signed distance of the point from each edge line
+    dist = (edges[:, :, 0] * rel[:, :, 1] - edges[:, :, 1] * rel[:, :, 0]) / edge_length
+    return np.all(dist >= -tol, axis=1) | np.all(dist <= tol, axis=1)
+
+
+def _find_overlapping_panels(
+    quad_xy: np.ndarray,
+    edges: np.ndarray,
+    edge_length: np.ndarray,
+    sub_centroids_xy: np.ndarray,
+    sub_to_panel: np.ndarray,
+    tree,
+    k: int,
+) -> np.ndarray:
+    """Find panel pairs whose projections overlap.
+
+    A sub-panel centroid that is strictly inside a different panel means the
+    two panels overlap (e.g., two CAERO1s stacked in the projected view).
+    Panels that only share an edge don't count.
+
+    Returns
+    -------
+    pairs : (npair, 2) int ndarray
+        unique (ipanel_a, ipanel_b) with ipanel_a < ipanel_b
+    """
+    nsub = len(sub_centroids_xy)
+    unused_dist, isub = tree.query(sub_centroids_xy, k=k)
+    neighbors = sub_to_panel[isub.reshape(nsub, k)]
+    margin = -1e-6 * edge_length.max()
+    pairs = []
+    for j in range(1, k):
+        iother = neighbors[:, j]
+        iself = sub_to_panel
+        is_other = iother != iself
+        isubs = np.where(is_other)[0]
+        icand = iother[isubs]
+        is_inside = _is_inside_quad_2d(
+            sub_centroids_xy[isubs], quad_xy[icand], edges[icand], edge_length[icand], margin
+        )
+        if is_inside.any():
+            pair = np.column_stack([iself[isubs[is_inside]], icand[is_inside]])
+            pairs.append(np.sort(pair, axis=1))
+    if not pairs:
+        return np.zeros((0, 2), dtype="int64")
+    return np.unique(np.vstack(pairs), axis=0)
+
+
+def _find_nearest_panels_3d(
+    quad_xy: np.ndarray,
+    quad_n: np.ndarray,
+    edges: np.ndarray,
+    edge_length: np.ndarray,
+    tol: float,
+    points_xy: np.ndarray,
+    points_n: np.ndarray,
+    candidates_2d: np.ndarray,
+    sub_centroids_xy: np.ndarray,
+    sub_to_panel: np.ndarray,
+    k: int,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Pick the candidate panel with the smallest 3D distance to each point.
+
+    distance = hypot(in-plane distance (0 if inside), out-of-plane distance
+    to the panel's plane).  Candidates are the k nearest sub-panels in 2D
+    plus the k nearest in 3D, so a dense lower panel can't crowd out a
+    coarse upper panel.
+    """
+    npoint = len(points_xy)
+    centroid_xy = quad_xy.mean(axis=1)
+    centroid_n = quad_n.mean(axis=1)
+    quad_3d = np.dstack([quad_xy, quad_n])
+    normal = np.cross(quad_3d[:, 2] - quad_3d[:, 0], quad_3d[:, 3] - quad_3d[:, 1])
+    assert np.all(np.abs(normal[:, 2]) > 0.0), "panel is perpendicular to the projection plane"
+    slope = -normal[:, :2] / normal[:, 2:3]  # dn/da, dn/db
+
+    def plane_n(ipanel: np.ndarray, xy: np.ndarray) -> np.ndarray:
+        return centroid_n[ipanel] + np.einsum("ij,ij->i", slope[ipanel], xy - centroid_xy[ipanel])
+
+    sub_n = plane_n(sub_to_panel, sub_centroids_xy)
+    tree_3d = _get_tree(np.column_stack([sub_centroids_xy, sub_n]))
+    unused_dist, isub = tree_3d.query(np.column_stack([points_xy, points_n]), k=k)
+    candidates = np.hstack([candidates_2d, sub_to_panel[isub.reshape(npoint, k)]])
+
+    ipanel = candidates[:, 0].copy()
+    best = np.full(npoint, np.inf)
+    outside_distance = np.zeros(npoint, dtype=quad_xy.dtype)
+    for j in range(candidates.shape[1]):
+        icand = candidates[:, j]
+        is_inside = _is_inside_quad_2d(
+            points_xy, quad_xy[icand], edges[icand], edge_length[icand], tol
+        )
+        d_plane = np.where(
+            is_inside,
+            0.0,
+            _point_to_quad_edge_distance_2d(points_xy, quad_xy[icand], edges[icand]),
+        )
+        d_normal = np.abs(points_n - plane_n(icand, points_xy))
+        dist = np.hypot(d_plane, d_normal)
+        is_closer = dist < best
+        best[is_closer] = dist[is_closer]
+        ipanel[is_closer] = icand[is_closer]
+        outside_distance[is_closer] = d_plane[is_closer]
+    return ipanel, outside_distance
+
+
+def _point_to_quad_edge_distance_2d(
+    points: np.ndarray, quads: np.ndarray, edges: np.ndarray
+) -> np.ndarray:
+    """Distance from each point to the closest edge of its paired quad.
+
+    Parameters
+    ----------
+    points : (n, 2) float ndarray
+    quads : (n, 4, 2) float ndarray
+        corners
+    edges : (n, 4, 2) float ndarray
+        corner[i+1] - corner[i]
+
+    Returns
+    -------
+    distance : (n,) float ndarray
+    """
+    rel = points[:, None, :] - quads
+    t = np.einsum("nij,nij->ni", rel, edges) / np.einsum("nij,nij->ni", edges, edges)
+    t = np.clip(t, 0.0, 1.0)
+    closest = quads + t[:, :, None] * edges
+    return np.linalg.norm(points[:, None, :] - closest, axis=2).min(axis=1)
+
+
+def _log_outside_aero_elements(
+    log: SimpleLogger,
+    panel_dim: str,
+    quad_xy: np.ndarray,
+    outside_distance: np.ndarray,
+    aero_normal_force: np.ndarray,
+) -> None:
+    """Report aero elements that fall outside every structural panel.
+
+    These are mapped to the nearest panel edge.  Force is conserved, but
+    the moment shifts by roughly force * distance.
+
+    Parameters
+    ----------
+    log : SimpleLogger
+        the logger
+    panel_dim : str
+        'z' or 'y'
+    quad_xy : (npanel, 4, 2) float ndarray
+        projected panel corners
+    outside_distance : (naero,) float ndarray
+        distance to the mapped panel; 0.0 if inside
+    aero_normal_force : (naero,) float ndarray
+        panel-normal aero force (Fz or Fy)
+
+    Notes
+    -----
+    By design, every aero element goes through both passes: XY panels carry
+    all of the Fz (lift, pitch) and XZ panels all of the Fy (side force,
+    yaw), since all load must land on a panel.  So far-away elements are
+    expected (e.g., dihedral wing tips in the y pass) and are only logged;
+    "far" means farther than the largest panel side.
+    """
+    is_outside = outside_distance > 0.0
+    noutside = is_outside.sum()
+    if noutside == 0:
+        return
+    max_side = np.linalg.norm(np.roll(quad_xy, -1, axis=1) - quad_xy, axis=2).max()
+    is_far = outside_distance > max_side
+    abs_force = np.abs(aero_normal_force)
+    log.info(
+        f"panel_dim={panel_dim!r}: {noutside}/{len(outside_distance)} aero elements "
+        f"are outside the structural panels (max distance={outside_distance.max():g}); "
+        f"F{panel_dim}={aero_normal_force[is_outside].sum():g} of "
+        f"{aero_normal_force.sum():g} is mapped to the nearest panel edge; "
+        f"{is_far.sum()} are farther than the largest panel side ({max_side:g}) "
+        f"with |F{panel_dim}|={abs_force[is_far].sum():g} of {abs_force.sum():g}"
+    )
 
 
 def _map_pressure_panel_model(
@@ -1521,21 +2346,18 @@ def _map_pressure_panel_model(
     sref: float = 1.0,
     bref: float = 1.0,
     cref: float = 1.0,
+    panel_map_method: str = "nearest_aerobox_refined_3d",
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Parameters
     ----------
     flip_Cp : bool; default=False
         flips the pressure on the panel model b/c ???; unused
+    panel_map_method : str; default='nearest_aerobox_refined_3d'
+        see ``pressure_map_to_panel_model``
     """
+    assert panel_map_method in PANEL_MAP_METHODS, panel_map_method
     eids_z = structure_eids[iz_structure]
-
-    fig = plt.figure()
-    ax = fig.add_subplot(projection="3d")
-    ax.set_xlabel("X Label")
-    ax.set_ylabel("Y Label")
-    ax.set_zlabel("Z Label")
-    ax.set_box_aspect((1, 1, 1))
 
     nz_structure = len(iz_structure)
     # -------------------------------------------
@@ -1553,6 +2375,11 @@ def _map_pressure_panel_model(
 
     fdtype = structure_area.dtype
     structure_box_moment_center = np.zeros((nz_structure, 3), dtype=fdtype)
+    # z-panels are mapped in the XY plane; y-panels in the XZ plane
+    panel_axes = {"z": [0, 1], "y": [0, 2]}[panel_dim]
+    inormal = {"z": 2, "y": 1}[panel_dim]
+    structure_box_quad_xy = np.zeros((nz_structure, 4, 2), dtype=fdtype)
+    structure_box_quad_n = np.zeros((nz_structure, 4), dtype=fdtype)
 
     # one moment center per structural panel (independent of the aero
     # element count/type, so quad-only aero models are handled)
@@ -1561,7 +2388,8 @@ def _map_pressure_panel_model(
         assert elem.type == "CQUAD4", elem
         inids = np.searchsorted(structure_nodes, elem.nodes)
         quad_xyz = structure_xyz[inids,]
-        # quad_xy = quad_xyz[:, [0, 1]]
+        structure_box_quad_xy[i] = quad_xyz[:, panel_axes]
+        structure_box_quad_n[i] = quad_xyz[:, inormal]
         p1 = quad_xyz[0, :]
         p2 = quad_xyz[1, :]
         p3 = quad_xyz[2, :]
@@ -1591,10 +2419,8 @@ def _map_pressure_panel_model(
     assert len(structure_box_centroid) > 0, structure_box_centroid
     assert len(aero_xyz) > 0, aero_xyz
 
-    structure_box_centroid_panel = structure_box_centroid[:, [0, 1]]
-    aero_tri_centroid_panel = aero_tri_centroid[:, [0, 1]]
-    aero_quad_centroid_panel = aero_quad_centroid[:, [0, 1]]
-    # structure_box_moment_center_panel = structure_box_moment_center[:, [0, 1]]
+    aero_tri_centroid_panel = aero_tri_centroid[:, panel_axes]
+    aero_quad_centroid_panel = aero_quad_centroid[:, panel_axes]
 
     # neidsi = 10
     neidsi = 0
@@ -1603,20 +2429,39 @@ def _map_pressure_panel_model(
         for x, y, z in structure_box_centroid[:neidsi, :]:
             msg += f"    [{x:.3f}, {y:.3f}, {z:.3f}]\n"
         log.debug(msg)
-    # del structure_box_centroid, structure_box_moment_center
-    # del aero_centroid
 
-    tree = _get_tree(structure_box_centroid_panel)
-    nnodes_structure = len(structure_box_centroid_panel)
-    # print(structure_box_centroid_panel.shape, aero_tri_centroid_panel.shape)
     if map_location == "centroid":
-        deq_tri, ieq_tri = tree.query(aero_tri_centroid_panel, k=1)
-        deq_quad, ieq_quad = tree.query(aero_quad_centroid_panel, k=1)
-        del deq_tri, deq_quad
-        slots_tri = np.where(ieq_tri < nnodes_structure)
-        slots_quad = np.where(ieq_quad < nnodes_structure)
-        iaero_tri = ieq_tri[slots_tri]
-        iaero_quad = ieq_quad[slots_quad]
+        ntri = len(aero_tri_centroid_panel)
+        aero_points = np.vstack([aero_tri_centroid_panel, aero_quad_centroid_panel])
+        log.info(f"panel_dim={panel_dim!r}: panel_map_method={panel_map_method!r}")
+        if panel_map_method == "nearest_aerobox_centroid":
+            tree = _get_tree(structure_box_centroid[:, panel_axes])
+            unused_dist, ipanel = tree.query(aero_points, k=1)
+        elif panel_map_method == "nearest_aerobox_refined":
+            sub_centroids, sub_to_panel = _refine_panel_centroids_2d(structure_box_quad_xy, log)
+            unused_dist, isub = _get_tree(sub_centroids).query(aero_points, k=1)
+            ipanel = sub_to_panel[isub]
+        else:
+            aero_points_n = np.concatenate(
+                [aero_tri_centroid[:, inormal], aero_quad_centroid[:, inormal]]
+            )
+            ipanel, outside_distance = find_owner_panels_2d(
+                structure_box_quad_xy,
+                aero_points,
+                log,
+                quad_n=structure_box_quad_n,
+                points_n=aero_points_n,
+                eids=eids_z,
+            )
+            aero_normal_force = qinf * np.concatenate([
+                np.reshape(aero_tri_force_coeff_per_q, (-1, 3))[:, inormal],
+                np.reshape(aero_quad_force_coeff_per_q, (-1, 3))[:, inormal],
+            ])
+            _log_outside_aero_elements(
+                log, panel_dim, structure_box_quad_xy, outside_distance, aero_normal_force
+            )
+        iaero_tri = ipanel[:ntri]
+        iaero_quad = ipanel[ntri:]
     else:
         raise RuntimeError(map_location)
 
@@ -1687,8 +2532,6 @@ def _map_pressure_panel_model(
                 istructure_box_id,
                 structure_nodes,
                 structure_xyz,
-                fig,
-                ax,
             )
 
         # assert len(istructure) == len(iaero), (len(istructure), len(iaero))
@@ -1728,6 +2571,8 @@ def _map_pressure_panel_model(
         )
         return result
     else:  # pragma: no cover
+        # TODO: map_type='pressure' is the default, but only 'force_moment' works
+        #       (it writes the pressure sid too)
         raise RuntimeError(map_type)
 
 
@@ -1748,14 +2593,20 @@ def _plot_panel_model(
     istructure_box_id: np.ndarray,
     structure_nodes: np.ndarray,
     structure_xyz: np.ndarray,
-    fig: plt.Figure,
-    ax: plt.Axes,
 ) -> None:
+    """Debug plot of the aero elements mapped to a panel (off unless enabled in code)."""
     plot_special_quad = eid_filter > 0
     plot_base_quads = plot_special_quad
 
     if not any([plot_special_quad, plot_base_quads, plot_scatter, plot_aero_model]):
         return
+
+    fig = plt.figure()
+    ax = fig.add_subplot(projection="3d")
+    ax.set_xlabel("X Label")
+    ax.set_ylabel("Y Label")
+    ax.set_zlabel("Z Label")
+    ax.set_box_aspect((1, 1, 1))
 
     log.info(f"eids_z = {eids_z}")
     if plot_base_quads:  # pragma: no cover
@@ -2707,6 +3558,8 @@ def map_panel_force_moment_centroid(
         #     Fx is always zero; these are pressure-only panels with no
         #     in-plane shear capability.
         #     z-panels: [0, 0, Fz]    y-panels: [0, Fy, 0]
+        # TODO: on a tilted (dihedral) box, Nastran applies this normal to the
+        #       box: vertical force * cos(theta) plus an extra side force
         pressure = force / structure_area
         if panel_dim == "z":
             pressurei = pressure[2]

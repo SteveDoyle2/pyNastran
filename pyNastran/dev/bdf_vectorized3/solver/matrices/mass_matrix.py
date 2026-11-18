@@ -42,7 +42,7 @@ defined in coordinate system CID (card field 4). Before computing the
 The inertia tensor is also rotated: I_basic = R @ I_cid @ R^T.
 
 CID = 0: offset already in basic (no rotation needed).
-CID = -1: offset is in basic (Nastran convention for absolute).
+CID = -1: X1-X3 are the cg *location* in basic; offset = X - xyz_grid.
 
 Lumped Mass Formulation
 -----------------------
@@ -69,7 +69,6 @@ pyNastran.dev.bdf_vectorized3.mesh_utils.inertia_relief :
 """
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -81,6 +80,7 @@ from cpylog import SimpleLogger
 from pyNastran.dev.bdf_vectorized3.bdf import read_bdf
 if TYPE_CHECKING:
     from pyNastran.utils import PathLike
+    from pyNastran.dev.bdf_vectorized3.bdf import BDF
 
 
 log = SimpleLogger(level='warning')
@@ -422,8 +422,8 @@ def _add_conm2(
     inertia = conm2.inertia.copy()     # (n, 6): I11, I21, I22, I31, I32, I33
     coord_id = conm2.coord_id          # (n,) CID for offset/inertia
 
-    # Skip zero-mass entries
-    nonzero = mass != 0.0
+    # Skip entries with no mass and no rotary inertia
+    nonzero = (mass != 0.0) | np.any(inertia != 0.0, axis=1)
     if not np.any(nonzero):
         return
     mass = mass[nonzero]
@@ -432,6 +432,13 @@ def _add_conm2(
     inertia = inertia[nonzero]
     coord_id = coord_id[nonzero]
     n = len(mass)
+
+    # CID=-1: X1-X3 are the cg location in basic, not an offset (QRG CONM2
+    # remark 4), so offset = X - xyz_grid (both basic).
+    is_absolute = coord_id == -1
+    if np.any(is_absolute):
+        xyz_grid = model.grid.xyz_cid0()[np.searchsorted(grid_ids, node_id[is_absolute])]
+        offset[is_absolute] -= xyz_grid
 
     # -----------------------------------------------------------------
     # Rotate offset and inertia from CID to basic
@@ -455,14 +462,16 @@ def _add_conm2(
             inertia_masked = inertia[mask_cid]
             n_masked = inertia_masked.shape[0]
             I_mat = np.zeros((n_masked, 3, 3), dtype=np.float64)
+            # Rotate the physical tensor (negated products of inertia), not
+            # the packed card values; the two only agree when I11=I22=I33.
             I_mat[:, 0, 0] = inertia_masked[:, 0]  # I11
-            I_mat[:, 1, 0] = inertia_masked[:, 1]  # I21
-            I_mat[:, 0, 1] = inertia_masked[:, 1]  # I21 (symmetric)
+            I_mat[:, 1, 0] = -inertia_masked[:, 1]  # -I21
+            I_mat[:, 0, 1] = -inertia_masked[:, 1]  # -I21 (symmetric)
             I_mat[:, 1, 1] = inertia_masked[:, 2]  # I22
-            I_mat[:, 2, 0] = inertia_masked[:, 3]  # I31
-            I_mat[:, 0, 2] = inertia_masked[:, 3]  # I31 (symmetric)
-            I_mat[:, 2, 1] = inertia_masked[:, 4]  # I32
-            I_mat[:, 1, 2] = inertia_masked[:, 4]  # I32 (symmetric)
+            I_mat[:, 2, 0] = -inertia_masked[:, 3]  # -I31
+            I_mat[:, 0, 2] = -inertia_masked[:, 3]  # -I31 (symmetric)
+            I_mat[:, 2, 1] = -inertia_masked[:, 4]  # -I32
+            I_mat[:, 1, 2] = -inertia_masked[:, 4]  # -I32 (symmetric)
             I_mat[:, 2, 2] = inertia_masked[:, 5]  # I33
 
             # I_basic = R^T @ I_cid @ R (row-vector convention: v_basic = v_local @ R)
@@ -471,10 +480,10 @@ def _add_conm2(
 
             # Repack to (n_masked, 6): I11, I21, I22, I31, I32, I33
             inertia[mask_cid, 0] = I_rotated[:, 0, 0]
-            inertia[mask_cid, 1] = I_rotated[:, 1, 0]
+            inertia[mask_cid, 1] = -I_rotated[:, 1, 0]
             inertia[mask_cid, 2] = I_rotated[:, 1, 1]
-            inertia[mask_cid, 3] = I_rotated[:, 2, 0]
-            inertia[mask_cid, 4] = I_rotated[:, 2, 1]
+            inertia[mask_cid, 3] = -I_rotated[:, 2, 0]
+            inertia[mask_cid, 4] = -I_rotated[:, 2, 1]
             inertia[mask_cid, 5] = I_rotated[:, 2, 2]
 
     # -----------------------------------------------------------------
@@ -527,14 +536,18 @@ def _add_conm2(
     I32 = inertia[:, 4]
     I33 = inertia[:, 5]
 
+    # QRG CONM2 remark 5: I21 = int(rho x1 x2 dV) (positive integral) and
+    # "the negative signs for the off-diagonal terms are supplied
+    # automatically", so the 6x6 matrix gets -I21, -I31, -I32.  This matches
+    # pyNastran.bdf CONM2.Inertia().
     M_all[:, 3, 3] += I11
-    M_all[:, 4, 3] += I21
-    M_all[:, 3, 4] += I21
+    M_all[:, 4, 3] -= I21
+    M_all[:, 3, 4] -= I21
     M_all[:, 4, 4] += I22
-    M_all[:, 5, 3] += I31
-    M_all[:, 3, 5] += I31
-    M_all[:, 5, 4] += I32
-    M_all[:, 4, 5] += I32
+    M_all[:, 5, 3] -= I31
+    M_all[:, 3, 5] -= I31
+    M_all[:, 5, 4] -= I32
+    M_all[:, 4, 5] -= I32
     M_all[:, 5, 5] += I33
 
     # -----------------------------------------------------------------
