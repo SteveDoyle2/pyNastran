@@ -69,26 +69,15 @@ def apply_grav(model: BDF,
 
         log.debug(f"  GRAV: accel_basic={accel_basic}")
 
-        # Build lumped mass matrix and apply F = M * a at each grid
-        # Use the assembled Mbb to get per-grid mass (6x6 diagonal blocks)
-        # More efficient: iterate grids, get diagonal mass, apply accel
-        grid = model.grid
-        for nid in grid.node_id:
+        # P = Mbb @ D a: every grid translates by the same acceleration.
+        # Using the full Mbb (not just its diagonal) keeps the m*e x a moment
+        # of offset masses (e.g. CONM2 X1-X3), so the gravity resultant acts
+        # through the true cg.
+        uaccel = np.zeros(ndof, dtype='float64')
+        for nid in model.grid.node_id:
             i1 = dof_map[(nid, 1)]
-            # Get translational mass from Mbb diagonal (will be assembled later)
-            # Instead, apply accel to the force vector; the mass contribution
-            # is handled by assembling F = rho*V*a for each element
-
-        # Apply F = M * a for each grid (translational DOFs only)
-        for nid in grid.node_id:
-            i1 = dof_map[(nid, 1)]
-            # Extract the 3x3 translational mass block for this grid
-            m_diag = np.array([
-                Mbb[i1, i1],
-                Mbb[i1 + 1, i1 + 1],
-                Mbb[i1 + 2, i1 + 2],
-            ])
-            Fb[i1: i1 + 3] += m_diag * accel_basic
+            uaccel[i1: i1 + 3] = accel_basic
+        Fb += Mbb @ uaccel
 
 
 def apply_rforce(model: BDF,

@@ -6,6 +6,7 @@ import numpy as np
 from cpylog import SimpleLogger
 
 from pyNastran.bdf.bdf import BDF as BDF_old
+from pyNastran.bdf.mesh_utils.loads import sum_forces_moments
 from pyNastran.bdf.mesh_utils.mass_properties import mass_properties
 from pyNastran.dev.bdf_vectorized3.bdf import BDF
 from pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix import build_mgg_lumped
@@ -16,6 +17,7 @@ from pyNastran.dev.tools.inrel.inertia_relief2 import (
 )
 from pyNastran.dev.tools.inrel.inertia_relief_vectorized import (
     get_mass_blocks,
+    inertia_relief_from_model,
     inertia_relief_vectorized,
 )
 
@@ -33,6 +35,15 @@ def _add_cards(model: BDF | BDF_old) -> None:
     model.add_conm2(14, 4, 0.5, cid=-1, X=[5.2, 2.6, 7.1], I=[0.2, 0.0, 0.3, 0.0, 0.0, 0.4])
     model.add_conrod(21, 100, [1, 3], A=0.5)
     model.add_mat1(100, 1.0e7, None, 0.3, rho=0.1)
+
+    # loads: two FORCEs on grid 2 (one in CID 10) must accumulate, and
+    # LOAD 100 scales the sets
+    model.add_force(1, 2, 100.0, [0.0, 0.0, 1.0])
+    model.add_force(1, 2, 50.0, [1.0, 0.0, 0.0], cid=10)
+    model.add_force(1, 4, 30.0, [0.0, 1.0, 1.0])
+    model.add_moment(2, 3, 20.0, [1.0, 1.0, 0.0])
+    model.add_load(100, 2.0, [1.5, 0.5], [1, 2])
+    model.add_grav(200, 9.81, [0.0, 0.0, -1.0])
 
 
 def _resultant(xyz: np.ndarray, force: np.ndarray, moment: np.ndarray) -> np.ndarray:
@@ -129,6 +140,56 @@ class TestInertiaReliefVectorized(unittest.TestCase):
         dforce2, dmoment2 = inertia_relief(mass, xyz_grid, inertia, force, moment)
         assert np.allclose(dforce1, dforce2, atol=1e-12)
         assert np.allclose(dmoment1, dmoment2, atol=1e-12)
+
+    def test_inertia_relief_from_model(self):
+        """
+        inertia_relief_from_model on a load set id.
+
+        Tests (tolerances):
+        - the assembled applied load resultant about the origin matches the
+          classic pyNastran.bdf sum_forces_moments for FORCE sets (one in a
+          rotated CID, two on one grid), a MOMENT, and a scaled LOAD
+          combination (rtol=1e-10)
+        - the relieved loads are in force and moment equilibrium (atol=1e-9)
+        - GRAV: applied force = total mass * g, and the relief cancels it
+          exactly (atol=1e-9)
+        """
+        log = SimpleLogger(level="warning")
+        model = BDF(log=log)
+        _add_cards(model)
+        model.setup()
+        xyz = model.grid.xyz_cid0()
+
+        model_old = BDF_old(log=log)
+        _add_cards(model_old)
+        model_old.cross_reference()
+
+        p0 = np.zeros(3)
+        for load_id in (1, 2, 100):
+            grid_id, force, moment, dforce, dmoment = inertia_relief_from_model(model, load_id)
+            assert np.array_equal(grid_id, model.grid.node_id)
+            force_expected, moment_expected = sum_forces_moments(model_old, p0, load_id)
+            resultant = _resultant(xyz, force, moment)
+            assert np.allclose(resultant[:3], force_expected, rtol=1e-10), (
+                load_id,
+                resultant[:3],
+                force_expected,
+            )
+            assert np.allclose(resultant[3:], moment_expected, rtol=1e-10), (
+                load_id,
+                resultant[3:],
+                moment_expected,
+            )
+            assert np.abs(resultant).max() > 0.0, load_id
+
+            balanced = _resultant(xyz, force + dforce, moment + dmoment)
+            assert np.allclose(balanced, 0.0, atol=1e-9), (load_id, balanced)
+
+        # GRAV: a uniform acceleration is fully relieved
+        grid_id, force, moment, dforce, dmoment = inertia_relief_from_model(model, 200)
+        mass_total = mass_properties(model_old)[0]
+        assert np.allclose(force.sum(axis=0), [0.0, 0.0, -9.81 * mass_total], atol=1e-9)
+        assert np.allclose(force + dforce, 0.0, atol=1e-9), force + dforce
 
 
 if __name__ == "__main__":  # pragma: no cover

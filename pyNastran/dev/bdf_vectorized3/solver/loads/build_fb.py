@@ -77,10 +77,12 @@ def build_Fb_from_loadid(model: BDF,
                 fxyz = fxyz_myz[:, :3]
                 nids = load.node_id
                 log.debug(f"  FORCE nids={nids} Fxyz={fxyz}")
+                # accumulate (several FORCEs may hit one grid) and apply the
+                # LOAD-card scale factor
                 for fxyzi, nid in zip(fxyz, nids):
                     assert len(fxyzi) == 3
                     fi = dof_map[(nid, 1)]
-                    Fb[fi : fi + 3] = fxyzi
+                    Fb[fi : fi + 3] += fxyzi * scale
 
             elif load.type == "MOMENT":
                 fxyz_myz = load.sum_forces_moments()
@@ -90,7 +92,7 @@ def build_Fb_from_loadid(model: BDF,
                 for mxyzi, nid in zip(mxyz, nids):
                     fi = dof_map[(nid, 4)]
                     assert len(mxyzi) == 3
-                    Fb[fi : fi + 3] = mxyzi
+                    Fb[fi : fi + 3] += mxyzi * scale
             elif load.type == "SPCD":
                 for nid, components, enforced in zip(
                     load.nodes, load.components, load.enforced):

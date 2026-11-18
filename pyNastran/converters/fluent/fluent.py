@@ -192,20 +192,29 @@ class Fluent:
         daten_filename = base + ".daten"
         cell_filename = base + ".cel"
         h5_filename = base + ".h5"
-        assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
-        assert os.path.exists(daten_filename), print_bad_path(daten_filename)
-        assert os.path.exists(cell_filename), print_bad_path(cell_filename)
         self.fluent_filename = fluent_filename
+        fluent_exists = (
+            os.path.exists(vrt_filename) and
+            os.path.exists(daten_filename) and
+            os.path.exists(cell_filename)
+        )
+        if not fluent_exists and os.path.exists(h5_filename):
+            is_loaded = self.read_h5(h5_filename, require_load=True)
+        else:
+            is_loaded = False
+            assert os.path.exists(vrt_filename), print_bad_path(vrt_filename)
+            assert os.path.exists(daten_filename), print_bad_path(daten_filename)
+            assert os.path.exists(cell_filename), print_bad_path(cell_filename)
 
-        fluent_filenames = [vrt_filename, cell_filename, daten_filename]
-        # the h5 is a cache of the vrt/cel/daten; only use it if it's current
-        # (a stale or unreadable h5 falls through and gets rewritten below)
-        if self.auto_read_write_h5 and is_h5_current(fluent_filenames, h5_filename, self.log):
-            # fails if pytables isn't installed
-            self.log.debug(f"reading fluent {h5_filename}")
-            is_loaded = self.read_h5(h5_filename, require_load=False)
-            if is_loaded:
-                return
+            fluent_filenames = [vrt_filename, cell_filename, daten_filename]
+            # the h5 is a cache of the vrt/cel/daten; only use it if it's current
+            # (a stale or unreadable h5 falls through and gets rewritten below)
+            if self.auto_read_write_h5 and is_h5_current(fluent_filenames, h5_filename, self.log):
+                # fails if pytables isn't installed
+                self.log.debug(f"reading fluent {h5_filename}")
+                is_loaded = self.read_h5(h5_filename, require_load=False)
+        if is_loaded:
+            return
 
         (quads, tris), element_ids = read_cell(cell_filename, self.log)
         node, xyz = read_vrt(vrt_filename, self.log)

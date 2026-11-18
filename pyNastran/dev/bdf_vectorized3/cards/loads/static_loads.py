@@ -1668,6 +1668,7 @@ class Combination(VectorizedBaseCard):
         self._idi = np.array([], dtype='int32')
         self._n_ids = np.array([], dtype='int32')
         self._ids_data = np.array([], dtype='int32')
+        self.scale = np.array([], dtype='float64')
         self.scale_factors = np.array([], dtype='float64')
 
     def add(self, sid: int, scale: float,
@@ -2104,7 +2105,8 @@ def get_reduced_loads(load: LOAD | LSEQ,
     stop_on_failure = True
     loads_by_load_id = load.get_loads_by_load_id()
     log = load.model.log
-    for sid, global_scale, iload in zip(load.load_id, load.scale_factors, load.iload):
+    # global scale is S (load.scale); load.scale_factors holds the Si values
+    for sid, global_scale, iload in zip(load.load_id, load.scale, load.iload):
         reduced_loadsi = []
         iload0, iload1 = iload
         if global_scale == 0. and filter_zero_scale_factors:

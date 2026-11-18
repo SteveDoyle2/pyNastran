@@ -83,7 +83,8 @@ def get_reduced_static_load(model: BDF,
             remove_missing_loads=False,
             filter_zero_scale_factors=False,
             stop_on_failure=True)
-        filter_load_ids = True
+        # LOAD.get_reduced_loads already includes the un-combined load ids
+        filter_load_card_ids = True
 
     #new_reduced_loads = defaultdict(list)
     for loadi in model.load_cards:
