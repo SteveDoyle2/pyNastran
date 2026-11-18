@@ -191,17 +191,6 @@ def inertia_loads(mass: np.ndarray,
     inertiai = inertia * wtmass
 
     radius = cg - ref_xyz[np.newaxis, :]
-    # old
-    # a_i = accel + alpha x r_i + omega x (omega x r_i)
-    #radius = cg - ref_xyz[np.newaxis, :]
-    #accel_node = accel[np.newaxis, :] + np.cross(alpha[np.newaxis, :], radius)
-    # centrifugal; zero when omega is zero, so no branch is needed
-    #accel_node += np.cross(omega[np.newaxis, :],
-    #                       np.cross(omega[np.newaxis, :], radius))
-    #
-    # d'Alembert force
-    #force = -massi[:, np.newaxis] * accel_node
-
     # a_i = accel + alpha x r_i + omega x (omega x r_i)
     #     = accel + (skew(alpha) + skew(omega) skew(omega)) r_i
     # Both rate terms are linear in r_i, so they fold into one 3x3 and the
@@ -220,15 +209,6 @@ def inertia_loads(mass: np.ndarray,
     # matmul and the (nnode,3,3) tensor stack never has to be built.
     # The second term is the rate coupling; it vanishes when omega is along a
     # principal axis of [I_i].
-    #
-    # old
-    # tensor stack carries the negated off-diagonals
-    #imat = _inertia_tensor(inertiai)
-    # rate coupling; vanishes when omega is along a principal axis of [I_i]
-    #moment = -np.einsum('nij,j->ni', imat, alpha)
-    #moment -= np.cross(omega[np.newaxis, :],
-    #                   np.einsum('nij,j->ni', imat, omega))
-    #
     bmat = _packed_inertia_dot(alpha) + skew_omega @ _packed_inertia_dot(omega)
     moment = inertiai @ -bmat.T
 
@@ -277,10 +257,6 @@ def resultant(force: np.ndarray,
 
     # sum(r x F) componentwise as six dot products.  np.cross would build an
     # (nnode,3) temporary only to reduce it away immediately.
-    #
-    # old
-    # moment_total = moment.sum(axis=0) + np.cross(radius, force).sum(axis=0)
-    #
     rx, ry, rz = radius[:, 0], radius[:, 1], radius[:, 2]
     fx, fy, fz = force[:, 0], force[:, 1], force[:, 2]
     moment_total = moment.sum(axis=0) + np.array([
@@ -355,11 +331,6 @@ def expected_resultant(mass: np.ndarray,
     # The self term sums in the packed (6,) form first -- summing 6 columns is
     # far cheaper than building and reducing an (nnode,3,3) stack -- and the
     # parallel-axis term is a weighted Gram matrix, i.e. one (3,nnode)@(nnode,3)
-    #
-    # old
-    #imat = _inertia_tensor(inertiai).sum(axis=0)
-    #rdotr = np.einsum('ni,ni->n', radius, radius)
-    #
     # matmul rather than a three-index einsum.
     inertia_self = inertiai.sum(axis=0)
     ixx, iyy, izz, ixy, ixz, iyz = inertia_self
@@ -371,10 +342,6 @@ def expected_resultant(mass: np.ndarray,
 
     mass_radius = massi[:, np.newaxis] * radius
     eye = np.eye(3, dtype='float64')
-
-    # old
-    #parallel = np.einsum('n,n,ij->ij', massi, rdotr, eye)
-    #parallel -= np.einsum('n,ni,nj->ij', massi, radius, radius)
 
     parallel = eye * (mass_radius * radius).sum()
     parallel -= mass_radius.T @ radius

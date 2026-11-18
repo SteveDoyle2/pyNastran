@@ -90,8 +90,6 @@ Limitations
   rotational relief; if the applied load carries a moment about it, a
   ``RuntimeWarning`` is issued and the moment is left in the residual.
   See the guard in ``inertia_relief``.
-- The self-inertia correction is currently inert -- see the "Known defects"
-  note on ``inertia_relief`` below.
 
 Defects fixed 2026-09-21
 ------------------------
@@ -134,9 +132,6 @@ coincident-node, large-magnitude, and non-zero-self-inertia cases.
 
 Remaining limitations
 ---------------------
-- The ``mxyzt_delta_self`` branch is still multiplied by ``0.`` and remains
-  inert; the self-inertia contribution is now handled in the ``mxyzt_dm``
-  term instead.
 - ``_mass_properties_total`` skips diagonalization when
   ``epsilon/delta <= 0.001`` (the Nastran GPWG check), so very small products
   of inertia are intentionally treated as zero.
@@ -292,59 +287,6 @@ def _mass_properties_total(
     return mass_total, cg_total, inertia_total, Mtt, S
 
 
-def _get_transformed_self_inertia(inertia: np.ndarray, S: np.ndarray) -> np.ndarray:
-    """
-    Sums the per-node self-inertia and rotates it into the principal frame.
-
-    Parameters
-    ----------
-    inertia : (nnode,6) float ndarray
-        per-node self-inertia [Ixx, Iyy, Izz, Ixy, Ixz, Iyz]
-    S : (3,3) float ndarray
-        the eigenvector matrix from ``_mass_properties_total``
-
-    Returns
-    -------
-    inertia_xform : (3,) float ndarray
-        the diagonal of the rotated self-inertia tensor
-
-    Notes
-    -----
-    - Only the diagonal is returned; the rotated products of inertia are
-      computed and then dropped (the corresponding lines are commented out).
-      This is lossy whenever the self-inertia tensor is not already principal
-      in the same frame as the overall body.
-    - The ``S.T @ imat @ S`` orientation is correct: ``eigh`` returns the
-      eigenvectors as columns, so this is the diagonalizing similarity.  (The
-      vector transforms in ``inertia_relief`` previously used the opposite
-      pairing; that was fixed 2026-09-21.)
-    - The returned value feeds only the ``mxyzt_delta_self`` branch, which is
-      multiplied by zero, so in the current state this result is unused.  The
-      live self-inertia handling is in the ``mxyzt_dm`` term, which rotates
-      each node's tensor individually rather than using this summed value.
-
-    """
-    inertia_self = inertia.sum(axis=0)
-    ixx, iyy, izz, ixy, ixz, iyz = inertia_self
-    imat = np.array(
-        [
-            [ixx, -ixy, -ixz],
-            [-ixy, iyy, -iyz],
-            [-ixz, -iyz, izz],
-        ]
-    )
-    ximat = S.T @ imat @ S  # is this backwards?
-    inertia_xform = np.array(
-        [
-            ximat[0, 0],
-            ximat[1, 1],
-            ximat[2, 2],
-            # -ximat[0, 1], -ximat[0, 2], -ximat[1, 2],
-        ]
-    )
-    return inertia_xform
-
-
 def inertia_relief(
     weight: np.ndarray,
     xyz: np.ndarray,
@@ -424,8 +366,6 @@ def inertia_relief(
       absorb a moment.  If the applied load *does* carry a moment about such
       an axis the problem is ill-posed; a ``RuntimeWarning`` is issued and the
       moment is left in the residual rather than being silently absorbed.
-    - ``mxyzt_delta_self`` is still multiplied by ``0.`` and is inert; the
-      self-inertia contribution is applied in the ``mxyzt_dm`` term instead.
 
     """
     mass = weight * wtmass
@@ -433,7 +373,6 @@ def inertia_relief(
     mass_total, cg_total, inertia_total, Mtt, S = _mass_properties_total(
         mass, xyz, inertia, debug=debug
     )
-    inertia_self = _get_transformed_self_inertia(inertia, S)
     assert inertia_total.shape == (6,), inertia_total.shape
 
     dxyz = xyz - cg_total[np.newaxis, :]
@@ -476,37 +415,12 @@ def inertia_relief(
     fxyzt_delta = -mass[:, np.newaxis] * accelt[np.newaxis, :]
     fxyzt_out = fxyzt + fxyzt_delta
 
-    # this is the moment due to applied forces
-    # was fxyzt_delta:
-    # - fails the force_linear test -> fxyzt_out
+    # moment of the linearly-relieved applied forces about the cg
     mxyzt_df = np.cross(dxyzt, fxyzt_out, axis=1)
 
     assert fxyzt.shape == mxyzt.shape, (fxyzt.shape, mxyzt.shape)
 
-    mxyzt1 = mxyzt + mxyzt_df
-    mxyzt1_total = mxyzt1.sum(axis=0)
-
-    # M = I*alpha = I0*alpha + m*r^2*alpha
-    #
-    # handle self-inertia (probably very small)
-    # removes the mean term (constant moment distribution)
-    if np.abs(inertia_self).max() > 0 and np.abs(mxyzt1_total).max() > 0:
-        # don't divide by 0
-        ipos = np.where(inertia_self != 0)[0]
-
-        # you should re-transform to get
-        # the principal inertias, but mehhh...
-        alphat_self = np.zeros(3, dtype="float64")
-        alphat_self[ipos] = mxyzt1_total[ipos] / inertia_final[ipos]
-
-        # TODO: should distribute better to nodes
-        #       this isn't biased by mass or anything...
-        mxyzt_delta_self = -(alphat_self * inertia_final * 0.0)[np.newaxis, :]
-    else:
-        mxyzt_delta_self = np.zeros(shape, dtype=dtype)
-
-    mxyzt2 = mxyzt + mxyzt_df + mxyzt_delta_self
-    mxyzt2_total = mxyzt2.sum(axis=0)
+    mxyzt_total = (mxyzt + mxyzt_df).sum(axis=0)
 
     # Don't divide by ~0.
     #
@@ -521,20 +435,20 @@ def inertia_relief(
     # point of working in the principal frame). Axes with no inertia get no
     # rotational relief.
     alphat_moment = np.zeros(3, dtype="float64")
-    alphat_moment[ipos] = mxyzt2_total[ipos] / inertia_final[ipos]
+    alphat_moment[ipos] = mxyzt_total[ipos] / inertia_final[ipos]
 
     # A skipped axis that still carries a moment is not physically solvable:
     # there is no inertia to react it, so that moment stays in the residual
     # and the caller's "balanced" load set is not actually balanced. Warn
     # rather than raise -- the other two axes are still perfectly valid.
     izero = np.setdiff1d(np.arange(3), ipos)
-    if len(izero) and np.abs(mxyzt2_total[izero]).max() > 1e-8 * max(
-        np.abs(mxyzt2_total).max(), 1e-300
+    if len(izero) and np.abs(mxyzt_total[izero]).max() > 1e-8 * max(
+        np.abs(mxyzt_total).max(), 1e-300
     ):
         warnings.warn(
             f"degenerate mass distribution: principal inertia(s) {izero} are "
             f"~0 (inertia={inertia_final}), but the applied moment about them "
-            f"is {mxyzt2_total[izero]}. No rotational relief is possible about "
+            f"is {mxyzt_total[izero]}. No rotational relief is possible about "
             "a zero-inertia axis, so that moment is left unbalanced.",
             RuntimeWarning,
             stacklevel=2,
@@ -590,13 +504,10 @@ def inertia_relief(
     # (mxyzt_dm) keeps the output physically clean:
     #   sum(moment + dmoment) + sum(r × (force + dforce)) == 0
     # about any reference point.
-    mxyzt_delta = mxyzt_delta_self + mxyzt_dm
-
     # Transform back out of the principal frame.
     # Forward was v_t = S.T @ v, so the inverse is v = S @ v_t.
-    St = S
-    fxyz_delta_out = np.einsum("nij,nj->ni", St[np.newaxis, :], fxyzt_delta)
-    mxyz_delta_out = np.einsum("nij,nj->ni", St[np.newaxis, :], mxyzt_delta)
+    fxyz_delta_out = np.einsum("nij,nj->ni", S[np.newaxis, :], fxyzt_delta)
+    mxyz_delta_out = np.einsum("nij,nj->ni", S[np.newaxis, :], mxyzt_dm)
 
     return fxyz_delta_out, mxyz_delta_out
 
