@@ -3,27 +3,24 @@ try:
     IS_SCIPY = True
 except ImportError:
     IS_SCIPY = False
-from pyNastran.bdf.mesh_utils.cut.test_cutting_plane import TestCuttingPlane
-from pyNastran.bdf.mesh_utils.cut.test_stiffness_plot import TestStiffnessPlot
+from pyNastran.bdf.mesh_utils.cut.test_cutting_plane import *
+from pyNastran.bdf.mesh_utils.cut.test_stiffness_plot import *
 
-from pyNastran.bdf.mesh_utils.aero.test_flutter import TestBDFFlutter
-from pyNastran.bdf.mesh_utils.aero.test_aero_utils import TestMeshUtilsAero
+from pyNastran.bdf.mesh_utils.aero.test_flutter import *
+from pyNastran.bdf.mesh_utils.aero.test_aero_utils import *
 
 if IS_SCIPY:
-    from pyNastran.bdf.mesh_utils.test.test_equivalence import TestEquiv
-    from pyNastran.bdf.mesh_utils.test.test_mesh_utils import (
-        TestMeshUtils, TestMeshUtilsCmdLine, TestRbeTools)
-from pyNastran.bdf.mesh_utils.test.test_convert import TestConvert
-from pyNastran.bdf.mesh_utils.test.test_mass import TestMass
-from pyNastran.bdf.mesh_utils.test.test_mesh_quality import TestMeshQuality
-from pyNastran.bdf.mesh_utils.test.test_refine import TestRefine
-from pyNastran.bdf.mesh_utils.test.test_remove_unused import TestRemoveUnused
-from pyNastran.bdf.mesh_utils.test.test_renumber import TestRenumber
-from pyNastran.bdf.mesh_utils.test.test_run_host_jobs import TestRunHostJobs
-from pyNastran.bdf.mesh_utils.test.test_sum_loads import TestLoadSum
-from pyNastran.bdf.mesh_utils.test.test_find_remove_duplicates import (
-    TestFindDuplicates, TestRemoveDuplicates, TestRoundTrip,
-    TestWarnOnEquivalentDuplicate, TestWarnOnRejectCards)
+    from pyNastran.bdf.mesh_utils.test.test_equivalence import *
+    from pyNastran.bdf.mesh_utils.test.test_mesh_utils import *
+from pyNastran.bdf.mesh_utils.test.test_convert import *
+from pyNastran.bdf.mesh_utils.test.test_mass import *
+from pyNastran.bdf.mesh_utils.test.test_mesh_quality import *
+from pyNastran.bdf.mesh_utils.test.test_refine import *
+from pyNastran.bdf.mesh_utils.test.test_remove_unused import *
+from pyNastran.bdf.mesh_utils.test.test_renumber import *
+from pyNastran.bdf.mesh_utils.test.test_run_host_jobs import *
+from pyNastran.bdf.mesh_utils.test.test_sum_loads import *
+from pyNastran.bdf.mesh_utils.test.test_find_remove_duplicates import *
 
 
 if __name__ == "__main__":  # pragma: no cover

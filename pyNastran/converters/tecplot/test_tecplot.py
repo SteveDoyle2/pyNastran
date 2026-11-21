@@ -2,12 +2,14 @@ import os
 from io import StringIO
 from pathlib import Path
 import unittest
+
+import numpy as np
 from cpylog import SimpleLogger
 
 import pyNastran
 from pyNastran.bdf.bdf import read_bdf
 from pyNastran.converters.tecplot.tecplot import read_tecplot
-from pyNastran.converters.tecplot.read_ascii import split_headers
+from pyNastran.converters.tecplot.read_ascii import split_headers, parse_varlocation
 from pyNastran.converters.tecplot.tecplot_to_nastran import tecplot_to_nastran_filename
 from pyNastran.converters.tecplot.tecplot_to_cart3d import tecplot_to_cart3d_filename
 from pyNastran.converters.nastran.nastran_to_tecplot import (
@@ -35,6 +37,82 @@ class TestTecplot(unittest.TestCase):
         for header, nheaders in headers:
             headers = split_headers(header, log)
             assert len(headers) == nheaders, headers
+
+    def test_split_headers_varlocation(self):
+        """commas inside VARLOCATION=(...) don't split the header"""
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        header = ('ZONE T="wing", n=6, e=3, ZONETYPE=FETRIANGLE, DATAPACKING=BLOCK,'
+                  'VARLOCATION=([1, 2, 3]=NODAL,[4-6]=CELLCENTERED)')
+        headers = split_headers(header, log)
+        assert len(headers) == 6, headers
+        assert headers[-1] == 'VARLOCATION=([1, 2, 3]=NODAL,[4-6]=CELLCENTERED)', headers
+
+    def test_parse_varlocation(self):
+        """
+        Tests:
+         - explicit lists, ranges, and unlisted (default NODAL) variables
+         - bad locations / out of range ids / unparseable values raise
+        """
+        is_cell = parse_varlocation('([1, 2, 3]=NODAL,[4, 5, 6]=CELLCENTERED)', 6)
+        assert is_cell.tolist() == [False, False, False, True, True, True], is_cell
+        is_cell = parse_varlocation('([3-5,7]=CELLCENTERED)', 7)
+        assert is_cell.tolist() == [False, False, True, True, True, False, True], is_cell
+        is_cell = parse_varlocation('( [4] = cellcentered )', 4)
+        assert is_cell.tolist() == [False, False, False, True], is_cell
+
+        with self.assertRaises(ValueError):
+            parse_varlocation('([4]=FACE)', 4)
+        with self.assertRaises(ValueError):
+            parse_varlocation('([5]=CELLCENTERED)', 4)
+        with self.assertRaises(ValueError):
+            parse_varlocation('CELLCENTERED', 4)
+
+    def test_tecplot_ascii_varlocation(self):
+        """
+        Reads an FE BLOCK zone with NODAL xyz and CELLCENTERED results.
+
+        Tests (exact; values are short decimals):
+         - nodal xyz -> zone_data; cell-centered results -> element_data
+         - values split across lines / mixed with commas
+         - a 2nd zone that reuses the VARIABLES
+         - cell-centered before nodal raises NotImplementedError
+        """
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        lines = (
+            'TITLE = "varlocation"\n'
+            'VARIABLES = "X", "Y", "Z", "Cp", "Region"\n'
+            'ZONE T="tris", N=4, E=2, ZONETYPE=FETRIANGLE, DATAPACKING=BLOCK,\n'
+            'VARLOCATION=([1-3]=NODAL,[4,5]=CELLCENTERED)\n'
+            '0.0 1.0\n1.0 0.0\n'
+            '0.0 0.0 1.0 1.0\n'
+            '0.0, 0.0, 0.0, 0.0\n'
+            '-0.5 0.25\n'
+            '3.0 4.0\n'
+            '1 2 3\n'
+            '1 3 4\n'
+            'ZONE T="quad", N=4, E=1, ZONETYPE=FEQUADRILATERAL, DATAPACKING=BLOCK,\n'
+            'VARLOCATION=([1, 2, 3]=NODAL,[4, 5]=CELLCENTERED)\n'
+            '0.0 1.0 1.0 0.0\n'
+            '0.0 0.0 1.0 1.0\n'
+            '2.0 2.0 2.0 2.0\n'
+            '0.75\n'
+            '7.0\n'
+            '1 2 3 4\n'
+        )
+        model = read_tecplot(StringIO(lines), filetype='ascii', log=log)
+        assert len(model.zones) == 2, model.zones
+        tri_zone, quad_zone = model.zones
+        assert tri_zone.variables == ['X', 'Y', 'Z', 'Cp', 'Region'], tri_zone.variables
+        assert np.array_equal(tri_zone.xyz, [[0., 0., 0.], [1., 0., 0.], [1., 1., 0.], [0., 1., 0.]]), tri_zone.xyz
+        assert np.array_equal(tri_zone.element_data, [[-0.5, 3.0], [0.25, 4.0]]), tri_zone.element_data
+        assert np.array_equal(tri_zone.tri_elements, [[0, 1, 2], [0, 2, 3]]), tri_zone.tri_elements
+        assert np.array_equal(quad_zone.xyz[:, 2], [2., 2., 2., 2.]), quad_zone.xyz
+        assert np.array_equal(quad_zone.element_data, [[0.75, 7.0]]), quad_zone.element_data
+        assert np.array_equal(quad_zone.quad_elements, [[0, 1, 2, 3]]), quad_zone.quad_elements
+
+        bad_lines = lines.replace('[1-3]=NODAL,[4,5]=CELLCENTERED', '[1]=CELLCENTERED')
+        with self.assertRaises(NotImplementedError):
+            read_tecplot(StringIO(bad_lines), filetype='ascii', log=log)
 
     def test_tecplot_binary_models(self):
         tecplot_filenames = [

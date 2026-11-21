@@ -34,6 +34,7 @@ from pyNastran.utils.convert import (
     convert_density,
     convert_pressure,
     convert_velocity,
+    PSF_TO_PA,
     _altitude_factor,
     _pressure_factor,
     _velocity_factor,
@@ -1104,7 +1105,7 @@ def atm_dynamic_viscosity_mu(
     if visc_units in {"(lbf*s)/ft^2", "psf*s"}:
         factor = 1.0
     elif visc_units in {"(N*s)/m^2", "Pa*s"}:
-        factor = 47.88026
+        factor = PSF_TO_PA
     else:  # pragma: no cover
         raise NotImplementedError(
             f"visc_units={visc_units!r}; use [(N*s)/m^2, Pa*s, (lbf*s)/ft^2]"

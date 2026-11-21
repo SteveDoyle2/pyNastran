@@ -1,18 +1,14 @@
-from pyNastran.op2.test.test_op2_unit_tests import (
-    TestOP2Main, TestOP2Unit, TestOP2Random,
-    TestNX, TestMSC,
-    TestAutodeskOP2, TestOptistructOP2,
-    TestSATKOP2, TestOP2Functions, TestOP2Params)
-from pyNastran.op2.test.test_op2_no_scipy import TestOp2NoScipy
-from pyNastran.op2.test.matrices.test_matrices import TestOP2Matrix
-from pyNastran.op2.test.examples.test_op2_in_material_coord import TestMaterialCoordReal
-from pyNastran.op2.test.examples.test_op2_in_material_coord_panel_SOL_108 import TestMaterialCoordComplex
-from pyNastran.op2.tables.geom.test.test_geom import TestOP2GeomUnit
-from pyNastran.op2.tables.test.test_grid_point_forces import TestGridPointForces
-from pyNastran.op2.tables.test.test_oug import TestOUG
-from pyNastran.op2.writer.test_op2_writer import TestOP2Writer
-from pyNastran.op2.op2_interface.test.test_results_set import TestResultSet
-from pyNastran.op2.tools.test_combination import TestCombination
+from pyNastran.op2.test.test_op2_unit_tests import *
+from pyNastran.op2.test.test_op2_no_scipy import *
+from pyNastran.op2.test.matrices.test_matrices import *
+from pyNastran.op2.test.examples.test_op2_in_material_coord import *
+from pyNastran.op2.test.examples.test_op2_in_material_coord_panel_SOL_108 import *
+from pyNastran.op2.tables.geom.test.test_geom import *
+from pyNastran.op2.tables.test.test_grid_point_forces import *
+from pyNastran.op2.tables.test.test_oug import *
+from pyNastran.op2.writer.test_op2_writer import *
+from pyNastran.op2.op2_interface.test.test_results_set import *
+from pyNastran.op2.tools.test_combination import *
 from pyNastran.op2.test.test_op2_bugfixes import *
 
 

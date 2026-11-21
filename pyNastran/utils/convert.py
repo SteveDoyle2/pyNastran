@@ -1,5 +1,8 @@
 import numpy as np
 
+# exact by definition: 1 lbf = 4.4482216152605 N, 1 ft = 0.3048 m
+PSF_TO_PA = 4.4482216152605 / 0.3048**2   # 47.88025898... Pa
+
 
 def convert_altitude(alt: float, alt_units_in: str, alt_units_out: str) -> float:
     """nominal unit is ft"""
@@ -141,13 +144,13 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     elif pressure_units_in == 'psi':
         factor *= 144
     elif pressure_units_in == 'bar':
-        factor *= 2088.545633
+        factor *= 1.0e5 / PSF_TO_PA
     elif pressure_units_in == 'Pa':
-        factor /= 47.880172
+        factor /= PSF_TO_PA
     elif pressure_units_in == 'kPa':
-        factor *= 20.88543815038
+        factor *= 1.0e3 / PSF_TO_PA
     elif pressure_units_in == 'MPa':
-        factor *= 20885.43815038
+        factor *= 1.0e6 / PSF_TO_PA
     else:
         msg = f'pressure_units_in={pressure_units_in!r} is not valid; use [Pa, kPa, MPa, bar, psf, psi]'
         raise RuntimeError(msg)
@@ -157,13 +160,13 @@ def _pressure_factor(pressure_units_in: str, pressure_units_out: str) -> float:
     elif pressure_units_out == 'psi':
         factor /= 144
     elif pressure_units_out == 'bar':
-        factor /= 2088.545633
+        factor /= 1.0e5 / PSF_TO_PA
     elif pressure_units_out == 'Pa':
-        factor *= 47.880172
+        factor *= PSF_TO_PA
     elif pressure_units_out == 'kPa':
-        factor /= 20.88543815038
+        factor /= 1.0e3 / PSF_TO_PA
     elif pressure_units_out == 'MPa':
-        factor /= 20885.43815038
+        factor /= 1.0e6 / PSF_TO_PA
     else:
         raise RuntimeError(f'pressure_units_out={pressure_units_out} is not valid; use [Pa, kPa, MPa, bar, psf, psi]')
     return factor

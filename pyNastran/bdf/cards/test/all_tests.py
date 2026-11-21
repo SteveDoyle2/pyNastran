@@ -1,44 +1,41 @@
-from pyNastran.bdf.cards.test.test_coords import TestCoords
-from pyNastran.bdf.cards.test.test_nodes import TestNodes
+from pyNastran.bdf.cards.test.test_coords import *
+from pyNastran.bdf.cards.test.test_nodes import *
 
-from pyNastran.bdf.cards.test.test_aero import TestAero
-from pyNastran.bdf.cards.test.test_zaero import TestAeroZaero
-from pyNastran.bdf.cards.test.test_acoustic import TestAcoustic
-from pyNastran.bdf.cards.test.test_constraints import TestConstraints
-from pyNastran.bdf.cards.test.test_sets import TestSets
-from pyNastran.bdf.cards.test.test_superelements import TestSuperelements
-from pyNastran.bdf.cards.test.test_deqatn import TestDEQATN
-from pyNastran.bdf.cards.test.test_dynamic import TestDynamic
+from pyNastran.bdf.cards.test.test_aero import *
+from pyNastran.bdf.cards.test.test_zaero import *
+from pyNastran.bdf.cards.test.test_acoustic import *
+from pyNastran.bdf.cards.test.test_constraints import *
+from pyNastran.bdf.cards.test.test_sets import *
+from pyNastran.bdf.cards.test.test_superelements import *
+from pyNastran.bdf.cards.test.test_deqatn import *
+from pyNastran.bdf.cards.test.test_dynamic import *
 
 # standard elements
-from pyNastran.bdf.cards.test.test_bolt_nx import TestBoltNX, TestBoltMSC
-from pyNastran.bdf.cards.test.test_rods import TestRods
-from pyNastran.bdf.cards.test.test_bars import TestBars
-from pyNastran.bdf.cards.test.test_beams import TestBeams, TestBend
-from pyNastran.bdf.cards.test.test_contact import TestContact
-from pyNastran.bdf.cards.test.test_cyclic import TestCyclic
-from pyNastran.bdf.cards.test.test_dmig import (
-    TestDTI, TestDMIGReal, TestDMIGImag, TestDMIAX,
-    TestMatrix, TestDMI,
-)
-from pyNastran.bdf.cards.test.test_elements import TestElements, TestPlotElements, TestBushingElements
-from pyNastran.bdf.cards.test.test_mass_elements import TestMassElements
-from pyNastran.bdf.cards.test.test_methods import TestMethods
-from pyNastran.bdf.cards.test.test_nsm import TestNsm
-from pyNastran.bdf.cards.test.test_loads import TestLoads
-from pyNastran.bdf.cards.test.test_materials import TestMaterials
-from pyNastran.bdf.cards.test.test_params import TestParams
-from pyNastran.bdf.cards.test.test_optimization import TestOpt
-from pyNastran.bdf.cards.test.test_parametric import TestParametric
-from pyNastran.bdf.cards.test.test_rigid import TestRigid
-from pyNastran.bdf.cards.test.test_springs import TestSprings
-from pyNastran.bdf.cards.test.test_dampers import TestDampers
-from pyNastran.bdf.cards.test.test_solids import TestSolids
-from pyNastran.bdf.cards.test.test_shells import TestShells
-from pyNastran.bdf.cards.test.test_tables import TestTables
-from pyNastran.bdf.cards.test.test_thermal import TestThermal
-from pyNastran.bdf.cards.test.test_axisymmetric import TestAxi
-from pyNastran.bdf.cards.test.test_base_card import TestBaseCard
+from pyNastran.bdf.cards.test.test_bolt_nx import *
+from pyNastran.bdf.cards.test.test_rods import *
+from pyNastran.bdf.cards.test.test_bars import *
+from pyNastran.bdf.cards.test.test_beams import *
+from pyNastran.bdf.cards.test.test_contact import *
+from pyNastran.bdf.cards.test.test_cyclic import *
+from pyNastran.bdf.cards.test.test_dmig import *
+from pyNastran.bdf.cards.test.test_elements import *
+from pyNastran.bdf.cards.test.test_mass_elements import *
+from pyNastran.bdf.cards.test.test_methods import *
+from pyNastran.bdf.cards.test.test_nsm import *
+from pyNastran.bdf.cards.test.test_loads import *
+from pyNastran.bdf.cards.test.test_materials import *
+from pyNastran.bdf.cards.test.test_params import *
+from pyNastran.bdf.cards.test.test_optimization import *
+from pyNastran.bdf.cards.test.test_parametric import *
+from pyNastran.bdf.cards.test.test_rigid import *
+from pyNastran.bdf.cards.test.test_springs import *
+from pyNastran.bdf.cards.test.test_dampers import *
+from pyNastran.bdf.cards.test.test_solids import *
+from pyNastran.bdf.cards.test.test_shells import *
+from pyNastran.bdf.cards.test.test_tables import *
+from pyNastran.bdf.cards.test.test_thermal import *
+from pyNastran.bdf.cards.test.test_axisymmetric import *
+from pyNastran.bdf.cards.test.test_base_card import *
 
 if __name__ == "__main__":  # pragma: no cover
     import unittest

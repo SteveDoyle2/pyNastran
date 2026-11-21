@@ -25,9 +25,9 @@ def fluent_to_nastran(model, bdf_filename: str) -> BDF:
             nastran_model.add_ctria3(eid, pid, [n1, n2, n3])
 
     if len(quads) > 0:
-        pids = tris[:, 1]
+        pids = quads[:, 1]
         all_pids.append(pids)
-        for eid, pid, n1, n2, n3, n4 in zip(quads[:, 0], quads[:, 1],
+        for eid, pid, n1, n2, n3, n4 in zip(quads[:, 0], pids,
                                             quads[:, 2], quads[:, 3], quads[:, 4], quads[:, 5]):
             nastran_model.add_cquad4(eid, pid, [n1, n2, n3, n4])
     upids = np.unique(np.hstack(all_pids))

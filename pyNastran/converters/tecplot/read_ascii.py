@@ -1,3 +1,4 @@
+import re
 from typing import Optional, Any, cast
 import numpy as np
 from cpylog import SimpleLogger
@@ -344,7 +345,7 @@ def header_lines_to_header_dict(title_line: str, header_lines: list[str],
                 #   'DT', 'SOLUTIONTIME', 'STRANDID', # tecplot 360 specific things not supported
                 allowed_keys = ['VARIABLES', 'T', 'ZONETYPE', 'DATAPACKING', # 'TITLE',
                                 'N', 'E', 'F', 'DT', 'SOLUTIONTIME', 'STRANDID',
-                                'I', 'J', 'K',]
+                                'I', 'J', 'K', 'VARLOCATION']
                 assert ukey in allowed_keys, 'ukey=%r; allowed=[%s]' % (ukey, ', '.join(allowed_keys))
             parse = False
     log.debug(f'headers_dict = {headers_dict}')
@@ -364,9 +365,16 @@ def split_headers(headers_in: str, log: SimpleLogger) -> list[str]:
     ichar = 0
     nchars = len(headers_in)
     word = ''
+    paren_depth = 0
     while ichar < nchars:
         char = headers_in[ichar]
-        if char == ',':
+        if char in '()':
+            # VARLOCATION=([1, 2]=NODAL,[3]=CELLCENTERED) has commas
+            # that don't separate headers
+            paren_depth += 1 if char == '(' else -1
+            word += char
+            ichar += 1
+        elif char == ',' and paren_depth == 0:
             #print(f'adding word = {word!r}')
             headers.append(word.strip())
             word = ''
@@ -621,7 +629,16 @@ def read_zonetype(log: SimpleLogger,
         raise NotImplementedError(zone_type)
 
     sline = split_line(line.strip())
-    if zone_type in ('FEBRICK', 'FETETRAHEDRON'):
+    if is_unstructured and 'VARLOCATION' in headers_dict:
+        if data_packing != 'BLOCK':
+            # Tecplot only allows CELLCENTERED variables with BLOCK
+            raise NotImplementedError(f'VARLOCATION requires DATAPACKING=BLOCK; '
+                                      f'data_packing={data_packing!r}')
+        is_cell_centered = parse_varlocation(headers_dict['VARLOCATION'], nresults)
+        iline, line, sline, xyz_results, element_data = read_fe_block_varlocation(
+            lines, iline, sline, is_cell_centered, nnodesi, nelementsi)
+        zone.element_data = element_data
+    elif zone_type in ('FEBRICK', 'FETETRAHEDRON'):
         if data_packing == 'POINT':
             for inode in range(nnodesi):
                 if inode == 0:
@@ -825,6 +842,101 @@ def read_zone_block(lines: list[str], iline: int,
     # setup
     #iline, line, sline = get_next_sline(lines, iline)
     return iline, line, sline
+
+def parse_varlocation(varlocation: str, nvars: int) -> np.ndarray:
+    """
+    Parses a VARLOCATION value into a cell-centered flag per variable.
+
+    Parameters
+    ----------
+    varlocation : str
+        the value of the VARLOCATION header
+        (e.g., '([1, 2, 3]=NODAL,[4-6]=CELLCENTERED)')
+    nvars : int
+        the number of variables
+
+    Returns
+    -------
+    is_cell_centered : (nvars,) bool np.ndarray
+        True if the variable is CELLCENTERED; False if NODAL
+
+    Notes
+    -----
+    Variable ids are 1-based and may be ranges (e.g., 3-7).
+    Variables that aren't listed are NODAL (the Tecplot default).
+    """
+    is_cell_centered = np.zeros(nvars, dtype='bool')
+    matches = re.findall(r'\[([^\]]*)\]\s*=\s*(\w+)', varlocation)
+    if len(matches) == 0:
+        raise ValueError(f'cannot parse VARLOCATION={varlocation!r}')
+    for ids_str, location in matches:
+        location = location.upper()
+        if location not in {'NODAL', 'CELLCENTERED'}:
+            raise ValueError(f'location={location!r} must be NODAL or CELLCENTERED; '
+                             f'VARLOCATION={varlocation!r}')
+        for word in ids_str.replace(',', ' ').split():
+            if '-' in word:
+                id1, id2 = word.split('-')
+                ivars = range(int(id1), int(id2) + 1)
+            else:
+                ivars = [int(word)]
+            for ivar in ivars:
+                if not 1 <= ivar <= nvars:
+                    raise ValueError(f'variable {ivar} is out of range [1, {nvars}]; '
+                                     f'VARLOCATION={varlocation!r}')
+                is_cell_centered[ivar - 1] = (location == 'CELLCENTERED')
+    return is_cell_centered
+
+
+def read_fe_block_varlocation(lines: list[str], iline: int, sline: list[str],
+                              is_cell_centered: np.ndarray,
+                              nnodes: int, nelements: int,
+                              ) -> tuple[int, Optional[str], Optional[list[str]],
+                                         np.ndarray, np.ndarray]:
+    """
+    Reads an unstructured BLOCK zone with NODAL and CELLCENTERED variables.
+
+    Each NODAL variable has nnodes values and each CELLCENTERED variable has
+    nelements values, written in variable order.
+
+    Returns
+    -------
+    iline, line, sline : the first line of element connectivity
+    nodal_data : (nnodes, nnodal) float np.ndarray
+    element_data : (nelements, ncell) float np.ndarray
+
+    Notes
+    -----
+    The Zone stores nodal data in zone_data and cell-centered data in
+    element_data, so the CELLCENTERED variables must come after the NODAL
+    variables (this is what Zone.write_unstructured_zone writes).
+    """
+    nvars = len(is_cell_centered)
+    ncell = int(is_cell_centered.sum())
+    nnodal = nvars - ncell
+    # TODO: support CELLCENTERED variables before NODAL variables
+    #       (requires reordering zone.variables)
+    if not np.all(is_cell_centered[nnodal:]):
+        raise NotImplementedError(f'CELLCENTERED variables must come after the NODAL '
+                                  f'variables; is_cell_centered={is_cell_centered.tolist()}')
+
+    nvalues = nnodal * nnodes + ncell * nelements
+    values: list[str] = []
+    line = None
+    while len(values) < nvalues:
+        if sline is None:
+            raise RuntimeError(f'unexpected end of file; read {len(values)} of {nvalues} values')
+        values.extend(sline)
+        iline, line, sline = get_next_sline(lines, iline)
+    if len(values) != nvalues:
+        raise RuntimeError(f'expected {nvalues} values; found {len(values)} '
+                           '(the element connectivity must start on a new line)')
+
+    data = np.array(values, dtype='float64')
+    nodal_data = data[:nnodal * nnodes].reshape(nnodal, nnodes).T
+    element_data = data[nnodal * nnodes:].reshape(ncell, nelements).T
+    return iline, line, sline, nodal_data, element_data
+
 
 def read_unstructured_elements(lines: list[str], iline: int, sline: list[str],
                                elements: np.ndarray,

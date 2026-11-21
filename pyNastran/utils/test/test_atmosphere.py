@@ -203,8 +203,8 @@ class TestAtmConvert(unittest.TestCase):
         assert np.allclose(convert_pressure(1.0, "kPa", "bar"), 1 / 100.0)
 
         # ------------
-        assert np.allclose(convert_pressure(1.0, "psf", "Pa"), 47.880208)
-        assert np.allclose(convert_pressure(1.0, "Pa", "psf"), 1 / 47.880208)
+        assert np.allclose(convert_pressure(1.0, "psf", "Pa"), 47.88025898)
+        assert np.allclose(convert_pressure(1.0, "Pa", "psf"), 1 / 47.88025898)
 
         assert np.allclose(convert_pressure(1.0, "kPa", "Pa"), 1000.0)
         assert np.allclose(convert_pressure(1.0, "Pa", "kPa"), 1 / 1000.0)
@@ -403,16 +403,16 @@ class TestAtm(unittest.TestCase):
 
         self.assertEqual(
             atm_pressure(alt=0.0, alt_units="m", pressure_units="Pa"),
-            101325.20482878872,
+            101325.38889872783,
         )
         self.assertAlmostEqual(
             atm_pressure(alt=0.0, alt_units="m", pressure_units="kPa"),
-            101.32520482878872,
+            101.32538889872784,
             delta=0.001,
         )
         self.assertAlmostEqual(
             atm_pressure(alt=0.0, alt_units="m", pressure_units="MPa"),
-            0.10132520482878872,
+            0.10132538889872783,
             delta=0.000001,
         )
 
@@ -669,8 +669,8 @@ class TestAtm(unittest.TestCase):
         """tests ``test_atm_dynamic_viscosity_mu``"""
         mu1 = atm_dynamic_viscosity_mu(0.0, alt_units="ft", visc_units="(N*s)/m^2")
         mu2 = atm_dynamic_viscosity_mu(300.0, alt_units="kft", visc_units="(N*s)/m^2")
-        self.assertEqual(mu1, 1.7881345434714084e-05), mu1
-        self.assertEqual(mu2, 1.3111218182081286e-05), mu2
+        self.assertEqual(mu1, 1.7881345053910656e-05), mu1
+        self.assertEqual(mu2, 1.31112179028631e-05), mu2
 
     def test_sutherland_viscoscity(self):
         """temperature (input) in rankine"""
@@ -1264,7 +1264,7 @@ class TestAtmConsistency(unittest.TestCase):
         q_pa = atm_dynamic_pressure(10000.0, 0.8, pressure_units="Pa")
         q_psi = atm_dynamic_pressure(10000.0, 0.8, pressure_units="psi")
         q_m = atm_dynamic_pressure(3048.0, 0.8, alt_units="m")
-        assert np.allclose(q_pa, q_psf * 47.880208)
+        assert np.allclose(q_pa, q_psf * 47.88025898)
         assert np.allclose(q_psi, q_psf / 144.0)
         assert np.allclose(q_m, q_psf)
 
@@ -1384,7 +1384,7 @@ class TestAtmConsistency(unittest.TestCase):
         mu_pa = atm_dynamic_viscosity_mu(10000.0, visc_units="Pa*s")
         self.assertEqual(mu_lbf, mu_psf)
         self.assertEqual(mu_ns, mu_pa)
-        assert np.allclose(mu_ns, mu_lbf * 47.88026)
+        assert np.allclose(mu_ns, mu_lbf * 47.88025898)
 
     def test_sutherland_continuity(self):
         """the linear (T<225 R) and Sutherland branches meet at 225 R"""

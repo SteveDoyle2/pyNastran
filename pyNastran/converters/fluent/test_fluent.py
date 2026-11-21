@@ -1,4 +1,5 @@
 import os
+import tempfile
 import unittest
 import warnings
 from pathlib import Path
@@ -10,7 +11,9 @@ import pyNastran
 from pyNastran.converters.fluent.fluent import Fluent, read_vrt, read_cell, read_daten, read_fluent
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.converters.fluent.fluent_to_tecplot import fluent_to_tecplot
+from pyNastran.converters.fluent.fluent_to_nastran import fluent_to_nastran
 from pyNastran.converters.fluent.ugrid_to_fluent import ugrid_to_fluent_filename
+from pyNastran.converters.tecplot.tecplot import read_tecplot
 
 try:
     import tables  # noqa: F401
@@ -29,8 +32,15 @@ UGRID_PATH = os.path.join(PKG_PATH, "converters", "aflr", "ugrid", "models")
 
 
 class TestFluent(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_path = Path(self._tmp_dir.name)
+
+    def tearDown(self) -> None:
+        self._tmp_dir.cleanup()
+
     def test_fluent_vrt_01(self):
-        vrt_filename = TEST_PATH / "test.cel"
+        vrt_filename = self.tmp_path / "test.vrt"
         with open(vrt_filename, "w") as vrt_file:
             vrt_file.write("""PROSTAR_VERTEX
      4000         0         0         0         0         0         0         0
@@ -44,7 +54,7 @@ class TestFluent(unittest.TestCase):
         assert np.array_equal(node_id, [1, 2, 3, 4]), node_id
 
     def test_fluent_cell_01(self):
-        cell_filename = TEST_PATH / "test.cel"
+        cell_filename = self.tmp_path / "test.cel"
         with open(cell_filename, "w") as cell_file:
             cell_file.write("""PROSTAR_CELL
              4000         0         0         0         0         0         0         0
@@ -59,7 +69,7 @@ class TestFluent(unittest.TestCase):
         assert np.array_equal(regions, [3]), regions
 
     def test_fluent_cell_02(self):
-        cell_filename = TEST_PATH / "test.cel"
+        cell_filename = self.tmp_path / "test.cel"
         with open(cell_filename, "w") as cell_file:
             cell_file.write("""PROSTAR_CELL
              4000         0         0         0         0         0         0         0
@@ -74,7 +84,7 @@ class TestFluent(unittest.TestCase):
         assert np.array_equal(regions, [100]), regions
 
     def test_fluent_daten_01(self):
-        daten_filename = TEST_PATH / "test.daten"
+        daten_filename = self.tmp_path / "test.daten"
         with open(daten_filename, "w") as daten_file:
             daten_file.write("""# Shell Id, Cf Components X, Cf Components Y, Cf Components Z, Pressure Coefficient
          1       0.00158262927085      -0.00013470219276       0.00033890815696      -0.09045402854837
@@ -82,6 +92,12 @@ class TestFluent(unittest.TestCase):
         element_id, titles, results = read_daten(daten_filename, scale=2.0)
         assert len(element_id) == 2, element_id
         assert np.array_equal(element_id, [1, 4175456]), element_id
+        assert titles.tolist() == [
+            "Shell Id", "Cf Components X", "Cf Components Y", "Cf Components Z",
+            "Pressure Coefficient"], titles
+        # scale applies to the results, not the element ids
+        assert results.shape == (2, 4), results.shape
+        assert np.allclose(results[:, 3], 2.0 * np.array([-0.09045402854837, -0.44872838534457]))
 
     def test_nastran_to_fluent(self):
         nastran_filename = BWB_PATH / "bwb_saero.bdf"
@@ -115,7 +131,131 @@ class TestFluent(unittest.TestCase):
         # print(np.unique(model2.region))
 
         tecplot = fluent_to_tecplot(vrt_filename, tecplot_filename)
-        # read_tecplot(tecplot_filename)  # TODO: fix tecplot parsing; the file is correct...
+        ntris = sum(len(zone.tri_elements) for zone in tecplot.zones)
+        nquads = sum(len(zone.quad_elements) for zone in tecplot.zones)
+        assert ntris == len(model.tris) and nquads == len(model.quads), (ntris, nquads)
+        tecplot2 = read_tecplot(tecplot_filename, log=log)
+        _assert_tecplot_equal(tecplot, tecplot2)
+
+    def test_fluent_to_tecplot(self):
+        """
+        tris + quads with non-sequential, unsorted node ids and an unused node
+
+        Tests (exact unless noted):
+         - 1 FETRIANGLE zone and 1 FEQUADRILATERAL zone
+         - variables = X, Y, Z, Region, <daten titles without the element id>
+         - each zone only has the nodes it uses (the unused node is dropped)
+         - element geometry matches the Fluent model
+         - element_data = [region, results] per element
+         - the ASCII file reads back (atol=1e-8; written with 10 sig figs)
+        """
+        model = _tri_quad_model()
+        # renumber 1-6 -> unsorted ids and add a node no element uses
+        new_ids = np.array([60, 10, 50, 20, 40, 30])
+        model.tris[:, 2:] = new_ids[model.tris[:, 2:] - 1]
+        model.quads[:, 2:] = new_ids[model.quads[:, 2:] - 1]
+        model.node_id = np.hstack([new_ids, 70])
+        model.xyz = np.vstack([model.xyz, [9.0, 9.0, 9.0]])
+
+        fluent_filename = self.tmp_path / "tri_quad.cel"
+        tecplot_filename = self.tmp_path / "tri_quad.plt"
+        model.write_fluent(fluent_filename)
+        tecplot = fluent_to_tecplot(fluent_filename, tecplot_filename)
+        assert tecplot_filename.exists()
+
+        assert len(tecplot.zones) == 2, tecplot.zones
+        tri_zone, quad_zone = tecplot.zones
+        variables = ["X", "Y", "Z", "Region", "Pressure Coefficient", "Other"]
+        for zone in tecplot.zones:
+            assert zone.variables == variables, zone.variables
+            assert zone.zone_data.shape == (6, 3), zone.zone_data.shape
+            assert not np.any(np.all(zone.xyz == 9.0, axis=1)), zone.xyz
+
+        assert len(tri_zone.quad_elements) == 0 and len(quad_zone.tri_elements) == 0
+        assert np.array_equal(
+            tri_zone.element_data, [[8, 20.0, -2.0], [8, 40.0, -4.0], [9, 50.0, -5.0]]
+        ), tri_zone.element_data
+        assert np.array_equal(
+            quad_zone.element_data, [[7, 10.0, -1.0], [7, 30.0, -3.0]]
+        ), quad_zone.element_data
+        _assert_zone_geometry(model, model.tris, tri_zone.xyz, tri_zone.tri_elements)
+        _assert_zone_geometry(model, model.quads, quad_zone.xyz, quad_zone.quad_elements)
+
+        tecplot2 = read_tecplot(tecplot_filename, log=SimpleLogger(level="warning"))
+        _assert_tecplot_equal(tecplot, tecplot2)
+
+    def test_fluent_to_tecplot_one_element_type(self):
+        """
+        tris-only and quads-only models give 1 zone; no file is written for ''
+
+        Tests (exact): zone count/type and element_data
+        """
+        for tri_ids, quad_ids, zonetype in [
+            ([2, 4, 5], None, "FETRIANGLE"),
+            (None, [1, 3], "FEQUADRILATERAL"),
+        ]:
+            model = _tri_quad_model()
+            model.slice_by_element_id(tri_ids=tri_ids, quad_ids=quad_ids)
+            fluent_filename = self.tmp_path / f"{zonetype}.cel"
+            model.write_fluent(fluent_filename)
+            tecplot = fluent_to_tecplot(fluent_filename)
+            assert not fluent_filename.with_suffix(".plt").exists()
+
+            assert len(tecplot.zones) == 1, tecplot.zones
+            zone = tecplot.zones[0]
+            assert zone.headers_dict["ZONETYPE"] == zonetype, zone.headers_dict
+            eids = np.array(tri_ids if tri_ids is not None else quad_ids)
+            assert np.array_equal(zone.element_data[:, 1], 10.0 * eids), zone.element_data
+
+    def test_fluent_to_tecplot_unsorted_daten(self):
+        """
+        Fluent doesn't have to write the daten in element id order
+
+        Tests (exact): element_data is paired with the right element
+        """
+        model = _tri_quad_model()
+        fluent_filename = self.tmp_path / "unsorted.cel"
+        model.write_fluent(fluent_filename)
+        daten_filename = fluent_filename.with_suffix(".daten")
+        with open(daten_filename, "r") as daten_file:
+            header, *rows = daten_file.readlines()
+        with open(daten_filename, "w") as daten_file:
+            daten_file.writelines([header] + rows[::-1])
+
+        tecplot = fluent_to_tecplot(fluent_filename)
+        tri_zone, quad_zone = tecplot.zones
+        # results[:, 0] = 10 * eid
+        assert np.array_equal(tri_zone.element_data[:, 1], [20.0, 40.0, 50.0])
+        assert np.array_equal(quad_zone.element_data[:, 1], [10.0, 30.0])
+
+    def test_fluent_to_nastran(self):
+        """
+        Tests (exact):
+         - GRIDs, CTRIA3s, and CQUAD4s keep their ids, xyz, nodes, and pids
+         - every tri and quad pid gets a PSHELL and MAT1 (quad-only pids too)
+        """
+        model = _tri_quad_model()
+        bdf_filename = self.tmp_path / "tri_quad.bdf"
+        nastran_model = fluent_to_nastran(model, bdf_filename)
+        assert bdf_filename.exists()
+
+        assert sorted(nastran_model.nodes) == [1, 2, 3, 4, 5, 6]
+        for nid, xyz in zip(model.node_id, model.xyz):
+            assert np.array_equal(nastran_model.nodes[nid].xyz, xyz), nid
+        for eid, pid, *nids in model.tris.tolist():
+            elem = nastran_model.elements[eid]
+            assert elem.type == "CTRIA3" and elem.pid == pid and elem.nodes == nids, elem
+        for eid, pid, *nids in model.quads.tolist():
+            elem = nastran_model.elements[eid]
+            assert elem.type == "CQUAD4" and elem.pid == pid and elem.nodes == nids, elem
+        # pid 7 is only used by quads
+        assert sorted(nastran_model.properties) == [7, 8, 9], nastran_model.properties
+        assert sorted(nastran_model.materials) == [7, 8, 9], nastran_model.materials
+
+        model.slice_by_element_id(quad_ids=[1, 3])
+        nastran_model = fluent_to_nastran(model, "")
+        assert sorted(nastran_model.elements) == [1, 3]
+        assert sorted(nastran_model.properties) == [7], nastran_model.properties
 
     def test_ugrid3d_gui_box(self):
         """simple UGRID3D box model"""
@@ -522,6 +662,25 @@ class TestFluent(unittest.TestCase):
                 filename = fluent_filename.with_suffix(ext)
                 if filename.exists():
                     os.remove(filename)
+
+
+def _assert_zone_geometry(model: Fluent, elements: np.ndarray,
+                          zone_xyz: np.ndarray, zone_elements: np.ndarray) -> None:
+    """the zone's (0-based) elements have the same corner xyz as the Fluent elements"""
+    inode = np.searchsorted(np.sort(model.node_id), elements[:, 2:])
+    xyz_sorted = model.xyz[np.argsort(model.node_id)]
+    assert np.array_equal(zone_xyz[zone_elements], xyz_sorted[inode])
+
+
+def _assert_tecplot_equal(tecplot1, tecplot2, atol: float = 1e-8) -> None:
+    """compares zones that were written to/read from an ASCII Tecplot file"""
+    assert len(tecplot1.zones) == len(tecplot2.zones), (tecplot1.zones, tecplot2.zones)
+    for zone1, zone2 in zip(tecplot1.zones, tecplot2.zones):
+        assert zone1.variables == zone2.variables, (zone1.variables, zone2.variables)
+        assert np.allclose(zone1.zone_data, zone2.zone_data, atol=atol)
+        assert np.allclose(zone1.element_data, zone2.element_data, atol=atol)
+        assert np.array_equal(zone1.tri_elements, zone2.tri_elements)
+        assert np.array_equal(zone1.quad_elements, zone2.quad_elements)
 
 
 def _three_region_model() -> Fluent:

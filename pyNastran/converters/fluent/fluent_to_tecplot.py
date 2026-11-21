@@ -8,11 +8,28 @@ from pyNastran.converters.tecplot.zone import Zone, TecplotDict
 def fluent_to_tecplot(fluent_filename: PathLike,
                       tecplot_filename: PathLike='') -> Tecplot:
     """
-    not well tested
+    Converts a Fluent vrt/cel/daten model to an ASCII Tecplot file.
 
-    considers:
-      - non-sequential node ids
-      - filters unused nodes
+    Parameters
+    ----------
+    fluent_filename : PathLike
+        the vrt/cel/daten file (any of them; they share a base name)
+    tecplot_filename : PathLike; default=''
+        the Tecplot file to write; '' -> don't write
+
+    Returns
+    -------
+    tecplot : Tecplot
+        one FETRIANGLE zone (if there are tris) followed by one
+        FEQUADRILATERAL zone (if there are quads)
+
+    Notes
+    -----
+    - X, Y, Z are NODAL; Region (the property id) and the daten results
+      are CELLCENTERED
+    - node ids may be non-sequential and unsorted
+    - result element ids may be unsorted
+    - each zone only has the nodes its elements use
     """
     fluent_model = read_fluent(fluent_filename)
     log = fluent_model.log
@@ -47,11 +64,11 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         tri_nodes = tris[:, 2:]
 
         unodes = np.unique(tri_nodes.ravel())
-        inid = np.searchsorted(node_id, unodes)
+        inid = _index_of(node_id, unodes, 'node')
         jtri_nodes = np.searchsorted(unodes, tri_nodes)
         #-------------
 
-        ires_tri = np.searchsorted(result_element_id, tri_eids)
+        ires_tri = _index_of(result_element_id, tri_eids, 'result element')
         res_tri = results[ires_tri, :]
         assert res_tri.ndim == 2, res_tri.shape
         res_tri = np.column_stack((tri_regions, res_tri))
@@ -80,11 +97,11 @@ def fluent_to_tecplot(fluent_filename: PathLike,
         quad_nodes = quads[:, 2:]
 
         unodes = np.unique(quad_nodes.ravel())
-        inid = np.searchsorted(node_id, unodes)
+        inid = _index_of(node_id, unodes, 'node')
         jquad_nodes = np.searchsorted(unodes, quad_nodes)
         #-------------
 
-        ires_quad = np.searchsorted(result_element_id, quad_eids)
+        ires_quad = _index_of(result_element_id, quad_eids, 'result element')
         res_quad = results[ires_quad, :]
         assert res_quad.ndim == 2, res_quad.shape
         res_quad = np.column_stack((quad_regions, res_quad))
@@ -104,3 +121,23 @@ def fluent_to_tecplot(fluent_filename: PathLike,
     if tecplot_filename:
         tecplot.write_tecplot(tecplot_filename)
     return tecplot
+
+
+def _index_of(ids: np.ndarray, values: np.ndarray, name: str) -> np.ndarray:
+    """
+    Gets the index of each value in ids (ids doesn't need to be sorted).
+
+    Raises
+    ------
+    KeyError
+        a value isn't in ids
+    """
+    isort = np.argsort(ids)
+    sorted_ids = ids[isort]
+    i = np.searchsorted(sorted_ids, values)
+    i = np.clip(i, 0, len(sorted_ids) - 1)
+    is_missing = sorted_ids[i] != values
+    if np.any(is_missing):
+        missing = np.unique(values[is_missing])
+        raise KeyError(f'{name} ids={missing.tolist()} are missing')
+    return isort[i]
