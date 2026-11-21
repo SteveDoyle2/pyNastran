@@ -476,6 +476,109 @@ class TestLoadSum(unittest.TestCase):
         self.assertTrue(np.allclose(F2_expected, F1), 'loadcase_id=%s F_expected=%s F1=%s' % (loadcase_id, F2_expected, F1))
         self.assertTrue(np.allclose(M2_expected, M1), 'loadcase_id=%s M_expected=%s M1=%s' % (loadcase_id, M2_expected, M1))
 
+    def test_loads_sum_grav_rforce(self):
+        """
+        GRAV and RFORCE summation vs NX 2412 OLOAD reference data.
+
+        The reference resultants (about the origin) are sums of NX OLOAD
+        grid loads for two models:
+        - offset-only CONM2s (CID=0, a rotated CID, CID=-1) with rotary
+          inertia: GRAV with a non-unit N (|a| = A*|N|) and RFORCE METHOD=1
+          with unit alpha along x, y, z (NX counts CONM2 offsets twice)
+        - the same kind of CONM2s plus CBARs and a CONROD, where the lumped
+          grid mass (not element centroids) is needed to match the moments
+
+        Tests (tolerances):
+        - sum_forces_moments and sum_forces_moments_elements match NX
+          (atol=1e-4; OLOAD is float32)
+        - include_grav / include_rforce default to False and skip the loads
+        - PARAM,WTMASS scales GRAV and RFORCE (rtol=1e-12)
+        """
+        # NX OLOAD resultants about the origin: [Fx, Fy, Fz, Mx, My, Mz]
+        offset_expected = {
+            4001: [11.772, -19.62, 39.24, 114.0268, 25.9121, -21.252],
+            3001: [0.0, 12.45, -5.897056, -55.05058, -2.690508, 1.365665],
+            3002: [-12.45, 0.0, 1.627208, 0.170152, -66.54338, 18.79458],
+            3003: [5.897056, -1.627208, 0.0, -0.579919, 20.58869, -35.34396],
+        }
+        p0 = np.zeros(3)
+
+        def offset_model(wtmass: float = 1.0) -> BDF:
+            model = BDF(debug=False, log=None)
+            model.add_cord2r(10, [1.0, 2.0, 3.0], [1.0, 2.0, 4.0], [2.0, 3.0, 3.0])
+            model.add_grid(1, [1.0, 2.0, 3.0])
+            model.add_grid(2, [-2.0, 1.0, 4.0])
+            model.add_grid(3, [3.0, -1.0, 0.5])
+            model.add_conm2(1, 1, 2.0, X=[0.5, -0.3, 0.2], I=[3.0, 0.4, 2.0, -0.3, 0.2, 1.5])
+            model.add_conm2(2, 2, 1.5, cid=10, X=[0.1, 0.7, -0.4],
+                            I=[1.0, 0.3, 2.5, 0.1, -0.2, 0.8])
+            model.add_conm2(3, 3, 0.5, cid=-1, X=[3.4, -0.6, 1.1],
+                            I=[0.2, 0.05, 0.3, 0.0, 0.1, 0.4])
+            model.add_grav(4001, 9.81, [0.3, -0.5, 1.0])
+            for j in range(3):
+                r123 = np.zeros(3)
+                r123[j] = 1.0
+                model.add_rforce(3001 + j, 0, 0.0, r123, method=1, racc=1.0 / (2 * np.pi))
+            if wtmass != 1.0:
+                model.add_param('WTMASS', [wtmass])
+            model.cross_reference()
+            return model
+
+        model = offset_model()
+        eids = list(model.masses)
+        nids = list(model.nodes)
+        for load_id, expected in offset_expected.items():
+            for force, moment in (
+                    sum_forces_moments(model, p0, load_id,
+                                       include_grav=True, include_rforce=True),
+                    sum_forces_moments_elements(model, p0, load_id, eids, nids,
+                                                include_grav=True, include_rforce=True)):
+                assert np.allclose(np.hstack([force, moment]), expected, atol=1e-4), (
+                    load_id, np.hstack([force, moment]) - expected)
+
+            # the mass summation is skipped unless requested
+            force, moment = sum_forces_moments(model, p0, load_id)
+            assert np.allclose(np.hstack([force, moment]), 0.0), load_id
+
+        # PARAM,WTMASS scales the mass for both GRAV and RFORCE
+        model_half = offset_model(wtmass=0.5)
+        for load_id, expected in offset_expected.items():
+            force, moment = sum_forces_moments(model_half, p0, load_id,
+                                               include_grav=True, include_rforce=True)
+            assert np.allclose(np.hstack([force, moment]), 0.5 * np.array(expected),
+                               rtol=1e-12, atol=1e-4), load_id
+
+        # CONM2s plus CBARs/CONROD: element mass must be lumped to the grids
+        mixed_expected = {
+            3001: [0.0, 13.9555, -37.94096, -339.8398, 150.9138, 44.79211],
+            3002: [-13.9555, 0.0, 42.61433, 143.0922, -357.198, 80.73134],
+            3003: [37.94096, -42.61433, 0.0, 51.24217, 79.78137, -569.8357],
+        }
+        model = BDF(debug=False, log=None)
+        model.add_cord2r(10, [1.0, 2.0, 3.0], [1.0, 2.0, 4.0], [2.0, 3.0, 3.0])
+        model.add_grid(1, [0.0, 0.0, 0.0])
+        model.add_grid(2, [10.0, 1.0, 0.0])
+        model.add_grid(3, [3.0, 8.0, 2.0])
+        model.add_grid(4, [5.0, 3.0, 7.0])
+        model.add_conm2(11, 1, 2.0, X=[0.5, -0.3, 0.2], I=[3.0, 0.4, 2.0, -0.3, 0.2, 1.5])
+        model.add_conm2(12, 2, 1.5, cid=10, X=[0.1, 0.7, -0.4], I=[1.0, 0.3, 2.5, 0.1, -0.2, 0.8])
+        model.add_conm2(13, 3, 3.0)
+        model.add_conm2(14, 4, 0.5, cid=-1, X=[5.2, 2.6, 7.1], I=[0.2, 0.0, 0.3, 0.0, 0.0, 0.4])
+        model.add_conrod(21, 100, [1, 3], A=0.5)
+        model.add_mat1(100, 1.0e7, None, 0.3, rho=0.1)
+        model.add_pbar(200, 100, 1.0, 1.0, 1.0, 0.0, 1.0)
+        for eid, (n1, n2) in enumerate([(1, 2), (2, 3), (3, 4)], start=31):
+            model.add_cbar(eid, 200, [n1, n2], [0.0, 0.0, 1.0], None)
+        for j in range(3):
+            r123 = np.zeros(3)
+            r123[j] = 1.0
+            model.add_rforce(3001 + j, 0, 0.0, r123, method=1, racc=1.0 / (2 * np.pi))
+        model.cross_reference()
+        for load_id, expected in mixed_expected.items():
+            force, moment = sum_forces_moments(model, p0, load_id, include_rforce=True)
+            assert np.allclose(np.hstack([force, moment]), expected, atol=1e-4), (
+                load_id, np.hstack([force, moment]) - expected)
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

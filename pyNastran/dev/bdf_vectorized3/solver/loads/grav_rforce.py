@@ -5,6 +5,7 @@ from typing import TextIO, Any
 
 import numpy as np
 import scipy as sp
+from scipy import sparse
 from scipy.sparse import csc_matrix, lil_matrix, dok_matrix, issparse
 from scipy.sparse.linalg import ArpackNoConvergence
 
@@ -20,6 +21,7 @@ from pyNastran.f06.errors import FatalError
 from pyNastran.dev.bdf_vectorized3.solver.elements.beam import (
     beam_pg_distributed, beam_pg_point,
     consistent_mass, lumped_mass,)
+from pyNastran.bdf.mesh_utils.loads import rforce_alpha_operator
 DOF_MAP = dict[tuple[int, int], int]
 Array = np.ndarray
 
@@ -58,7 +60,8 @@ def apply_grav(model: BDF,
         norm_N = np.linalg.norm(N_vec)
         if norm_N == 0.0:
             continue
-        accel_basic = mag * N_vec / norm_N
+        # QRG GRAV remark 1: a = A * N, so |a| = A * |N| (N is not normalized)
+        accel_basic = mag * N_vec
 
         # Transform from CID to basic if needed
         if cid != 0:
@@ -86,92 +89,82 @@ def apply_rforce(model: BDF,
                  Fb: np.ndarray,
                  dof_map: DOF_MAP, ndof: int,
                  log: SimpleLogger,
-                 xyz_cid0 : np.ndarray | None,
-                 Mbb: Array | None = None) -> Array:
-    """Apply RFORCE load (centrifugal/rotational force) to Fb.
+                 xyz_cid0: np.ndarray | None = None,
+                 Mbb: Array | None = None) -> None:
+    """Apply RFORCE load (centrifugal/angular-acceleration force) to Fb.
 
-    Following MYSTRAN's approach:
-    F_i = M_i * [omega x (omega x r_i) + alpha x r_i]
-    where r_i = position of grid i relative to the reference grid.
+    Per the QRG (RFORCE remarks 1-2)::
+
+        F_i = -[m]_i [omega x (omega x (r_i - r_a)) + alpha x (r_i - r_a)]
+        omega = 2*pi * A * R       (R is NOT normalized)
+        alpha = 2*pi * RACC * R
+
+    where ``[m]_i`` is the 3x3 translational mass at grid i and ``r_a`` is
+    grid G (G=0 is the origin of the CID system).
+
+    Notes
+    -----
+    - The angular-acceleration (RACC) part uses ``rforce_alpha_operator``,
+      which reproduces NX OLOAD output for METHOD=1 (offset CONM2s and rotary
+      inertia included, the way NX does it) and METHOD=2 (translational mass
+      only).
+    - The centrifugal (A) part uses only the translational mass at each grid.
+      TODO: METHOD=1 CONM2 offset terms for the centrifugal (A) part.
+    - The rotation vector is rotated from CID to basic by the coordinate
+      system axes.
+
     """
-    # Build temporary Mbb for force computation
-    # temp_subcase = Subcase(id=0)
-    # Mbb_temp = build_Mbb(model, temp_subcase, dof_map, ndof, fdtype="float64")
-
-    # Reference point position
+    assert Mbb is not None, Mbb
     grid = model.grid
     all_nids = grid.node_id
     if xyz_cid0 is None:
         xyz_cid0 = grid.xyz_cid0()
 
+    # per-grid 6x6 mass blocks; translational mass is the T1-T3 diagonal
+    i1 = np.array([dof_map[(nid, 1)] for nid in all_nids])
+    local = np.arange(6)
+    rows = (i1[:, None, None] + local[None, :, None]) * np.ones((1, 1, 6), dtype=int)
+    cols = (i1[:, None, None] + local[None, None, :]) * np.ones((1, 6, 1), dtype=int)
+    mass_blocks = np.asarray(
+        sparse.csr_matrix(Mbb)[rows.ravel(), cols.ravel()]).reshape(len(i1), 6, 6)
+    m_trans = np.diagonal(mass_blocks[:, :3, :3], axis1=1, axis2=2)
+
+    coord = model.coord
     for i_load in range(load.n):
         nid_ref = load.node_id[i_load]
         cid = load.coord_id[i_load]
-        a_scale = load.scale_factor[i_load]
-        r123 = load.r123[i_load]
-        method = load.method[i_load] # if hasattr(load, 'method') else 1
-        racc = load.racc[i_load] # if hasattr(load, 'racc') else 0.0
+        r123 = load.r[i_load]
 
-        # Angular velocity vector
-        freq = a_scale * r123     # rev/s
-        omega = 2 * np.pi * freq  # rad/s
-
-        # Transform from CID to basic if needed
-        if cid != 0:
-            coord = model.coord
-            beta = coord.xyz_to_global_transform[cid]
-            omega = beta.T @ omega
-
-        # Angular acceleration (for tangential component)
-        alpha = 2 * np.pi * racc * r123  # rev/s^s -> rad/s^2
-        if cid != 0:
-            alpha = beta.T @ alpha
-
-        omega *= scale
-        alpha *= scale
-
-        log.debug(f"  RFORCE: omega={omega}, alpha={alpha}, nid_ref={nid_ref}")
+        # rev/time -> rad/time; R is not normalized (QRG remark 2)
+        omega = 2 * np.pi * load.scale[i_load] * r123
+        alpha = 2 * np.pi * load.racc[i_load] * r123
 
         xyz_ref = np.zeros(3)
+        if cid != 0:
+            beta = coord.xyz_to_global_transform[cid]
+            omega = beta.T @ omega
+            alpha = beta.T @ alpha
+            if nid_ref == 0:
+                # The QRG G field says G=0 is the origin of the CID system,
+                # while remark 4 says the basic origin.  This follows the
+                # field definition.
+                icoord = np.where(coord.coord_id == cid)[0][0]
+                xyz_ref = coord.origin[icoord]
         if nid_ref > 0:
             iref = np.searchsorted(all_nids, nid_ref)
             xyz_ref = xyz_cid0[iref]
+        log.debug(f"  RFORCE: omega={omega}, alpha={alpha}, nid_ref={nid_ref}")
 
-        # Relative position
         dxyz = xyz_cid0 - xyz_ref[np.newaxis, :]
+        # centrifugal: -m omega x (omega x r)
+        centrifugal = np.cross(omega[np.newaxis, :], np.cross(omega[np.newaxis, :], dxyz))
+        loads = np.zeros((len(i1), 6), dtype='float64')
+        loads[:, :3] = -m_trans * centrifugal
+        # angular acceleration, per the METHOD (see rforce_alpha_operator)
+        method = int(load.method[i_load])
+        loads += rforce_alpha_operator(mass_blocks, dxyz, method) @ alpha
 
-        # Centripetal: omega x (omega x r_i)
-        omega_cross_r = np.cross(omega, dxyz, axis=0)
-        assert omega_cross_r.shape == dxyz.shape
-        accel_centripetal = np.cross(omega, omega_cross_r, axis=0)
-        assert accel_centripetal.shape == dxyz.shape
-
-        # Tangential: alpha x r_i
-        accel_tangential = np.cross(alpha, dxyz, axis=0)
-        assert accel_tangential.shape == dxyz.shape
-
-        # Total acceleration (negative for inertial force direction in Nastran)
-        accel_totals = -(accel_centripetal + accel_tangential)
-
-        # Apply F = M * a_centrifugal at each grid
-        #for nid, xyz_i, r_i in zip(all_nids, xyz_cid0, dxyz):
-        for nid, r_i, accel_total in zip(all_nids, dxyz, accel_totals):
-            i1 = dof_map[(nid, 1)]
-
-            # Centripetal: omega x (omega x r_i)
-            #omega_cross_r = np.cross(omega, r_i)
-            #accel_centripetal = np.cross(omega, omega_cross_r)
-
-            # Tangential: alpha x r_i
-            #accel_tangential = np.cross(alpha, r_i)
-
-            # Total acceleration (negative for inertial force direction in Nastran)
-            #accel_total = -(accel_centripetal + accel_tangential)
-
-            # Mass at this grid
-            m_diag = np.array([
-                Mbb_temp[i1, i1],
-                Mbb_temp[i1 + 1, i1 + 1],
-                Mbb_temp[i1 + 2, i1 + 2],
-            ])
-            Fb[i1: i1 + 3] += m_diag * accel_total
+        # A LOAD scale multiplies the load vector, not omega (the centrifugal
+        # term is quadratic in omega; QRG RFORCE remarks 11 and 19)
+        for j in range(6):
+            Fb[i1 + j] += scale * loads[:, j]

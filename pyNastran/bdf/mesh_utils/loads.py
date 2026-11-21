@@ -20,7 +20,8 @@ if TYPE_CHECKING:  # pragma: no cover
         CBAR, CQUAD4, CTRIA3,
         PLOAD1, PLOAD2, PLOAD4,
         FORCE, FORCE1, FORCE2,
-        MOMENT, MOMENT1, MOMENT2, SLOAD)
+        MOMENT, MOMENT1, MOMENT2, SLOAD,
+        GRAV, RFORCE)
     FgLoad = (PLOAD | PLOAD2 | PLOAD4 |
               FORCE | FORCE1 | FORCE2 |
               MOMENT | MOMENT1 | MOMENT2 | SLOAD)
@@ -36,6 +37,7 @@ def sum_forces_moments(model: BDF,
                        cid: int=0,
                        include_grav: bool=False,
                        xyz_cid0: Optional[dict[int, NDArray3float]]=None,
+                       include_rforce: bool=False,
                        ) -> tuple[NDArray3float, NDArray3float]:
     """
     Sums applied forces & moments about a reference point p0 for all
@@ -45,6 +47,7 @@ def sum_forces_moments(model: BDF,
       - FORCE, FORCE1, FORCE2
       - MOMENT, MOMENT1, MOMENT2
       - PLOAD, PLOAD2, PLOAD4
+      - GRAV, RFORCE (with include_grav / include_rforce)
       - LOAD
 
     Parameters
@@ -58,9 +61,14 @@ def sum_forces_moments(model: BDF,
     cid : int; default=0
         the coordinate system for the summation
     include_grav : bool; default=False
-        includes gravity in the summation (not supported)
+        includes GRAV loads; off by default because it lumps the model mass
+        to the grids, which is slow on large models
     xyz_cid0 : None / dict[int] = (3, ) ndarray
         the nodes in the global coordinate system
+    include_rforce : bool; default=False
+        includes RFORCE loads (same cost as include_grav).  GRAV and RFORCE
+        use the lumped grid mass (see ``get_grid_mass_blocks``), matching
+        Nastran's OLOAD, including PARAM,WTMASS and CONM2 offsets/inertia.
 
     Returns
     -------
@@ -89,6 +97,8 @@ def sum_forces_moments(model: BDF,
     xyz = get_xyz_cid0_dict(model, xyz_cid0=xyz_cid0)
 
     unsupported_types = set()
+    mass_blocks = None
+    xyz_grid = None
     for load, scale in zip(loads, scale_factors):
         #if load.type not in ['FORCE1']:
             #continue
@@ -180,17 +190,15 @@ def sum_forces_moments(model: BDF,
         elif load.type == 'PLOAD4':
             _pload4_total(loadcase_id, load, scale, xyz, F, M, xyz_ref)
 
-        elif load.type == 'GRAV':
-            if include_grav:  # this will be super slow
-                gravity = load.GravityVector() * scale
-                for eid, elem in model.elements.items():
-                    centroid = elem.Centroid()
-                    mass = elem.Mass()
-                    r = centroid - xyz_ref
-                    f = mass * gravity
-                    m = np.cross(r, f)
-                    F += f
-                    M += m
+        elif load.type in {'GRAV', 'RFORCE'}:
+            if (load.type == 'GRAV' and not include_grav) or (
+                    load.type == 'RFORCE' and not include_rforce):
+                continue
+            if mass_blocks is None:  # lump the mass once (slow)
+                unused_nids, xyz_grid, mass_blocks = get_grid_mass_blocks(model, xyz)
+            f, m = _mass_load_total(load, scale, xyz, xyz_grid, mass_blocks, xyz_ref)
+            F += f
+            M += m
         else:
             # we collect them so we only get one print
             unsupported_types.add(load.type)
@@ -357,6 +365,7 @@ def sum_forces_moments_elements(model: BDF,
                                 cid: int=0,
                                 include_grav: bool=False,
                                 xyz_cid0: Optional[dict[int, NDArray3float]]=None,
+                                include_rforce: bool=False,
                                 ) -> tuple[NDArray3float, NDArray3float]:
     """
     Sum the forces/moments based on a list of nodes and elements.
@@ -378,9 +387,14 @@ def sum_forces_moments_elements(model: BDF,
     loadcase_id : int
         the LOAD=ID to analyze
     include_grav : bool; default=False
-        includes gravity in the summation (not supported)
+        includes GRAV loads; off by default because it lumps the model mass
+        to the grids, which is slow on large models
     xyz_cid0 : None / dict[int] = (3, ) ndarray
         the nodes in the global coordinate system
+    include_rforce : bool; default=False
+        includes RFORCE loads (same cost as include_grav).  GRAV and RFORCE
+        use the lumped grid mass (see ``get_grid_mass_blocks``), matching
+        Nastran's OLOAD, including PARAM,WTMASS and CONM2 offsets/inertia.
 
     Returns
     -------
@@ -392,7 +406,7 @@ def sum_forces_moments_elements(model: BDF,
     Nodal Types  : FORCE, FORCE1, FORCE2,
                    MOMENT, MOMENT1, MOMENT2,
                    PLOAD
-    Element Types: PLOAD1, PLOAD2, PLOAD4, GRAV
+    Element Types: PLOAD1, PLOAD2, PLOAD4, GRAV, RFORCE
 
     If you have a CQUAD4 (eid=3) with a PLOAD4 (sid=3) and a FORCE
     card (nid=5) acting on it, you can include the PLOAD4, but
@@ -454,6 +468,8 @@ def sum_forces_moments_elements(model: BDF,
         'CTRIA3', 'CQUAD4', 'CTRIAR', 'CQUADR',
         'CTRIA6', 'CQUAD8', 'CQUAD', 'CSHEAR'}
     skip_loads = {'QVOL'}
+    mass_blocks = None
+    xyz_grid = None
     for load, scale in zip(loads, scale_factors):
         #if load.type not in ['FORCE1']:
             #continue
@@ -601,19 +617,16 @@ def sum_forces_moments_elements(model: BDF,
         elif loadtype == 'PLOAD4':
             _pload4_elements(loadcase_id, load, scale, eids, xyz, F, M, xyz_ref)
 
-        elif loadtype == 'GRAV':
-            if include_grav:  # this will be super slow
-                g = load.GravityVector() * scale
-                for eid, elem in model.elements.items():
-                    if eid not in eids:
-                        continue
-                    centroid = elem.Centroid()
-                    mass = elem.Mass()
-                    r = centroid - xyz_ref
-                    f = mass * g
-                    m = np.cross(r, f)
-                    F += f
-                    M += m
+        elif loadtype in {'GRAV', 'RFORCE'}:
+            if (loadtype == 'GRAV' and not include_grav) or (
+                    loadtype == 'RFORCE' and not include_rforce):
+                continue
+            if mass_blocks is None:  # lump the selected mass once (slow)
+                unused_nids, xyz_grid, mass_blocks = get_grid_mass_blocks(
+                    model, xyz, eids=set(eids))
+            f, m = _mass_load_total(load, scale, xyz, xyz_grid, mass_blocks, xyz_ref)
+            F += f
+            M += m
         elif loadtype in skip_loads:
             continue
         else:
@@ -1337,3 +1350,225 @@ def _add_pload(Fg: np.ndarray,
             irow = dof_map[(nid, dof+1)]
             Fg[irow] += fglobal[dof]
             #model.log.warning('PLOAD havent been verified')
+
+
+def _skew_stack(xyz: np.ndarray) -> np.ndarray:
+    """(n,3) -> (n,3,3) skew matrices with ``skew(r) @ v == cross(r, v)``."""
+    skew = np.zeros((len(xyz), 3, 3), dtype='float64')
+    x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
+    skew[:, 0, 1], skew[:, 0, 2] = -z, y
+    skew[:, 1, 0], skew[:, 1, 2] = z, -x
+    skew[:, 2, 0], skew[:, 2, 1] = -y, x
+    return skew
+
+
+def rforce_alpha_operator(mass_blocks: np.ndarray, xyz: np.ndarray, method: int) -> np.ndarray:
+    """
+    Per-grid RFORCE load per unit angular acceleration (RACC), as Nastran
+    computes it, about the origin of ``xyz``.
+
+    Parameters
+    ----------
+    mass_blocks : (ngrid,6,6) float ndarray
+        per-grid 6x6 mass blocks in the basic frame
+    xyz : (ngrid,3) float ndarray
+        grid locations relative to the rotation point, basic frame
+    method : int
+        the RFORCE METHOD field (1 or 2)
+
+    Returns
+    -------
+    operator : (ngrid,6,3) float ndarray
+        ``load_i = operator[i] @ alpha`` gives [Fx, Fy, Fz, Mx, My, Mz] at
+        grid i for an angular acceleration ``alpha`` (rad/time^2)
+
+    Notes
+    -----
+    - METHOD=2 (QRG RFORCE remark 1): ``F_i = -m_i (alpha x r_i)`` with only
+      the translational mass; no grid moments.
+    - METHOD=1 was measured from NX 2412 OLOAD output (unit alpha along x, y,
+      z; agrees to the float32 OLOAD precision), because the QRG says RACC
+      always uses METHOD=2 (remark 13) while NX rejects METHOD=2 with CONM2
+      offsets (USER FATAL 6584).  NX evaluates the translation at the grid's
+      mass cg ``p_i = r_i + s_i/m_i`` (``s_i`` = first moment of the block)
+      and then applies the full 6x6 block::
+
+          load_i = -[M_i] [alpha x p_i; alpha]
+
+      This counts a CONM2 offset twice (once in ``p_i`` and once in the
+      block's coupling terms), so it is not the exact rigid-body load, but it
+      is what Nastran applies.  Without offsets it is the exact rigid-body
+      load, including CONM2 rotary inertia.
+
+    """
+    ngrid = len(xyz)
+    assert mass_blocks.shape == (ngrid, 6, 6), (mass_blocks.shape, ngrid)
+    operator = np.zeros((ngrid, 6, 3), dtype='float64')
+    if method == 2:
+        m_trans = np.diagonal(mass_blocks[:, :3, :3], axis1=1, axis2=2)
+        operator[:, :3, :] = m_trans[:, :, np.newaxis] * _skew_stack(xyz)
+        return operator
+    assert method == 1, method
+
+    mass = mass_blocks[:, 0, 0]
+    rt = mass_blocks[:, 3:, :3]
+    first_moment = np.column_stack([-rt[:, 1, 2], rt[:, 0, 2], -rt[:, 0, 1]])
+    point = np.array(xyz, dtype='float64')
+    imass = mass != 0.0
+    point[imass] += first_moment[imass] / mass[imass, np.newaxis]
+    # rigid rotation about the origin: translation alpha x p = -skew(p) alpha
+    rotation = np.zeros((ngrid, 6, 3), dtype='float64')
+    rotation[:, :3, :] = -_skew_stack(point)
+    rotation[:, 3:, :] = np.eye(3)
+    return -mass_blocks @ rotation
+
+
+def get_grid_mass_blocks(model: BDF,
+                         xyz: dict[int, np.ndarray],
+                         eids: Optional[set[int]] = None,
+                         ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Builds the lumped (PARAM,COUPMASS,-1) 6x6 mass block at each grid.
+
+    Element mass is split equally to the element's grids (translational
+    only).  A CONM2 adds its full 6x6 block, including its offset and rotary
+    inertia.  Blocks are in the basic frame and scaled by PARAM,WTMASS.
+
+    Parameters
+    ----------
+    model : BDF
+        the cross-referenced model
+    xyz : dict[nid] = (3,) float ndarray
+        grid locations in the basic frame
+    eids : set[int]; default=None
+        only include these element/mass ids (None = all)
+
+    Returns
+    -------
+    nids : (ngrid,) int ndarray
+        the grids with mass
+    xyz_grid : (ngrid,3) float ndarray
+        their locations in the basic frame
+    mass_blocks : (ngrid,6,6) float ndarray
+        their 6x6 mass blocks
+
+    Notes
+    -----
+    - This matches how Nastran lumps mass for GRAV/RFORCE, which is not the
+      same as putting each element's mass at its centroid: the force
+      resultant agrees, but the moment of an angular acceleration depends on
+      second moments (e.g., a rod lumped to its ends adds m L^2/4 about its
+      center).
+    - TODO: CONM1 and CMASS1-4 are skipped with a warning.
+    - TODO: element offsets (CBAR/CBEAM WA/WB, shell ZOFFS) are ignored.
+
+    """
+    from pyNastran.bdf.mesh_utils.mass_properties import NO_MASS
+    wtmass = model.wtmass
+    blocks: dict[int, np.ndarray] = {}
+
+    def block(nid: int) -> np.ndarray:
+        if nid not in blocks:
+            blocks[nid] = np.zeros((6, 6), dtype='float64')
+        return blocks[nid]
+
+    for eid, elem in model.elements.items():
+        if eids is not None and eid not in eids:
+            continue
+        if elem.type in NO_MASS:
+            continue
+        try:
+            mass = elem.Mass()
+        except (AttributeError, NotImplementedError):
+            # element types without a Mass() method carry no mass here
+            continue
+        if mass == 0.0:
+            continue
+        elem_nids = [nid for nid in elem.node_ids if nid is not None and nid in xyz]
+        mass_node = wtmass * mass / len(elem_nids)
+        for nid in elem_nids:
+            mblock = block(nid)
+            mblock[0, 0] += mass_node
+            mblock[1, 1] += mass_node
+            mblock[2, 2] += mass_node
+
+    skipped = set()
+    for eid, elem in model.masses.items():
+        if eids is not None and eid not in eids:
+            continue
+        if elem.type != 'CONM2':
+            skipped.add(elem.type)
+            continue
+        nid = elem.Nid()
+        mass = wtmass * elem.Mass()
+        offset = elem.Centroid() - xyz[nid]
+        skew = _skew_stack(offset[np.newaxis, :])[0]
+        mblock = block(nid)
+        mblock[:3, :3] += mass * np.eye(3)
+        mblock[:3, 3:] += mass * skew.T
+        mblock[3:, :3] += mass * skew
+        # the tensor carries -I21, -I31, -I32 (QRG CONM2 remark 5)
+        mblock[3:, 3:] += wtmass * elem.Inertia() + mass * (
+            offset @ offset * np.eye(3) - np.outer(offset, offset))
+    if skipped:
+        model.log.warning(f'GRAV/RFORCE summation skips mass types {sorted(skipped)}')
+
+    nids = np.array(sorted(blocks), dtype='int32')
+    xyz_grid = np.array([xyz[nid] for nid in nids], dtype='float64').reshape(len(nids), 3)
+    mass_blocks = np.array([blocks[nid] for nid in nids], dtype='float64').reshape(len(nids), 6, 6)
+    return nids, xyz_grid, mass_blocks
+
+
+def _mass_load_total(load: GRAV | RFORCE,
+                     scale: float,
+                     xyz: dict[int, np.ndarray],
+                     xyz_grid: np.ndarray,
+                     mass_blocks: np.ndarray,
+                     xyz_ref: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Sums a GRAV or RFORCE load about ``xyz_ref`` using lumped grid mass.
+
+    GRAV (QRG GRAV remark 1): ``P = [M] D a`` with ``a = A * N``; CONM2
+    offsets give ``m e x a`` grid moments.
+
+    RFORCE (QRG RFORCE remarks 1-2)::
+
+        omega = 2 pi A R,  alpha = 2 pi RACC R   (R is not normalized)
+        F_i = -m_i omega x (omega x r_i)  +  rforce_alpha_operator @ alpha
+
+    with ``r_i`` measured from grid G (G=0: the origin of the CID system).
+    The LOAD scale multiplies the load vector, not omega (the centrifugal term
+    is quadratic in omega; QRG RFORCE remarks 11 and 19).
+    TODO: METHOD=1 CONM2 offset terms for the centrifugal (A) part.
+
+    """
+    ngrid = len(xyz_grid)
+    if ngrid == 0:
+        return np.zeros(3), np.zeros(3)
+    loads = np.zeros((ngrid, 6), dtype='float64')
+    if load.type == 'GRAV':
+        accel = load.GravityVector()
+        loads = mass_blocks[:, :, :3] @ accel
+    else:
+        assert load.type == 'RFORCE', load.type
+        r123 = np.asarray(load.r123, dtype='float64')
+        omega = 2 * np.pi * load.scale * r123
+        alpha = 2 * np.pi * load.racc * r123
+        cid_ref = load.cid_ref
+        xyz_axis = np.zeros(3)
+        if load.Cid() != 0:
+            beta = cid_ref.beta()  # rows are the local axes in basic
+            omega = beta.T @ omega
+            alpha = beta.T @ alpha
+            xyz_axis = cid_ref.origin
+        if load.Nid() > 0:
+            xyz_axis = xyz[load.Nid()]
+        dxyz = xyz_grid - xyz_axis[np.newaxis, :]
+        m_trans = np.diagonal(mass_blocks[:, :3, :3], axis1=1, axis2=2)
+        loads[:, :3] = -m_trans * np.cross(omega[np.newaxis, :],
+                                           np.cross(omega[np.newaxis, :], dxyz))
+        loads += rforce_alpha_operator(mass_blocks, dxyz, load.method) @ alpha
+    loads = loads * scale
+    force = loads[:, :3].sum(axis=0)
+    moment = loads[:, 3:].sum(axis=0) + np.cross(xyz_grid - xyz_ref, loads[:, :3]).sum(axis=0)
+    return force, moment

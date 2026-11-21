@@ -151,12 +151,26 @@ Array-only: nothing here imports ``pyNastran.bdf``.  Model adapters build the
 ``(mass, xyz, inertia)`` arrays and call ``inertia_relief``; see
 ``inertia_relief_vectorized.py`` for the ``bdf_vectorized3`` adapter.
 
+- ``inertia_relief`` / ``inertia_relief_6x6``: per-grid relief loads
+  (point masses / 6x6 lumped blocks).
+- ``inertia_relief_grav_rforce``: the GRAV acceleration and RFORCE angular
+  acceleration that balance a load, so a few cards replace per-grid
+  FORCE/MOMENT cards.  Validated against NX 2412: the balanced LOAD left
+  1e-3 of SPC force at a single constrained grid vs 3430 unbalanced.
+- ``pyNastran.bdf.mesh_utils.loads.rforce_alpha_operator``: Nastran's RFORCE
+  angular-acceleration load (METHOD=1 measured from NX OLOAD; METHOD=2 per
+  the QRG).  It lives in the non-dev ``loads.py`` so ``sum_forces_moments``
+  can use it too.
+
 """
 
 from __future__ import annotations
 import warnings
 
 import numpy as np
+from scipy import sparse
+
+from pyNastran.bdf.mesh_utils.loads import rforce_alpha_operator
 
 
 def _mass_properties_total(
@@ -636,3 +650,162 @@ def inertia_relief_6x6(
     )
     dmoment = dmoment_mass + np.cross(offset, dforce)
     return dforce, dmoment
+
+
+def _skew_stack(xyz: np.ndarray) -> np.ndarray:
+    """(n,3) -> (n,3,3) skew matrices with ``skew(r) @ v == cross(r, v)``."""
+    skew = np.zeros((len(xyz), 3, 3), dtype="float64")
+    x, y, z = xyz[:, 0], xyz[:, 1], xyz[:, 2]
+    skew[:, 0, 1], skew[:, 0, 2] = -z, y
+    skew[:, 1, 0], skew[:, 1, 2] = z, -x
+    skew[:, 2, 0], skew[:, 2, 1] = -y, x
+    return skew
+
+
+def inertia_relief_grav_rforce(
+    mbb: np.ndarray,
+    xyz: np.ndarray,
+    force: np.ndarray,
+    moment: np.ndarray,
+    rforce_method: int = 1,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Finds a GRAV acceleration and an RFORCE angular acceleration that balance
+    an applied load, so a few cards replace per-grid FORCE/MOMENT cards.
+
+    Each card's load is modeled the way Nastran applies it:
+
+    - GRAV (QRG GRAV remark 1): the load is ``+[M] D_t g`` with the full mass
+      matrix, so CONM2 offsets and coupled mass contribute moments.
+    - RFORCE with A=0 about the basic origin: the per-grid load Nastran
+      applies for the given METHOD (see ``rforce_alpha_operator``).
+
+    The six unknowns ``(g, alpha)`` are solved so the resultant of
+    applied + GRAV + RFORCE is zero about the basic origin::
+
+        [sum F_grav(g) + sum F_rforce(alpha)] = -sum F_applied
+        [sum M_grav(g) + sum M_rforce(alpha)] = -sum M_applied
+
+    Parameters
+    ----------
+    mbb : (6*ngrid, 6*ngrid) float ndarray or sparse matrix
+        basic-frame mass matrix (already scaled by WTMASS), 6 DOFs per grid
+        in ``xyz`` order
+    xyz : (ngrid,3) float ndarray
+        grid locations in the basic frame
+    force : (ngrid,3) float ndarray
+        applied grid forces in the basic frame
+    moment : (ngrid,3) float ndarray
+        applied grid moments in the basic frame
+    rforce_method : int; default=1
+        the RFORCE METHOD field (1 or 2); NX rejects METHOD=2 when any CONM2
+        has an offset
+
+    Returns
+    -------
+    grav_accel : (3,) float ndarray
+        the GRAV acceleration vector ``A * N`` in the basic frame
+    alpha : (3,) float ndarray
+        the RFORCE angular acceleration (rad/time^2) about the basic origin;
+        RACC = ``|alpha| / (2 pi)`` with ``R = alpha / |alpha|``
+    residual : (6,) float ndarray
+        the remaining [force, moment] resultant about the origin; ~0 unless
+        the mass distribution is degenerate (e.g., collinear)
+
+    Notes
+    -----
+    - The per-grid loads differ from ``inertia_relief`` at CONM2s with offsets
+      (and, for METHOD=2, rotary inertia), because Nastran's RFORCE models
+      them differently; the resultant is still exactly balanced because the
+      solve uses Nastran's RFORCE load.
+    - A degenerate (e.g., collinear) mass distribution can't react a moment
+      about the zero-inertia axis.  The system is solved by least squares and
+      a ``RuntimeWarning`` reports the residual.
+
+    """
+    ngrid = len(xyz)
+    assert xyz.shape == (ngrid, 3), xyz.shape
+    assert force.shape == (ngrid, 3), force.shape
+    assert moment.shape == (ngrid, 3), moment.shape
+    assert mbb.shape == (6 * ngrid, 6 * ngrid), (mbb.shape, ngrid)
+    skew_r = _skew_stack(xyz)
+
+    # GRAV: grid loads = Mbb @ (unit translation in direction j), j = 1..3
+    dt = np.zeros((6 * ngrid, 3), dtype="float64")
+    for j in range(3):
+        dt[j::6, j] = 1.0
+    grav_loads = np.asarray(mbb @ dt).reshape(ngrid, 6, 3)
+    grav_f = grav_loads[:, :3, :]  # (ngrid, 3, 3): force per unit g
+    grav_m = grav_loads[:, 3:, :]
+    a_grav = np.vstack(
+        [
+            grav_f.sum(axis=0),
+            (grav_m + skew_r @ grav_f).sum(axis=0),
+        ]
+    )
+
+    # RFORCE: per-grid load per unit alpha, as Nastran applies it
+    mass_blocks, unused_coupling = get_mass_blocks(sparse.csr_matrix(mbb))
+    rforce_op = rforce_alpha_operator(mass_blocks, xyz, rforce_method)
+    rforce_f = rforce_op[:, :3, :]
+    rforce_m = rforce_op[:, 3:, :]
+    a_rforce = np.vstack(
+        [
+            rforce_f.sum(axis=0),
+            (rforce_m + skew_r @ rforce_f).sum(axis=0),
+        ]
+    )
+
+    amat = np.hstack([a_grav, a_rforce])
+    applied = np.hstack(
+        [
+            force.sum(axis=0),
+            moment.sum(axis=0) + np.cross(xyz, force).sum(axis=0),
+        ]
+    )
+    solution, *unused = np.linalg.lstsq(amat, -applied, rcond=1e-12)
+    residual = applied + amat @ solution
+    if np.abs(residual).max() > 1e-8 * max(np.abs(applied).max(), 1e-300):
+        warnings.warn(
+            f"GRAV/RFORCE cannot fully balance the load (degenerate mass "
+            f"distribution?); residual [F, M] = {residual}",
+            RuntimeWarning,
+            stacklevel=2,
+        )
+    return solution[:3], solution[3:], residual
+
+
+def get_mass_blocks(mbb: sparse.spmatrix) -> tuple[np.ndarray, float]:
+    """
+    Extracts the diagonal 6x6 block of each grid from a g-set mass matrix.
+
+    Parameters
+    ----------
+    mbb : (6*ngrid, 6*ngrid) sparse matrix
+        the mass matrix with 6 DOFs per grid in [T1, T2, T3, R1, R2, R3] order
+
+    Returns
+    -------
+    mass_blocks : (ngrid,6,6) float ndarray
+        the per-grid diagonal blocks
+    coupling_ratio : float
+        ``sum(|off-block terms|) / sum(|all terms|)``; 0.0 for a purely
+        block-diagonal (lumped) matrix
+
+    """
+    ndof = mbb.shape[0]
+    assert ndof % 6 == 0, ndof
+    ngrid = ndof // 6
+    coo = sparse.coo_matrix(mbb)
+    igrid = coo.row // 6
+    in_block = igrid == coo.col // 6
+
+    mass_blocks = np.zeros((ngrid, 6, 6), dtype="float64")
+    np.add.at(
+        mass_blocks,
+        (igrid[in_block], coo.row[in_block] % 6, coo.col[in_block] % 6),
+        coo.data[in_block],
+    )
+    abs_total = np.abs(coo.data).sum()
+    coupling_ratio = np.abs(coo.data[~in_block]).sum() / abs_total if abs_total > 0.0 else 0.0
+    return mass_blocks, float(coupling_ratio)

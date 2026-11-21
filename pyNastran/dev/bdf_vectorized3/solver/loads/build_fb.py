@@ -114,7 +114,8 @@ def build_Fb_from_loadid(model: BDF,
                 apply_grav(model, load, scale, Fb, dof_map, ndof, log,
                            Mbb=Mbb)
             elif load.type == "RFORCE":
-                apply_rforce(model, load, scale, Fb, dof_map, ndof, log, Mbb=Mbb)
+                apply_rforce(model, load, scale, Fb, dof_map, ndof, log,
+                             xyz_cid0=xyz_cid0, Mbb=Mbb)
             else:
                 print(load.get_stats())
                 raise NotImplementedError(load)

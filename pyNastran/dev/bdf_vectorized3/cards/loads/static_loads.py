@@ -3119,9 +3119,10 @@ class RFORCE(Load):
         nid = self.model.grid.node_id
         cid = self.model.coord.coord_id
 
+        # G=0 is valid (the origin), so it is not a missing node
         geom_check(self,
                    missing,
-                   node=(nid, self.node_id), filter_node0=False,
+                   node=(nid, self.node_id), filter_node0=True,
                    coord=(cid, self.coord_id))
 
     def sum_forces_moments(self) -> np.ndarray:

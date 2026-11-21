@@ -34,46 +34,14 @@ from scipy import sparse
 from pyNastran.dev.bdf_vectorized3.solver.loads.build_fb import build_Fb_from_loadid
 from pyNastran.dev.bdf_vectorized3.solver.matrices.mass_matrix import build_mgg_lumped
 from pyNastran.dev.bdf_vectorized3.solver.utils import get_param
-from pyNastran.dev.tools.inrel.inertia_relief2 import inertia_relief_6x6
+from pyNastran.dev.tools.inrel.inertia_relief2 import (
+    get_mass_blocks,
+    inertia_relief_6x6,
+    inertia_relief_grav_rforce,
+)
 
 if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.dev.bdf_vectorized3.bdf import BDF
-
-
-def get_mass_blocks(mbb: sparse.spmatrix) -> tuple[np.ndarray, float]:
-    """
-    Extracts the diagonal 6x6 block of each grid from a g-set mass matrix.
-
-    Parameters
-    ----------
-    mbb : (6*ngrid, 6*ngrid) sparse matrix
-        the mass matrix with 6 DOFs per grid in [T1, T2, T3, R1, R2, R3] order
-
-    Returns
-    -------
-    mass_blocks : (ngrid,6,6) float ndarray
-        the per-grid diagonal blocks
-    coupling_ratio : float
-        ``sum(|off-block terms|) / sum(|all terms|)``; 0.0 for a purely
-        block-diagonal (lumped) matrix
-
-    """
-    ndof = mbb.shape[0]
-    assert ndof % 6 == 0, ndof
-    ngrid = ndof // 6
-    coo = sparse.coo_matrix(mbb)
-    igrid = coo.row // 6
-    in_block = igrid == coo.col // 6
-
-    mass_blocks = np.zeros((ngrid, 6, 6), dtype="float64")
-    np.add.at(
-        mass_blocks,
-        (igrid[in_block], coo.row[in_block] % 6, coo.col[in_block] % 6),
-        coo.data[in_block],
-    )
-    abs_total = np.abs(coo.data).sum()
-    coupling_ratio = np.abs(coo.data[~in_block]).sum() / abs_total if abs_total > 0.0 else 0.0
-    return mass_blocks, float(coupling_ratio)
 
 
 def inertia_relief_vectorized(
@@ -232,3 +200,113 @@ def inertia_relief_from_model(
     force, moment = get_grid_loads(model, load_id, mbb=mbb)
     grid_id, dforce, dmoment = inertia_relief_vectorized(model, force, moment, debug=debug, mbb=mbb)
     return grid_id, force, moment, dforce, dmoment
+
+
+def add_inertia_relief_cards(
+    model: BDF,
+    load_id: int,
+    balanced_load_id: int,
+    grav_id: int,
+    rforce_id: int,
+    wtmass: float | None = None,
+    rforce_method: int = 1,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Balances a static load set with one GRAV, one RFORCE, and a LOAD card.
+
+    Instead of writing a FORCE/MOMENT pair per grid, the rigid-body relief is
+    expressed as a GRAV acceleration plus an RFORCE angular acceleration
+    (A=0, about the basic origin), combined with the applied load::
+
+        LOAD, balanced_load_id, 1.0, 1.0, load_id, 1.0, grav_id, 1.0, rforce_id
+
+    A zero GRAV or RFORCE (e.g., a load with no net force) is omitted.
+
+    See ``inertia_relief2.inertia_relief_grav_rforce`` for how each card's
+    load is modeled.  The cards are added to ``model`` and ``model.setup()``
+    is re-run.
+
+    Parameters
+    ----------
+    model : pyNastran.dev.bdf_vectorized3.bdf.BDF
+        the cross-referenced model
+    load_id : int
+        the applied static load set id
+    balanced_load_id : int
+        the new LOAD id (select with Case Control LOAD=balanced_load_id)
+    grav_id : int
+        the new GRAV id
+    rforce_id : int
+        the new RFORCE id
+    wtmass : float; default=None
+        PARAM,WTMASS; None reads it from the model (default 1.0).  Nastran
+        scales the mass for GRAV and RFORCE by WTMASS, so the accelerations
+        are in true units.
+    rforce_method : int; default=1
+        the RFORCE METHOD field.  NX rejects METHOD=2 when any CONM2, shell,
+        or beam has an offset (USER FATAL 6584); METHOD=1 is the QRG choice
+        for lumped mass with offsets (RFORCE remark 7).
+
+    Returns
+    -------
+    grav_accel : (3,) float ndarray
+        the GRAV acceleration vector, basic frame
+    alpha : (3,) float ndarray
+        the RFORCE angular acceleration (rad/time^2), basic frame
+    residual : (6,) float ndarray
+        the unbalanced [force, moment] resultant about the origin (~0)
+
+    Notes
+    -----
+    - GRAV can't share a SID with FORCE/MOMENT cards (QRG GRAV remark 3),
+      which is why the combination goes through a LOAD card.
+    - Nastran does not allow a LOAD card to reference another LOAD card, so
+      if ``load_id`` is a LOAD card, its components are copied into the new
+      LOAD with their scale factors (``S * Si``).
+
+    """
+    if wtmass is None:
+        wtmass = get_param(model, "WTMASS", 1.0)
+    mbb, grid_id, unused_total_mass = build_mgg_lumped(
+        model=model, wtmass=wtmass, output_frame="basic"
+    )
+    assert np.array_equal(grid_id, model.grid.node_id), "grid order mismatch"
+    force, moment = get_grid_loads(model, load_id, mbb=mbb)
+    xyz = model.grid.xyz_cid0()
+    grav_accel, alpha, residual = inertia_relief_grav_rforce(
+        mbb, xyz, force, moment, rforce_method=rforce_method
+    )
+
+    load = model.load
+    if load.n and load_id in load.load_id:
+        # LOAD can't reference a LOAD; copy its components
+        iload = np.where(load.load_id == load_id)[0][0]
+        i0, i1 = load.iload[iload]
+        scale_factors = list(load.scale[iload] * load.scale_factors[i0:i1])
+        load_ids = list(load.load_ids[i0:i1])
+    else:
+        scale_factors = [1.0]
+        load_ids = [load_id]
+
+    accel_mag = np.linalg.norm(grav_accel)
+    if accel_mag > 0.0:
+        model.add_grav(grav_id, accel_mag, grav_accel / accel_mag)
+        load_ids.append(grav_id)
+        scale_factors.append(1.0)
+    alpha_mag = np.linalg.norm(alpha)
+    if alpha_mag > 0.0:
+        # RACC is in rev/time^2 and R is not normalized (QRG RFORCE remark 2)
+        model.add_rforce(
+            rforce_id,
+            0,
+            0.0,
+            alpha / alpha_mag,
+            cid=0,
+            method=rforce_method,
+            racc=alpha_mag / (2 * np.pi),
+        )
+        load_ids.append(rforce_id)
+        scale_factors.append(1.0)
+    model.add_load(balanced_load_id, 1.0, scale_factors, load_ids)
+    model.setup()
+    return grav_accel, alpha, residual

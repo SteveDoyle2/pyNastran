@@ -508,10 +508,14 @@ class GRAV(BaseCard):
         return coord_id(self.cid_ref, self.cid)
 
     def GravityVector(self) -> np.ndarray:
-        """returns the gravity vector in absolute coordinates"""
+        """
+        Returns the acceleration vector ``A * N`` in the basic frame.
+
+        Per QRG GRAV remark 1, ``|a| = A * |N|`` (N is not normalized).
+        Previously the CID=0 branch returned N without the A scale.
+        """
         if self.Cid() == 0:
-            return self.N
-        ## TODO: shouldn't be scaled by the ???
+            return self.scale * self.N
         p = self.cid_ref.transform_vector_to_global(self.N)
         return self.scale * p
 
