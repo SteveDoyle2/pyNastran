@@ -1011,6 +1011,17 @@ class TestNewZaeroCards(unittest.TestCase):
     """Tests for newly added ZAERO cards: CONMLST, CPFACT, APCONST,
     SPLINE0, PBODY7, TRIMFLT, and generic cards (ASEOUT, OUTPUT4, etc.).
     """
+    def setUp(self):
+        # xref calls view_block_diagram -> g.view(), which renders a pdf and
+        # opens it; an open pdf is locked on Windows, so the next dot call fails
+        self._original_digraph = graphviz_interface.Digraph
+        self._original_enf = graphviz_interface.ExecutableNotFound
+        graphviz_interface.Digraph = graphviz_interface.FakeDigraph
+        graphviz_interface.ExecutableNotFound = graphviz_interface.FakeExecutableNotFound
+
+    def tearDown(self):
+        graphviz_interface.Digraph = self._original_digraph
+        graphviz_interface.ExecutableNotFound = self._original_enf
 
     def test_conmlst(self):
         """CONMLST parses scale factor + CONM ID pairs."""

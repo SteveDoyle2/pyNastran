@@ -2049,7 +2049,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                                    nlabels=nlabels, labelsize=labelsize,
                                    ncolors=ncolors, colormap=colormap,
                                    is_horizontal=is_horizontal,
-                                   is_shown=is_legend_shown)
+                                   is_shown=is_legend_shown,
+                                   labels=self.get_result_labels(icase_fringe))
 
             #obj.get_vector_array_by_phase(i, name, )
             self._update_min_max_actors(location, icase_fringe,

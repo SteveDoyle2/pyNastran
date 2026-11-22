@@ -969,6 +969,9 @@ class OP2(OP2_Scalar, OP2Writer):
             'bgpdt', 'gpdt', 'eqexin', 'grid_point_weight', 'psds',
             'monitor1', 'monitor3',
             'cstm', 'trmbu', 'trmbd',
+            # keyed by control surface name (key[-1]=cs_name); including it
+            # adds a 2nd key per subcase, which blocks combining everything
+            'trim.hinge_moment_derivatives',
         )
 
         # set subcase_key

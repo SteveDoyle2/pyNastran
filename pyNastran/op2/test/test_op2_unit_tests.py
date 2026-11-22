@@ -1167,8 +1167,9 @@ class TestNX(Tester):
         assert len(trim.aero_pressure) == 1, trim.aero_pressure
         assert len(trim.aero_force) == 1, trim.aero_force
 
-        #key = 1
-        key = (1, 1, 1, 0, 0, '', '')
+        # combine_results collapses trim results to the subcase id
+        # (hinge_moment_derivatives stays keyed by control surface)
+        key = 1
         str(trim.derivatives[key])
         str(trim.control_surface_position_hinge_moment[key])
         str(trim.aero_pressure[key])

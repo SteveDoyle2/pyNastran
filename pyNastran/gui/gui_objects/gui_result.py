@@ -117,6 +117,10 @@ class GuiResultCommon:
     def get_fringe_vector_result(self, i: int, name: str) -> tuple[Any, Any]:  # pragma: no cover
         raise NotImplementedError(f'{self.class_name}.get_fringe_vector_result')
 
+    def get_labels(self, i: int, name: str) -> Optional[dict[int, str]]:
+        """string labels of an integer (categorical) result: {code: label}; None = numeric"""
+        return getattr(self, 'string_labels', None)
+
     def get_vector_size(self, i: int, name: str) -> int:
         """vector_size=1 is the default"""
         return 1
@@ -478,7 +482,8 @@ class GuiResult(GuiResultCommon):
                  data_map: Any=None,
                  data_format: Optional[str]=None,
                  scale_type: str='',
-                 uname: str='GuiResult'):
+                 uname: str='GuiResult',
+                 labels: Optional[dict[int, str]]=None):
         """
         Parameters
         ----------
@@ -500,9 +505,19 @@ class GuiResult(GuiResultCommon):
             ???
         uname : str
             some unique name for ...
+        labels : dict[int, str]; default=None
+            string (categorical) result: ``scalar`` holds integer codes and
+            labels[code] is the string shown in the legend and by the probe
+            (e.g. {1: 'steel', 2: 'aluminum'})
 
         """
         GuiResultCommon.__init__(self)
+        if labels is not None:
+            assert scalar.dtype.kind in 'iu', f'title={title!r}: labels need an int scalar; dtype={scalar.dtype}'
+            labels = {int(code): str(label) for code, label in labels.items()}
+            missing = sorted(set(np.unique(scalar).tolist()) - set(labels) - {mask_value})
+            assert len(missing) == 0, f'title={title!r}: codes {missing} have no label'
+        self.string_labels = labels
         self.scale_type = scale_type
         self.data_map = data_map
         self.subcase_id = subcase_id

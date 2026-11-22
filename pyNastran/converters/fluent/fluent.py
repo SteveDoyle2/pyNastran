@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional
 
@@ -51,6 +52,9 @@ class Fluent:
         self.titles = np.zeros((0,), dtype="|U8")
         self.result_element_id = np.array([], dtype="int32")
         self.results = np.zeros((0, 0), dtype="float64")
+        # string results: {title: {code: label}}; the column of ``results``
+        # holds the integer codes (h5 only; the daten format has no labels)
+        self.result_labels: dict[str, dict[int, str]] = {}
 
         # TODO: may be removed
         self.element_ids = np.array([], dtype="int32")
@@ -133,6 +137,10 @@ class Fluent:
         for name in names:
             datai = getattr(self, name)
             h5file.create_array(h5file.root, name, datai)
+        if self.result_labels:
+            # {title: {code: label}} as one JSON string (keys become strings)
+            h5file.create_array(h5file.root, "result_labels",
+                                [json.dumps(self.result_labels).encode("utf-8")])
 
         h5file.close()
         self.fluent_filename = h5_filename
@@ -180,6 +188,12 @@ class Fluent:
                 setattr(self, name, data_array)
             else:
                 setattr(self, name, datai)
+        self.result_labels = {}
+        if "/result_labels" in h5file:
+            text = h5file.get_node("/result_labels").read()[0].decode("utf-8")
+            self.result_labels = {
+                title: {int(code): label for code, label in labels.items()}
+                for title, labels in json.loads(text).items()}
         h5file.close()
         assert len(self.result_element_id) > 0, self.result_element_id
         assert len(self.element_ids) > 0, self.element_ids
@@ -440,6 +454,7 @@ class Fluent:
                 log=self.log,
             )
             assert isinstance(model2, Fluent)
+            model2.result_labels = dict(self.result_labels)
             str(model2)
             assert len(model2.result_element_id) > 0
             region = model2.region

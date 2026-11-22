@@ -1,6 +1,7 @@
 """defines testing utils"""
 import os
 import copy
+import tempfile
 from io import StringIO
 from collections import ChainMap
 from pathlib import Path
@@ -55,10 +56,60 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
                    stringify: bool=False,
                    nastran_format: str='nx',
                    op2_log_level: str='warning') -> BDF:
-    """writes, re-reads, saves an obj, loads an obj, and returns the deck"""
+    """
+    writes, re-reads, saves an obj, loads an obj, and returns the deck
+
+    Notes
+    -----
+    All scratch files (model2.bdf, test.h5, model.obj, junk.bdf, spike.op2,
+    ...) are written to a unique temporary directory.  Previously they were
+    written to the cwd with fixed names, so parallel test runs (pytest-xdist,
+    PyCharm, multiple processes) deleted/overwrote each other's files, giving
+    spurious ``FileNotFoundError: model2.bdf`` and ``LookupError: unknown
+    encoding:`` (half-written test.h5) failures.
+    """
     assert xref in {'standard', 'safe', True, False}, f'xref={xref}'
-    if os.path.exists('junk.bdf'):
-        os.remove('junk.bdf')
+    # ignore_cleanup_errors: Windows can briefly hold file locks; a leftover
+    # temp dir is harmless and must not fail the test
+    with tempfile.TemporaryDirectory(prefix='pynastran_save_load_',
+                                     ignore_cleanup_errors=True) as tmp_dir:
+        return _save_load_deck(
+            model, Path(tmp_dir), xref=xref, punch=punch,
+            run_remove_unused=run_remove_unused, run_convert=run_convert,
+            run_renumber=run_renumber, run_mirror=run_mirror,
+            run_save_load=run_save_load, run_quality=run_quality,
+            write_saves=write_saves, run_save_load_hdf5=run_save_load_hdf5,
+            run_mass_properties=run_mass_properties, run_loads=run_loads,
+            run_export_caero=run_export_caero, run_test_bdf=run_test_bdf,
+            run_op2_writer=run_op2_writer, run_op2_reader=run_op2_reader,
+            run_deepcopy=run_deepcopy,
+            remove_disabled_cards=remove_disabled_cards,
+            stringify=stringify, nastran_format=nastran_format,
+            op2_log_level=op2_log_level)
+
+
+def _save_load_deck(model: BDF, dirname: Path,
+                    xref: str='standard', punch: bool=True,
+                    run_remove_unused: bool=True,
+                    run_convert: bool=True,
+                    run_renumber: bool=True,
+                    run_mirror: bool=True,
+                    run_save_load: bool=True,
+                    run_quality: bool=True,
+                    write_saves: bool=True,
+                    run_save_load_hdf5: bool=True,
+                    run_mass_properties: bool=True,
+                    run_loads: bool=True,
+                    run_export_caero: bool=True,
+                    run_test_bdf: bool=True,
+                    run_op2_writer: bool=True,
+                    run_op2_reader: bool=True,
+                    run_deepcopy: bool=True,
+                    remove_disabled_cards: bool=True,
+                    stringify: bool=False,
+                    nastran_format: str='nx',
+                    op2_log_level: str='warning') -> BDF:
+    """helper for ``save_load_deck``; all scratch files go in ``dirname``"""
     if not remove_disabled_cards:
         model._add_disabled_cards()
     model.set_error_storage(nparse_errors=0, stop_on_parsing_error=True,
@@ -83,9 +134,10 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
         del bdf_file2
 
     if write_saves and model.save_file_structure:
-        bdf_filenames = {0 : 'junk.bdf',}
+        junk_filename = dirname / 'junk.bdf'
+        bdf_filenames = {0 : junk_filename,}
         model.write_bdfs(bdf_filenames)
-        os.remove('junk.bdf')
+        os.remove(junk_filename)
 
     if run_convert:
         units_to = ['m', 'kg', 's']
@@ -108,7 +160,6 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
     model2.read_bdf(bdf_file, punch=punch, xref=False)
     _cross_reference(model2, xref)
 
-    dirname = Path('.')
     model2.pop_parse_errors()
     model2.get_bdf_stats()
     model2.write_bdf(dirname / 'model2.bdf')
@@ -135,29 +186,32 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
     _run_loads(model2, nelements, run_loads=run_loads)
 
     if run_save_load:
-        model2.save(obj_filename='model.obj', unxref=True)
+        obj_filename = dirname / 'model.obj'
+        model2.save(obj_filename=obj_filename, unxref=True)
         model3 = BDF(debug=False, log=model.log, mode='msc')
-        model3.load(obj_filename='model.obj')
-        os.remove('model.obj')
+        model3.load(obj_filename=obj_filename)
+        os.remove(obj_filename)
     else:
         model2.uncross_reference()
         model3 = model2
 
-    _run_hdf5(model2, model.log, run_save_load_hdf5=run_save_load_hdf5)
+    _run_hdf5(model2, model.log, run_save_load_hdf5=run_save_load_hdf5,
+              dirname=dirname)
 
     cross_reference(model3, xref)
     if run_renumber:
-        renumber('model2.bdf', model.log)
+        renumber(dirname / 'model2.bdf', model.log, dirname=dirname)
         if run_mirror:
             # we put this under renumber to prevent modifying an
             # existing model to prevent breaking tests
             #
             # shouldn't have any effect model2.bdf
-            model_mirrored = bdf_mirror('model2.bdf', plane='xz', log=model.log)[0]
-            model_mirrored.write_bdf('mirrored2.bdf')
-            read_bdf('mirrored2.bdf', log=model.log)
-            os.remove('mirrored2.bdf')
-    os.remove('model2.bdf')
+            mirrored_filename = dirname / 'mirrored2.bdf'
+            model_mirrored = bdf_mirror(dirname / 'model2.bdf', plane='xz', log=model.log)[0]
+            model_mirrored.write_bdf(mirrored_filename)
+            read_bdf(mirrored_filename, log=model.log)
+            os.remove(mirrored_filename)
+    os.remove(dirname / 'model2.bdf')
 
     if model.elements and run_quality:
         element_quality(model)
@@ -175,7 +229,8 @@ def save_load_deck(model: BDF, xref: str='standard', punch: bool=True,
         run_op2_writer=run_op2_writer,
         run_op2_reader=run_op2_reader,
         nastran_format=nastran_format,
-        op2_log_level=op2_log_level)
+        op2_log_level=op2_log_level,
+        dirname=dirname)
 
     if run_remove_unused:
         remove_unused(model)
@@ -193,13 +248,30 @@ def read_write_op2_geom(model: BDF,
                         run_op2_writer: bool=True,
                         run_op2_reader: bool=True,
                         nastran_format: str='nx',
-                        op2_log_level: str='warning') -> None:
-    """helper method for ``save_load_deck``"""
+                        op2_log_level: str='warning',
+                        dirname: Path | None=None) -> None:
+    """
+    helper method for ``save_load_deck``
+
+    Parameters
+    ----------
+    dirname : Path | None
+        scratch directory for spike.op2; None -> a unique temp directory
+        (avoids collisions between parallel test runs)
+    """
     if not run_op2_writer:
+        return
+    if dirname is None:
+        with tempfile.TemporaryDirectory(prefix='pynastran_op2_geom_',
+                                         ignore_cleanup_errors=True) as tmp_dir:
+            read_write_op2_geom(
+                model, run_op2_writer=run_op2_writer, run_op2_reader=run_op2_reader,
+                nastran_format=nastran_format, op2_log_level=op2_log_level,
+                dirname=Path(tmp_dir))
         return
     op2_geom_model = attach_displacement_to_bdf_model(model)
 
-    op2_filename = 'spike.op2'
+    op2_filename = dirname / 'spike.op2'
     bkp_log = op2_geom_model.log
     op2_geom_model.log = SimpleLogger(level=op2_log_level, encoding='utf-8')
     op2_geom_model.write_op2(op2_filename, post=-1, endian=b'<', skips=None,
@@ -228,10 +300,11 @@ def attach_displacement_to_bdf_model(model: BDF) -> OP2Geom:
     return op2_geom_model
 
 def _run_hdf5(model2: BDF, log: SimpleLogger,
-              run_save_load_hdf5: bool=True) -> None:
-    """helper method"""
+              run_save_load_hdf5: bool=True,
+              dirname: Path=Path('.')) -> None:
+    """helper method; test.h5 is written to ``dirname``"""
     if run_save_load_hdf5 and IS_H5PY:
-        hdf5_filename = 'test.h5'
+        hdf5_filename = dirname / 'test.h5'
         model2.export_hdf5_filename(hdf5_filename)
         model4 = BDF(log=model2.log)
         model4.load_hdf5_filename(hdf5_filename)
@@ -345,8 +418,10 @@ def cross_reference(model: BDF, xref: bool) -> None:
     model.pop_xref_errors()
 
 
-def renumber(bdf_filename: PathLike, log: SimpleLogger) -> None:
-    bdf_filename_out = 'junk.bdf'
+def renumber(bdf_filename: PathLike, log: SimpleLogger,
+             dirname: Path=Path('.')) -> None:
+    """renumbers a deck and re-reads it; junk.bdf is written to ``dirname``"""
+    bdf_filename_out = dirname / 'junk.bdf'
     #model3_copy = deepcopy(model3)
     #model3.cross_reference()
     bdf_renumber(bdf_filename, bdf_filename_out, size=8, is_double=False,
@@ -354,7 +429,7 @@ def renumber(bdf_filename: PathLike, log: SimpleLogger) -> None:
                  debug=False)
     model4 = BDF(debug=False, log=log)
     model4.read_bdf(bdf_filename_out)
-    os.remove('junk.bdf')
+    os.remove(bdf_filename_out)
 
 def get_matrices(model: BDF) -> None:
     """tests the ``get_matrix`` method for every type of matrix"""

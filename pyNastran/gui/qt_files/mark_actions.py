@@ -104,7 +104,7 @@ class MarkActions:
         is_value, values = get_plottable_values(obj, i, res_name)
         if not is_value:
             return None
-        result_values = values[node_id]
+        result_values = label_values(obj, i, res_name, values[node_id])
         assert not isinstance(xyz, int), xyz
         return result_name, result_values, node_id, xyz
 
@@ -193,7 +193,7 @@ class MarkActions:
             return None
 
         try:
-            result_values = values[cell_id]
+            result_values = label_values(obj, i, res_name, values[cell_id])
         except IndexError:
             msg = ('values[cell_id] is out of bounds; length=%s\n'
                    'result_name=%r cell_id=%r case_key=%r\n' % (
@@ -280,7 +280,7 @@ class MarkActions:
             return None
 
         try:
-            result_values = values[cell_ids]
+            result_values = label_values(obj, i, res_name, values[cell_ids])
         except IndexError:
             msg = (
                 f'values[cell_id] is out of bounds; length={len(values)}\n'
@@ -550,6 +550,25 @@ def create_annotation(gui: MainWindow,
     #camera.GetClippingRange()
     #camera.GetFocalPoint()
     return text_actor
+
+def label_values(obj, i: int, res_name: str, values):
+    """
+    Replaces the integer codes of a string (categorical) result with their
+    labels for the probe/markers; numeric results are returned unchanged.
+    """
+    labels = obj.get_labels(i, res_name) if hasattr(obj, 'get_labels') else None
+    if not labels:
+        return values
+
+    def _label(value) -> str:
+        if not np.isfinite(value):   # masked
+            return str(value)
+        return labels.get(int(value), str(value))
+
+    if np.ndim(values) == 0:
+        return _label(values)
+    return np.array([_label(value) for value in np.ravel(values)], dtype=object)
+
 
 def get_plottable_values(obj, i, res_name) -> tuple[bool, Optional[np.ndarray]]:
     """returns a vector -> fringe depending on what's available"""

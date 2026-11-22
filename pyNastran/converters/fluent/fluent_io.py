@@ -190,7 +190,7 @@ class FluentIO:
         form, cases = _fill_fluent_case(
             cases, idi, node_id, result_element_id,
             region, results, titles, normal,
-            nnodes_array)
+            nnodes_array, model.result_labels))
 
         gui.node_ids = node_id
         gui.element_ids = result_element_id
@@ -265,9 +265,16 @@ def _fill_fluent_case(cases: dict[int, Any],
                       results: np.ndarray,
                       titles: list[str],
                       normal: np.ndarray,
-                      nnodes_array: np.ndarray,) -> tuple[list[tuple[str, int, list]],
-                                                          dict[int, Any]]:
-    """adds the sidebar results"""
+                      nnodes_array: np.ndarray,
+                      result_labels: dict[str, dict[int, str]] | None=None,
+                      ) -> tuple[list[tuple[str, int, list]], dict[int, Any]]:
+    """
+    adds the sidebar results
+
+    result_labels : {title: {code: label}}; default=None
+        string columns (Fluent.result_labels): shown with their labels
+    """
+    result_labels = result_labels or {}
     # reorg the ids
     #element_ids = np.unique(np.hstack([tris[:, 0], quads[:, 0]]))
     #colormap = 'jet'
@@ -324,8 +331,14 @@ def _fill_fluent_case(cases: dict[int, Any],
     for i, title in enumerate(titles[1:]):
         result = results[:, i]
         assert len(element_id) == len(result)
+        # results are stored as floats; show whole-number columns (ids, flags) as ints
+        if len(result) and np.all(np.isfinite(result)) and np.all(result == np.round(result)) and np.abs(result).max() < 2**31:
+            result = result.astype('int32')
+        labels = result_labels.get(str(title))   # string column: int codes + labels
+        if labels is not None and result.dtype.kind != 'i':
+            labels = None   # codes must be whole numbers
         pressure_res = GuiResult(idi, header=title, title=title,
-                                 location='centroid', scalar=result)
+                                 location='centroid', scalar=result, labels=labels)
         cases[icase] = (pressure_res, (itime, title))
         formi = (title, icase, [])
         form.append(formi)

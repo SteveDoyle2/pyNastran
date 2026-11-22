@@ -572,7 +572,8 @@ class LegendObject(BaseGui):
                                   nlabels=nlabels, labelsize=labelsize,
                                   ncolors=ncolors, colormap=colormap,
                                   is_horizontal=is_horizontal,
-                                  is_shown=is_shown)
+                                  is_shown=is_shown,
+                                  labels=gui.get_result_labels(gui.icase_fringe))
             gui.update_contour_filter(nlabels, location, min_value, max_value)
         if render:
             gui.Render()

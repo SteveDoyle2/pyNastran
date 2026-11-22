@@ -2,6 +2,7 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
 import numpy as np
+from vtkmodules.vtkCommonCore import vtkVariant
 from vtkmodules.vtkRenderingCore import vtkColorTransferFunction, vtkTextProperty
 from vtkmodules.vtkRenderingAnnotation import vtkScalarBarActor
 
@@ -318,8 +319,15 @@ class ScalarBar:
                colormap_space: str='',  # hsv, rgb
                is_low_to_high: bool=True,
                is_horizontal: bool=True,
-               is_shown: bool=True):
-        """updates the scalar bar"""
+               is_shown: bool=True,
+               labels: dict[int, str] | None=None):
+        """
+        updates the scalar bar
+
+        labels : dict[int, str]; default=None
+            string (categorical) result: each code is annotated with its
+            label and the numeric tick labels are hidden
+        """
         #self.set_visibility(is_shown)
         settings: Settings = self.settings
 
@@ -352,11 +360,31 @@ class ScalarBar:
             self.update_data_format(min_value, max_value, data_format,
                                     nlabels=nlabels, ncolors=ncolors)
 
+        self.update_labels(labels, min_value, max_value)
         self.min_value = min_value
         self.max_value = max_value
 
         self.set_visibility(is_shown)
         self.scalar_bar.Modified()
+
+    def update_labels(self, labels: dict[int, str] | None,
+                      min_value: float, max_value: float) -> None:
+        """
+        Shows string labels instead of numbers (None = numeric legend).
+
+        Only codes inside [min_value, max_value] are annotated, so a user
+        range on the legend also limits the labels.
+        """
+        self.color_function.ResetAnnotations()
+        if not labels:
+            self.scalar_bar.SetDrawTickLabels(True)
+            return
+        lo, hi = sorted([min_value, max_value])
+        for code, label in sorted(labels.items()):
+            if lo <= code <= hi:
+                self.color_function.SetAnnotation(vtkVariant(int(code)), label)
+        self.scalar_bar.SetDrawAnnotations(True)
+        self.scalar_bar.SetDrawTickLabels(False)
 
 #def _is_int_result(data_format):
     #if 'i' in data_format:

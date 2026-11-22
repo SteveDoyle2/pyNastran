@@ -560,7 +560,8 @@ class GuiQtCommon(GuiAttributes):
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_shown=is_legend_shown)
+                               is_shown=is_legend_shown,
+                               labels=self.get_result_labels(icase))
 
         icase_fringe = icase
         icase_disp = self.icase_disp
@@ -1202,7 +1203,8 @@ class GuiQtCommon(GuiAttributes):
                 data_format,
                 nlabels=nlabels, labelsize=labelsize,
                 ncolors=ncolors, colormap=colormap,
-                is_shown=is_legend_shown)
+                is_shown=is_legend_shown,
+                labels=self.get_result_labels(icase_fringe))
 
             self._update_min_max_actors(location, icase_fringe,
                                         imin, min_value,

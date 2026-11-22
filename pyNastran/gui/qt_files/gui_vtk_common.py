@@ -610,7 +610,8 @@ class GuiVTKCommon(GuiQtCommon):
                                data_format,
                                nlabels=nlabels, labelsize=labelsize,
                                ncolors=ncolors, colormap=colormap,
-                               is_shown=is_legend_shown)
+                               is_shown=is_legend_shown,
+                               labels=obj.get_labels(i, name))
 
         location_nodal = 'node'
         self._update_min_max_actors(location_nodal, icase_fringe,

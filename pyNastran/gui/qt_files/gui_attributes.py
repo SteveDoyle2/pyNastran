@@ -895,7 +895,8 @@ class GuiAttributes:
                           ncolors: Optional[int]=None,
                           colormap: Optional[str]=None,
                           is_horizontal: Optional[bool]=None,
-                          is_shown: bool=True) -> None:
+                          is_shown: bool=True,
+                          labels: Optional[dict[int, str]]=None) -> None:
         """
         Updates the Scalar Bar
 
@@ -921,6 +922,8 @@ class GuiAttributes:
                 red-green-blue array
         is_shown : bool
             show the scalar bar
+        labels : dict[int, str]; default=None
+            string labels of an integer (categorical) result
 
         """
         if colormap is None:
@@ -937,7 +940,7 @@ class GuiAttributes:
                           ncolors=ncolors, colormap=colormap,
                           is_low_to_high=self.legend_obj.is_low_to_high,
                           is_horizontal=is_horizontal,
-                          is_shown=is_shown)
+                          is_shown=is_shown, labels=labels)
 
     #---------------------------------------------------------------------------
     def create_global_axes(self, dim_max: float) -> None:
@@ -1290,6 +1293,13 @@ class GuiAttributes:
         unused_zaxis_xyz = self.model.coords[cid_zaxis].transform_node_to_global(zaxis)
 
     #---------------------------------------------------------------------------
+    def get_result_labels(self, icase: Optional[int]) -> Optional[dict[int, str]]:
+        """string labels {code: label} of a categorical result case (None = numeric)"""
+        if icase is None or icase not in self.case_keys:
+            return None
+        obj, (i, name) = self.result_cases[self.case_keys[icase]]
+        return obj.get_labels(i, name) if hasattr(obj, 'get_labels') else None
+
     def get_result_by_xyz_cell_id(self, node_xyz: np.ndarray,
                                   cell_id: int,
                                   icase: Optional[int]=None) -> tuple[str, Any, int, np.ndarray]:

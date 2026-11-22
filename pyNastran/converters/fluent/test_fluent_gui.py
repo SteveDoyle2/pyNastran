@@ -11,6 +11,8 @@ from pyNastran.converters.fluent.fluent import Fluent
 from pyNastran.converters.fluent.fluent_io import FluentIO
 from pyNastran.converters.fluent.nastran_to_fluent import nastran_to_fluent
 from pyNastran.converters.fluent.ugrid_to_fluent import ugrid_to_fluent_filename
+from pyNastran.gui.gui_objects.gui_result import GuiResult
+from pyNastran.gui.qt_files.mark_actions import label_values
 
 
 PKG_PATH = Path(pyNastran.__path__[0])
@@ -63,6 +65,97 @@ class TestFluentGui(unittest.TestCase):
         test.log = log
         test.on_load_geometry(
             fluent_filename, geometry_format='fluent', stop_on_failure=True)
+
+    def test_fluent_gui_flat_plate_h5(self):
+        """
+        Flat plate h5 with extra result columns, loaded like ``pyNastranGUI -f fluent plate.h5``:
+
+        - a 3x2 quad plate (6 elements) with results Cp (float), Float1 (float),
+          Int1 (whole numbers, e.g. a per-element id/flag) and String1 (a string
+          column: integer codes + Fluent.result_labels)
+        - every column is a GUI result, in file order, after the standard ones
+        - Cp/Float1 round trip exactly as floats ('%.2f'); Int1 is shown as an
+          int result ('%i') with the same values and no labels
+        - String1: the labels survive the h5 round trip; the legend annotates
+          each code with its label and hides the numeric ticks; switching back
+          to a numeric result removes the annotations; the probe shows the label
+        - a column with labels must use whole-number codes, and every code
+          needs a label (GuiResult raises otherwise)
+        """
+        log = get_logger(level='warning', encoding='utf-8')
+        nx, ny = 3, 2
+        x, y = np.meshgrid(np.linspace(0., 1., nx + 1), np.linspace(-0.5, 0.5, ny + 1),
+                           indexing='ij')
+        model = Fluent(log=log)
+        model.node_id = np.arange(1, x.size + 1)
+        model.xyz = np.column_stack([x.ravel(), y.ravel(), np.zeros(x.size)])
+        nid = model.node_id.reshape(nx + 1, ny + 1)
+        quads = []
+        for i in range(nx):
+            for j in range(ny):
+                quads.append([nid[i, j], nid[i + 1, j], nid[i + 1, j + 1], nid[i, j + 1]])
+        nquad = len(quads)
+        eids = np.arange(1, nquad + 1)
+        model.quads = np.column_stack([eids, np.ones(nquad, dtype='int32'), quads])
+        model.tris = np.zeros((0, 5), dtype='int32')
+        model.element_ids = eids
+        model.result_element_id = eids
+        model.titles = ['ElementID', 'Cp', 'Float1', 'Int1', 'String1']
+        cp = np.linspace(0.05, 0.3, nquad)
+        float1 = np.linspace(-5.0, 5.0, nquad)
+        int1 = np.array([4, 4, 4, 23, 23, 20])
+        string1 = np.array([1, 1, 2, 2, 3, 1])
+        labels = {1: 'alpha', 2: 'beta', 3: 'gamma'}
+        model.results = np.column_stack([cp, float1, int1, string1])
+        model.result_labels = {'String1': labels}
+
+        h5_filename = TEST_PATH / 'tmp_flat_plate.h5'
+        model.write_h5(h5_filename)
+        test = FluentGui()
+        test.log = log
+        test.on_load_geometry(h5_filename, geometry_format='fluent', stop_on_failure=True)
+
+        cases = {name: obj for obj, (_itime, name) in test.result_cases.values()}
+        names = [name for _obj, (_itime, name) in test.result_cases.values()]
+        self.assertEqual(names[-4:], ['Cp', 'Float1', 'Int1', 'String1'])
+        np.testing.assert_array_equal(cases['Cp'].scalar, cp)
+        np.testing.assert_array_equal(cases['Float1'].scalar, float1)
+        self.assertEqual(cases['Cp'].data_format, '%.2f')
+        self.assertEqual(cases['Int1'].scalar.dtype.kind, 'i')
+        self.assertEqual(cases['Int1'].data_format, '%i')
+        np.testing.assert_array_equal(cases['Int1'].scalar, int1)
+        self.assertIsNone(cases['Int1'].get_labels(0, 'Int1'))
+
+        string_res = cases['String1']
+        self.assertEqual(string_res.get_labels(0, 'String1'), labels)
+        np.testing.assert_array_equal(string_res.scalar, string1)
+
+        test.setup_fake_text_actors()
+        icase = {name: icase for icase, (_obj, (_i, name)) in test.result_cases.items()}
+        lut = test.scalar_bar.color_function
+        test._set_case('dummy', icase['String1'], explicit=False, cycle=False,
+                       skip_click_check=False, min_value=None, max_value=None,
+                       is_legend_shown=None, show_msg=False)
+        annotations = {lut.GetAnnotatedValue(j).ToInt(): lut.GetAnnotation(j)
+                       for j in range(lut.GetNumberOfAnnotatedValues())}
+        self.assertEqual(annotations, labels)
+        self.assertFalse(test.scalar_bar.scalar_bar.GetDrawTickLabels())
+        self.assertEqual(label_values(string_res, 0, 'String1', string1[4]), 'gamma')
+        self.assertEqual(list(label_values(string_res, 0, 'String1', string1[:3])),
+                         ['alpha', 'alpha', 'beta'])
+        self.assertEqual(label_values(cases['Int1'], 0, 'Int1', 23), 23)
+
+        test._set_case('dummy', icase['Cp'], explicit=False, cycle=False,
+                       skip_click_check=False, min_value=None, max_value=None,
+                       is_legend_shown=None, show_msg=False)
+        self.assertEqual(lut.GetNumberOfAnnotatedValues(), 0)
+        self.assertTrue(test.scalar_bar.scalar_bar.GetDrawTickLabels())
+
+        with self.assertRaises(AssertionError):   # float codes
+            GuiResult(0, 'bad', 'bad', 'centroid', np.array([1.5, 2.0]), labels=labels)
+        with self.assertRaises(AssertionError):   # code 4 has no label
+            GuiResult(0, 'bad', 'bad', 'centroid', np.array([1, 4]), labels=labels)
+        os.remove(h5_filename)
 
     def test_fluent_gui_missing_nodes(self):
         model = Fluent()

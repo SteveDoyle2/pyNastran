@@ -4760,6 +4760,9 @@ def read_oaerof(op2_reader: OP2Reader) -> None:
             assert tcode == 102, tcode
             assert numwide == 8, numwide
 
+            # set analysis_code explicitly; otherwise _get_code uses the stale
+            # value from the previous table, which blocks combine_results
+            op2.analysis_code = acode // 10  # 1=statics
             op2.tCode = tcode  # trim
             op2.sort_code = 0  # SORT1, real, not-random
             subcase_key = op2._get_code()
@@ -4902,6 +4905,9 @@ def read_oaerop(op2_reader: OP2Reader) -> None:
             assert tcode == 101, tcode
             assert numwide == 4, numwide
 
+            # set analysis_code explicitly; otherwise _get_code uses the stale
+            # value from the previous table, which blocks combine_results
+            op2.analysis_code = acode // 10  # 1=statics
             op2.tCode = tcode  # trim
             op2.sort_code = 0  # SORT1, real, not-random
             subcase_key = op2._get_code()
@@ -5270,6 +5276,9 @@ def read_oaercshm(op2_reader: OP2Reader) -> None:
             assert tcode == 104, tcode
             assert numwide == 8, numwide
 
+            # set analysis_code explicitly; otherwise _get_code uses the stale
+            # value from the previous table, which blocks combine_results
+            op2.analysis_code = acode // 10  # 1=statics
             op2.tCode = tcode  # trim
             op2.sort_code = 0  # SORT1, real, not-random
             subcase_key = op2._get_code()
