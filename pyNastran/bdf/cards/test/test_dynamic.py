@@ -6,6 +6,7 @@ import numpy as np
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf, CrossReferenceError
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 #ROOT_PATH = pyNastran.__path__[0]
 
@@ -986,6 +987,306 @@ TABLED1, 29, LINEAR, LINEAR
         #   o Scaled by 2.5 and applied as a force to Component 1 of Grid 425.
         #   o Scaled by 50.0 and applied as a pressure to the quadrilateral
         #     element face defined by Grids 63, 64, 88, and 91.
+
+    def test_nolin(self) -> None:
+        """
+        Tests the NOLIN1/NOLIN2/NOLIN3/NOLIN4 cards.
+
+        Tests:
+         - parsing the NX QRG examples (blank components -> 0)
+         - add_nolin1..4, grouping by SID in model.nolins
+         - validate (component ranges; 10-16 velocity on CJ/CK only)
+         - NOLIN1 TABLED1 cross-reference / uncross-reference
+         - write (8/16) and write/read round trip (save_load_deck)
+         - remove_unused keeps the NOLIN-referenced points
+        Tolerances: exact (ids/components); floats are round-tripped
+        through the 8-character writer, compared with assertAlmostEqual
+        """
+        model = BDF(debug=None)
+        for nid in [2, 3, 4, 101, 102]:
+            model.add_grid(nid, [float(nid), 0., 0.])
+        model.add_tabled1(6, [0., 1.], [0., 2.])
+
+        # NX QRG examples
+        model.add_card(['NOLIN1', 21, 3, 4, 2.1, 3, 10, 6], 'NOLIN1', comment='nolin1')
+        model.add_card(['NOLIN2', 14, 2, 1, 2.9, 2, 1, 2], 'NOLIN2')
+        model.add_card(['NOLIN3', 4, 102, None, -6.1, 2, 15, -3.5], 'NOLIN3')
+        model.add_card(['NOLIN4', 2, 4, 6, 2.0, 101, None, 16.3], 'NOLIN4')
+
+        nolin2 = model.nolins[14][0]
+        self.assertEqual(nolin2.type, 'NOLIN2')
+        self.assertEqual(nolin2.ck, 0)  # blank
+        nolin3 = model.nolins[4][0]
+        self.assertEqual(nolin3.ci, 0)
+        self.assertEqual(nolin3.cj, 15)
+        self.assertAlmostEqual(nolin3.a, -3.5)
+        nolin4 = model.nolins[2][0]
+        self.assertEqual(nolin4.cj, 0)
+        self.assertEqual(nolin4.node_ids, [4, 101])
+
+        # same SID shares a list (NONLINEAR=21)
+        nolin1b = model.add_nolin1(21, 2, 1, 1.0, 2, 11, 6)
+        model.add_nolin2(21, 2, 2, 0.5, 3, 12, 4, 13)
+        model.add_nolin3(21, 3, 3, 1.5, 4, 3, 2.0)
+        model.add_nolin4(21, 3, 3, 1.5, 4, 3, 2.0)
+        self.assertEqual(len(model.nolins[21]), 5)
+        self.assertEqual(
+            [card.type for card in model.nolins[21]],
+            ['NOLIN1', 'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4'])
+
+        model.validate()
+        for nolins in model.nolins.values():
+            for nolin in nolins:
+                nolin.raw_fields()
+                nolin.write_card(size=8)
+                nolin.write_card(size=16)
+
+        # velocity components are not allowed on the load point (CI)
+        bad = model.nolins[21][0].__class__(1, 2, 11, 1.0, 2, 1, 6)
+        with self.assertRaises(AssertionError):
+            bad.validate()
+
+        model.cross_reference()
+        self.assertEqual(nolin1b.tid_ref.tid, 6)
+        self.assertEqual(nolin1b.Tid(), 6)
+        model.uncross_reference()
+        self.assertIsNone(nolin1b.tid_ref)
+        model.safe_cross_reference()
+
+        model2 = save_load_deck(model, run_remove_unused=False)
+        self.assertEqual(sorted(model2.nolins), [2, 4, 14, 21])
+        self.assertEqual(len(model2.nolins[21]), 5)
+        nolin3b = model2.nolins[4][0]
+        self.assertEqual(nolin3b.cj, 15)
+        self.assertAlmostEqual(nolin3b.s, -6.1)
+
+        remove_unused(model2)
+        self.assertEqual(len(model2.nodes), 5)
+
+    def test_rcross(self) -> None:
+        """
+        Tests the RCROSS card.
+
+        Tests:
+         - parsing the two NX QRG examples (incl. blank CURID)
+         - add_rcross, CURID=0 (OP2 blank) -> None
+         - validate rejects unknown RTYPE and both-blank RTYPEs
+         - write (8/16) and write/read round trip (save_load_deck)
+         - remove_unused keeps the RCROSS grids (DISP/VELO/PRESS and a
+           blank RTYPE2 that inherits VELO) and removes an unused grid;
+           STRESS ids are treated as elements, not grids
+        Tolerances: exact (ids/strings)
+        """
+        model = BDF(debug=None)
+        for nid in [50, 51, 52, 101, 150, 999]:
+            model.add_grid(nid, [float(nid), 0., 0.])
+        model.add_card(['RCROSS', 20, 'DISP', 50, 2, 'STRESS', 150, 8, 4], 'RCROSS',
+                       comment='rcross')
+        model.add_card(['RCROSS', 200, 'PRESS', 101, 1, 'DISP', 50, 2], 'RCROSS')
+        rcross_op2 = model.add_rcross(20, 'VELO', 51, 3, None, 52, 1, 0)
+        self.assertIsNone(rcross_op2.curid)
+        self.assertEqual(len(model.rcrosses[20]), 2)
+
+        rcross1 = model.rcrosses[20][0]
+        self.assertEqual(rcross1.rtype2, 'STRESS')
+        self.assertEqual(rcross1.curid, 4)
+        rcross2 = model.rcrosses[200][0]
+        self.assertIsNone(rcross2.curid)
+
+        model.validate()
+        for rcrosses in model.rcrosses.values():
+            for rcross in rcrosses:
+                rcross.write_card(size=8)
+                rcross.write_card(size=16)
+
+        bad_rtype = model.rcrosses[20][0].__class__(1, 'DISPL', 1, 1, 'DISP', 2, 1)
+        with self.assertRaises(AssertionError):
+            bad_rtype.validate()
+        both_blank = model.rcrosses[20][0].__class__(1, None, 1, 1, None, 2, 1)
+        with self.assertRaises(AssertionError):
+            both_blank.validate()
+
+        model2 = save_load_deck(model, run_remove_unused=False)
+        self.assertEqual(sorted(model2.rcrosses), [20, 200])
+        self.assertEqual(len(model2.rcrosses[20]), 2)
+        self.assertIsNone(model2.rcrosses[20][1].rtype2)
+        self.assertEqual(model2.rcrosses[20][1].comp1, 3)
+        self.assertEqual(model2.rcrosses[20][1].response_types_ids(),
+                         [('VELO', 51), ('VELO', 52)])
+
+        # grid 150 is only referenced as a STRESS element id -> removed
+        remove_unused(model2)
+        self.assertEqual(sorted(model2.nodes), [50, 51, 52, 101])
+
+    def test_elist(self) -> None:
+        """
+        Tests the ELIST card.
+
+        Tests:
+         - parsing the NX QRG example (signed ids + THRU)
+         - THRU expansion keeps the sign; xref keeps only the THRU ids
+           that exist, but explicitly listed ids must exist
+         - validate rejects eid=0, leading/trailing THRU, and THRU
+           ranges with mixed signs
+         - the writer never puts THRU in the first/last data field of
+           a row (NX Remark 3), and the ids survive a write/read
+         - write/read round trip (save_load_deck)
+        Tolerances: exact (integer ids)
+        """
+        model = BDF(debug=None)
+        _add_quads(model, [51, 62, 68, 70, 102, 122])
+
+        model.add_card(['ELIST', 3, 51, -62, 68, 'THRU', 102, 122], 'ELIST',
+                       comment='elist')
+        elist = model.elists[3]
+        self.assertEqual(elist.eids, [51, -62, 68, 'THRU', 102, 122])
+        signed = elist.signed_element_ids
+        self.assertEqual(signed[:3], [51, -62, 68])
+        self.assertEqual(len(signed), 3 + (102 - 68) + 1)
+        self.assertEqual(signed[-1], 122)
+        model.validate()
+
+        model.cross_reference()
+        self.assertEqual(elist.element_ids, [51, 62, 68, 70, 102, 122])
+        model.uncross_reference()
+        model.safe_cross_reference()
+
+        # negative THRU range keeps the sign
+        elist_neg = model.add_elist(4, [-68, 'THRU', -70])
+        self.assertEqual(elist_neg.signed_element_ids, [-68, -69, -70])
+
+        # explicitly listed missing element -> error; THRU gap -> ok
+        model.add_elist(5, [51, 999])
+        model.uncross_reference()
+        with self.assertRaises(KeyError):
+            model.elists[5].cross_reference(model)
+        del model.elists[5]
+
+        cls = elist.__class__
+        for bad_eids in ([0], ['THRU', 2], [1, 'THRU'], [1, 'THRU', -3], [5, 'THRU', 3]):
+            with self.assertRaises(AssertionError):
+                cls(10, bad_eids).validate()
+
+        # THRU must not land in the first/last data field of a row
+        eids = [1, 'THRU', 3, 5, 'THRU', 7, 9, 'THRU', 11, 20, 21, 30, 'THRU', 33]
+        elist_layout = cls(11, eids)
+        elist_layout.validate()
+        msg = elist_layout.write_card(size=8)
+        for irow, line in enumerate(msg.rstrip().split('\n')):
+            row = [line[i:i+8].strip() for i in range(0, len(line), 8)]
+            ifirst = 2 if irow == 0 else 1
+            self.assertNotEqual(row[ifirst], 'THRU', msg)
+            if len(row) == 9:
+                self.assertNotEqual(row[8], 'THRU', msg)
+        model.add_card(msg.rstrip().split('\n'), 'ELIST', is_list=False)
+        self.assertEqual(sorted(model.elists[11].signed_element_ids),
+                         sorted(elist_layout.signed_element_ids))
+        del model.elists[11]  # layout check only; its elements don't exist
+
+        for elisti in model.elists.values():
+            elisti.write_card(size=8)
+            elisti.write_card(size=16)
+
+        model.cross_reference()
+        model2 = save_load_deck(model, run_remove_unused=False)
+        self.assertEqual(model2.elists[3].eids, [51, -62, 68, 'THRU', 102, 122])
+        self.assertEqual(model2.elists[4].signed_element_ids, [-68, -69, -70])
+
+    def test_mfluid(self) -> None:
+        """
+        Tests the MFLUID card.
+
+        Tests:
+         - parsing the NX QRG example (with continuation: RMAX)
+         - defaults (CID=0, ZFS=None, PLANE='N', RMAX=1e10, FMEXACT=1e15)
+         - add_mfluid, two fluid volumes sharing one SID
+         - validate rejects ELIST1+ELIST2=0 and bad PLANE values
+         - CORD2R and ELIST cross-reference / uncross-reference
+         - missing ELIST raises on cross_reference
+         - write (8/16) and write/read round trip (save_load_deck)
+        Tolerances: exact (ids/strings); floats via assertAlmostEqual
+        (8-character field writer)
+        """
+        model = BDF(debug=None)
+        model.add_cord2r(2, [0., 0., 0.], [0., 0., 1.], [1., 0., 0.])
+        _add_quads(model, [1, 2, 3, 4])
+        model.add_elist(3, [1, -2])
+        model.add_elist(4, [3])
+        model.add_elist(5, [4])
+        card = ['MFLUID', 3, 2, 15.73, 1006., 3, 4, 'S', 'N',
+                100.]
+        model.add_card(card, 'MFLUID', comment='mfluid')
+        mfluid1 = model.mfluids[3][0]
+        self.assertEqual(mfluid1.cid, 2)
+        self.assertAlmostEqual(mfluid1.zfs, 15.73)
+        self.assertAlmostEqual(mfluid1.rho, 1006.)
+        self.assertEqual((mfluid1.elist1, mfluid1.elist2), (3, 4))
+        self.assertEqual((mfluid1.plane1, mfluid1.plane2), ('S', 'N'))
+        self.assertAlmostEqual(mfluid1.rmax, 100.)
+        self.assertAlmostEqual(mfluid1.fmexact, 1.0e15)
+
+        mfluid2 = model.add_mfluid(3, 1.2, elist1=5)
+        self.assertEqual(mfluid2.cid, 0)
+        self.assertIsNone(mfluid2.zfs)
+        self.assertEqual((mfluid2.plane1, mfluid2.plane2), ('N', 'N'))
+        self.assertAlmostEqual(mfluid2.rmax, 1.0e10)
+        self.assertEqual(len(model.mfluids[3]), 2)
+        self.assertNotIn('1.+10', mfluid2.write_card(size=8))  # defaults are blank
+
+        model.validate()
+        for mfluid in model.mfluids[3]:
+            mfluid.write_card(size=8)
+            mfluid.write_card(size=16)
+
+        no_elist = mfluid2.__class__(1, 1.0)
+        with self.assertRaises(AssertionError):
+            no_elist.validate()
+        bad_plane = mfluid2.__class__(1, 1.0, elist1=1, plane1='X')
+        with self.assertRaises(AssertionError):
+            bad_plane.validate()
+
+        model.cross_reference()
+        self.assertEqual(mfluid1.cid_ref.cid, 2)
+        self.assertEqual(mfluid1.Cid(), 2)
+        self.assertIs(mfluid1.elist1_ref, model.elists[3])
+        self.assertIs(mfluid1.elist2_ref, model.elists[4])
+        self.assertEqual((mfluid1.Elist1(), mfluid1.Elist2()), (3, 4))
+        self.assertIsNone(mfluid2.elist2_ref)  # ELIST2=0 is unused
+        model.uncross_reference()
+        self.assertIsNone(mfluid1.cid_ref)
+        self.assertIsNone(mfluid1.elist1_ref)
+        self.assertEqual((mfluid1.elist1, mfluid1.elist2), (3, 4))
+        model.safe_cross_reference()
+
+        missing_elist = mfluid2.__class__(9, 1.0, elist1=99)
+        with self.assertRaises(KeyError):
+            missing_elist.cross_reference(model)
+
+        model2 = save_load_deck(model, run_remove_unused=False)
+        self.assertEqual(len(model2.mfluids[3]), 2)
+        mfluid1b = model2.mfluids[3][0]
+        self.assertAlmostEqual(mfluid1b.zfs, 15.73)
+        self.assertAlmostEqual(mfluid1b.rmax, 100.)
+        self.assertEqual(mfluid1b.plane1, 'S')
+
+        # the MFLUID coordinate system is "used"
+        remove_unused(model2)
+        self.assertIn(2, model2.coords)
+        self.assertEqual(sorted(model2.elists), [3, 4, 5])
+
+
+def _add_quads(model: BDF, eids: list[int]) -> None:
+    """adds one unit CQUAD4 per element id (with a PSHELL/MAT1)"""
+    model.add_mat1(1, 3.0e7, None, 0.3)
+    model.add_pshell(1, mid1=1, t=0.1)
+    for eid in eids:
+        nid = 4 * eid
+        model.add_grid(nid, [0., 0., float(eid)])
+        model.add_grid(nid + 1, [1., 0., float(eid)])
+        model.add_grid(nid + 2, [1., 1., float(eid)])
+        model.add_grid(nid + 3, [0., 1., float(eid)])
+        model.add_cquad4(eid, 1, [nid, nid + 1, nid + 2, nid + 3])
+
 
 if __name__ == '__main__':  # pragma: no cover
     unittest.main()

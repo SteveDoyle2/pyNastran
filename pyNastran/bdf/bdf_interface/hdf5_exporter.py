@@ -23,6 +23,7 @@ dict_int_list_obj_attrs: list[str] = [
     'nsms', 'nsmadds',
     'frequencies',
     'bcs', 'transfer_functions',
+    'nolins', 'rcrosses', 'mfluids',
     'dvgrids',
 
     # parametric
@@ -89,6 +90,7 @@ dict_int_obj_attrs: list[str] = [
     'suport1',
     'tables_d', 'tables_m', 'tables_sdamping', 'tempds',
     'tics',
+    'elists',
     'tstepnls', 'tsteps',
     'view3ds', 'views',
 
@@ -170,7 +172,7 @@ LIST_KEYS = [
 
 LIST_OBJ_KEYS: list[str] = [  ## TODO: not done
     # TODO: required
-    'asets', 'bsets', 'csets', 'omits', 'qsets',
+    'asets', 'bsets', 'csets', 'omits', 'qsets', 'rvdofs',
     'mkaeros',
     'monitor_points',
     'suport',

@@ -67,7 +67,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from pyNastran.bdf.cards.deqatn import DEQATN
     from pyNastran.bdf.cards.dynamic import (
         DELAY, DPHASE,  # FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
-        TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
+        TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC,
+        NOLIN1, NOLIN2, NOLIN3, NOLIN4, RCROSS, MFLUID, ELIST)
     from pyNastran.bdf.cards.loads.loads import (
         LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM,
         LOADCYN, LOADCYH)
@@ -129,7 +130,7 @@ if TYPE_CHECKING:  # pragma: no cover
     )
     from pyNastran.bdf.cards.bdf_sets import (
         ASET, BSET, CSET, QSET, USET, OMIT,
-        ASET1, BSET1, CSET1, QSET1, USET1, OMIT1,
+        ASET1, BSET1, CSET1, QSET1, USET1, OMIT1, RVDOF, RVDOF1,
         SET1, SET2, SET3,
         SEBSET, SECSET, SEQSET,  # SEUSET
         SEBSET1, SECSET1, SEQSET1,  # SEUSET1
@@ -810,6 +811,41 @@ class AddMethods:
         # else:
         #     model.pelast[key] = prop
         #     model._type_to_id_map[prop.type].append(key)
+
+    def _add_dict_list_object(self, slot_name: str, key: int, obj) -> None:
+        """adds an object to a dict[int, list[obj]] slot"""
+        assert key > 0, f'sid={key} {obj}'
+        model = self.model
+        slot = getattr(model, slot_name)
+        if key in slot:
+            slot[key].append(obj)
+        else:
+            slot[key] = [obj]
+            model._type_to_id_map[obj.type].append(key)
+
+    def add_nolin_object(self, nolin: NOLIN1 | NOLIN2 | NOLIN3 | NOLIN4) -> None:
+        """adds a NOLIN1/NOLIN2/NOLIN3/NOLIN4 object"""
+        self._add_dict_list_object('nolins', nolin.sid, nolin)
+
+    def add_rcross_object(self, rcross: RCROSS) -> None:
+        """adds an RCROSS object"""
+        self._add_dict_list_object('rcrosses', rcross.sid, rcross)
+
+    def add_mfluid_object(self, mfluid: MFLUID) -> None:
+        """adds an MFLUID object"""
+        self._add_dict_list_object('mfluids', mfluid.sid, mfluid)
+
+    def add_elist_object(self, elist: ELIST, allow_overwrites: bool=False) -> None:
+        """adds an ELIST object"""
+        key = elist.lid
+        model = self.model
+        assert key > 0, f'lid={key} elist={elist}'
+        if key in model.elists and not allow_overwrites:
+            if not elist == model.elists[key]:
+                raise RuntimeError(f'ELIST.lid={key}\nold=\n{model.elists[key]}new=\n{elist}')
+        else:
+            model.elists[key] = elist
+            model._type_to_id_map[elist.type].append(key)
 
     def add_tf_object(self, tf: TF, allow_overwrites: bool=False) -> None:
         """adds an TF (transfer function) object"""
@@ -1685,6 +1721,12 @@ class AddMethods:
         self.model.omits.append(set_obj)
         n = len(self.model._type_to_id_map['OMIT'])
         self.model._type_to_id_map['OMIT'].append(n)
+
+    def add_rvdof_object(self, set_obj: RVDOF | RVDOF1) -> None:
+        """adds an RVDOF/RVDOF1 object"""
+        self.model.rvdofs.append(set_obj)
+        n = len(self.model._type_to_id_map['RVDOF'])
+        self.model._type_to_id_map['RVDOF'].append(n)
 
     def add_bset_object(self, set_obj: BSET | BSET1) -> None:
         """adds an BSET/BSET1 object"""

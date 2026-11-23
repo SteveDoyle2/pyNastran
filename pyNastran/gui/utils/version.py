@@ -2,6 +2,7 @@
 defines:
  - version_latest, version_current, is_newer = check_for_newer_version(version_current=None)
 """
+import re
 import urllib.request
 import urllib.error
 from typing import Optional
@@ -34,14 +35,25 @@ def get_data_from_website(target_url: str) -> tuple[Optional[list[str]], bool]:
     return lines, is_failed
 
 def split_version(version: str, msg: str) -> tuple[int, int, int]:
-    try:
-        major, minor, rev = version.split('+')[0].split('.')
-    except ValueError:
+    """
+    Gets the (major, minor, rev) from a version string.
+
+    Handles:
+     - releases:              '1.4.0'
+     - old-style dev:         '1.4.0+dev.5378fd363'
+     - PEP 440 (setuptools-scm) dev: '1.5.0.dev20261122+gc9ddf9b51'
+     - pre-releases:          '1.5.0rc1'
+
+    Notes
+    -----
+    Only the leading major.minor.rev is used; dev-ness is checked
+    separately (``'dev' in version``).
+    """
+    match = re.match(r'\s*(\d+)\.(\d+)\.(\d+)', version)
+    if match is None:
         print(f'version_{msg} = {version}')
-        raise
-    imajor = int(major)
-    iminor = int(minor)
-    irev = int(rev)
+        raise ValueError(f'cannot parse version_{msg}={version!r}')
+    imajor, iminor, irev = (int(value) for value in match.groups())
     tuple_version = (imajor, iminor, irev)
     return tuple_version
 

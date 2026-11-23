@@ -573,6 +573,10 @@ TABLE_OBJ_MAP = {
     'rms.cbeam_stress': (RandomBeamStressArray, ),
     'no.cbeam_stress': (RandomBeamStressArray, ),
     'modal_contribution.cbeam_stress': (RealBeamStressArray, ComplexBeamStressArray, ),
+    'RASCONS.cbeam_stress': (RealBeamStressArray, ),
+    'RASEATC.cbeam_stress': (RealBeamStressArray, ),
+    'RAECONS.cbeam_strain': (RealBeamStrainArray, ),
+    'RAEEATC.cbeam_strain': (RealBeamStrainArray, ),
 
     'strain.cbeam_strain': (RealBeamStrainArray, ComplexBeamStrainArray),
     'ato.cbeam_strain': (RandomBeamStrainArray, ),
@@ -597,6 +601,8 @@ TABLE_OBJ_MAP = {
     'no.cbend_strain': (RandomBendStrainArray, ),
 
     'force.cbeam_force': (RealCBeamForceArray, ComplexCBeamForceArray),
+    'RAFCONS.cbeam_force': (RealCBeamForceArray, ),
+    'RAFEATC.cbeam_force': (RealCBeamForceArray, ),
     'ato.cbeam_force': (RealCBeamForceArray, ),
     'crm.cbeam_force': (RealCBeamForceArray, ),
     'psd.cbeam_force': (RealCBeamForceArray, ),

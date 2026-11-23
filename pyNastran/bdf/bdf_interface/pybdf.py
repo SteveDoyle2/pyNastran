@@ -37,7 +37,8 @@ from pyNastran.utils import print_bad_path, PathLike
 from pyNastran.bdf import BULK_DATA_CARDS, CASE_BULK_CARDS
 from pyNastran.bdf.errors import AuxModelError, MissingDeckSections, SuperelementFlagError
 from pyNastran.bdf.bdf_interface.utils import _parse_pynastran_header
-from pyNastran.bdf.bdf_interface.include_file import get_include_filename, parse_include_lines
+from pyNastran.bdf.bdf_interface.include_file import (
+    get_include_filename, parse_include_lines, is_prefixed_include)
 from cpylog import SimpleLogger, __version__ as CPYLOG_VERSION
 if CPYLOG_VERSION > '1.6.0':
     from cpylog import get_logger
@@ -508,6 +509,12 @@ class BDFInputPy:
             except IndexError:
                 break
             line_upper = line.upper()
+            if 'INCLUDE' in line_upper and is_prefixed_include(line_upper):
+                jfile, jline = ilines[i]
+                raise SyntaxError(
+                    f'invalid INCLUDE (stray characters before INCLUDE): {line!r}\n'
+                    f'  source file: {os.path.abspath(self.loaded_filenames[jfile])}\n'
+                    f'  source line: {jline+1}')
             if line_upper.startswith('INCLUDE'):
                 j, include_lines = self._get_include_lines(lines, line, i, nlines)
 

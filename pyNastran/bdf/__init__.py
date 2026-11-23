@@ -214,6 +214,10 @@ BULK_DATA_CARDS = {
     'TSTEP',  ## tsteps
     'TSTEPNL', 'TSTEP1',  ## tstepnls
     'TF',  ## transfer_functions
+    'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4',  ## nolins
+    'RCROSS',  ## rcrosses
+    'MFLUID',  ## mfluids
+    'ELIST',  ## elists
     'TIC', ## initial conditions - sid (set ID)
 
     ## frequencies
@@ -235,6 +239,7 @@ BULK_DATA_CARDS = {
     'SET1', 'SET2', 'SET3',  ## sets
     'ASET', 'ASET1',  ## asets
     'OMIT', 'OMIT1',  ## omits
+    'RVDOF', 'RVDOF1',  ## rvdofs
     'BSET', 'BSET1',  ## bsets
     'CSET', 'CSET1',  ## csets
     'QSET', 'QSET1',  ## qsets

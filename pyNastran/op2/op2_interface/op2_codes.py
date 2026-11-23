@@ -38,6 +38,10 @@ SORT1_TABLES_BYTES = [
     b'OEFRMS2', b'OEFNO2',
 
     b'RAFCONS', b'RAFEATC',
+    # constraint (CONS) / attachment (EATC) mode OES tables (PARAM,RSCON/RSATT + RSOPT,1);
+    # one record per constraint/attachment mode, like a SOL 103 OES1
+    b'RASCONS', b'RAECONS', b'RAPCONS', b'RAQCONS',
+    b'RASEATC', b'RAEEATC', b'RAPEATC', b'RAQEATC',
     b'OUG1F',
 
     # SATK

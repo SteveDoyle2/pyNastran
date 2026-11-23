@@ -32,7 +32,7 @@ def coords_from_vector_1d(v_array: np.ndarray) -> np.ndarray:
     i, nmag = normalize_vector2d(v)
     j = perpendicular_vector2d(i)
     k = cross2d(i, j)
-    coords = axes_stack(i, j, k, nmag)
+    coords = axes_stack(i, j, k, nmag, copy=False)
     return coords
 
 
@@ -227,7 +227,7 @@ def _coordinate_system_from_vector_2d(v21: np.ndarray,
     i, nmag = normalize_vector2d(v21)
     k, unused_nmag = normalize_vector2d(normal)
     j = cross2d(k, i)
-    coords = axes_stack(i, j, k, nmag)
+    coords = axes_stack(i, j, k, nmag, copy=False)
     return coords
 
 #def coordinate_system_from_vector_2d_tri_theta(xyz1, xyz2, xyz3, theta, dtype=None):

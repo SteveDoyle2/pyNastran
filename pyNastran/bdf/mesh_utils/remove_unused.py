@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, TYPE_CHECKING
 import numpy as np
 from pyNastran.bdf.bdf import BDF, read_bdf
+from pyNastran.bdf.cards.dynamic import RCROSS_ELEMENT_RTYPES
 from pyNastran.utils import PathLike
 #from pyNastran.bdf.mesh_utils.bdf_renumber import bdf_renumber
 if TYPE_CHECKING:  # pragma: no cover
@@ -426,6 +427,25 @@ def remove_unused(bdf_filename: PathLike,
         elif card_type == 'TIC':
             for tic in model.tics.values():
                 nids_used.update(tic.node_ids)
+        elif card_type in {'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4'}:
+            for nolins in model.nolins.values():
+                for nolin in nolins:
+                    nids_used.update(nolin.node_ids)
+        elif card_type == 'MFLUID':
+            for mfluids in model.mfluids.values():
+                for mfluid in mfluids:
+                    cids_used.add(mfluid.Cid())
+        elif card_type == 'RCROSS':
+            for rcrosses in model.rcrosses.values():
+                for rcross in rcrosses:
+                    for rtype, idi in rcross.response_types_ids():
+                        if rtype in RCROSS_ELEMENT_RTYPES:
+                            eids_used.add(idi)
+                        else:  # DISP, VELO, ..., PRESS (fluid grid)
+                            nids_used.add(idi)
+        elif card_type == 'ELIST':
+            for elist in model.elists.values():
+                eids_used.update(abs(eid) for eid in elist.signed_element_ids)
         elif card_type == 'GRID':
             for unused_nid, node in model.nodes.items():
                 cids_used.update([node.Cp(), node.Cd()])
@@ -507,6 +527,9 @@ def remove_unused(bdf_filename: PathLike,
             obj = card_type[:4].lower() + 's'
             sets = getattr(model, obj)  # list of SETs
             for set_card in sets:
+                nids_used.update(set_card.ids)
+        elif card_type in {'RVDOF', 'RVDOF1'}:
+            for set_card in model.rvdofs:
                 nids_used.update(set_card.ids)
 
         elif card_type == 'SESET':

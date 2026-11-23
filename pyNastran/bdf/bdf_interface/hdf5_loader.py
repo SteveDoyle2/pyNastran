@@ -70,6 +70,9 @@ def load_bdf_from_hdf5_file(h5_file, model: BDF):
         'dload_entries' : hdf5_load_dload_entries,
         'bcs' : hdf5_load_bcs,
         'transfer_functions' : hdf5_load_transfer_functions,
+        'nolins' : hdf5_load_nolins,
+        'rcrosses' : hdf5_load_rcrosses,
+        'mfluids' : hdf5_load_mfluids,
         'dvgrids': hdf5_load_dvgrids,
 
         'nsms' : hdf5_load_nsms,
@@ -892,6 +895,32 @@ def hdf5_load_transfer_functions(model: BDF, group, encoding: str) -> None:
                 sub_group, encoding, model.log)
             _put_keys_values_into_dict_list(model, 'transfer_functions', itf_id, lkeys, values)
             model.card_count[card_type] = len(lkeys)
+
+def _hdf5_load_sid_dict_list(model: BDF, name: str, group, encoding: str) -> None:
+    """loads a dict[sid, list[card]] attribute (e.g., nolins)"""
+    keys = list(group.keys())
+    keys.remove('keys')
+    for sid in keys:
+        isid = int(sid)
+        cards_group = group[sid]
+        for card_type in cards_group.keys():
+            sub_group = cards_group[card_type]
+            lkeys, values = load_cards_from_keys_values(
+                f'{name}/{sid}/{card_type}',
+                sub_group, encoding, model.log)
+            _put_keys_values_into_dict_list(model, name, isid, lkeys, values)
+
+def hdf5_load_nolins(model: BDF, group, encoding: str) -> None:
+    """loads the nolins"""
+    _hdf5_load_sid_dict_list(model, 'nolins', group, encoding)
+
+def hdf5_load_rcrosses(model: BDF, group, encoding: str) -> None:
+    """loads the rcrosses"""
+    _hdf5_load_sid_dict_list(model, 'rcrosses', group, encoding)
+
+def hdf5_load_mfluids(model: BDF, group, encoding: str) -> None:
+    """loads the mfluids"""
+    _hdf5_load_sid_dict_list(model, 'mfluids', group, encoding)
 
 def hdf5_load_dvgrids(model: BDF, group, encoding: str) -> None:
     """loads the dvgrids"""

@@ -84,7 +84,8 @@ from pyNastran.bdf.cards.coordinate_systems import (CORD1R, CORD1C, CORD1S,
 from pyNastran.bdf.cards.deqatn import DEQATN
 from pyNastran.bdf.cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5,
-    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
+    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC,
+    NOLIN1, NOLIN2, NOLIN3, NOLIN4, RCROSS, MFLUID, ELIST)
 from pyNastran.bdf.cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
 from pyNastran.bdf.cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -137,7 +138,7 @@ from pyNastran.bdf.cards.superelements import (
 )
 from pyNastran.bdf.cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET, OMIT,
-    ASET1, BSET1, CSET1, QSET1, USET1, OMIT1,
+    ASET1, BSET1, CSET1, QSET1, USET1, OMIT1, RVDOF, RVDOF1,
     SET1, SET2, SET3,
     SEBSET, SECSET, SEQSET,  # SEUSET
     SEBSET1, SECSET1, SEQSET1,  # SEUSET1
@@ -619,6 +620,13 @@ CARD_MAP = {
     'TSTEPNL': TSTEPNL,
 
     'TF': TF,
+    'NOLIN1': NOLIN1,
+    'NOLIN2': NOLIN2,
+    'NOLIN3': NOLIN3,
+    'NOLIN4': NOLIN4,
+    'RCROSS': RCROSS,
+    'MFLUID': MFLUID,
+    'ELIST': ELIST,
     'TIC': TIC,
 
     'TOPVAR': TOPVAR,
@@ -724,6 +732,8 @@ CARD_MAP = {
 
     'OMIT': OMIT,
     'OMIT1': OMIT1,
+    'RVDOF': RVDOF,
+    'RVDOF1': RVDOF1,
 
     # radset
     'RADSET': RADSET,
@@ -8821,6 +8831,46 @@ class AddCards(AddCoords, AddContact, AddBolts,
         self._add_methods.add_omit_object(omit1)
         return omit1
 
+    def add_rvdof(self, ids: list[int], components: list[str],
+                  comment: str='') -> RVDOF:
+        """
+        Creates an RVDOF card, which defines the degrees of freedom
+        where residual vectors are computed (RESVEC(RVDOF)).
+
+        Parameters
+        ----------
+        ids : list[int]
+            the GRID/SPOINT ids
+        components : list[str]
+            the degrees of freedom for each id (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+
+        """
+        rvdof = RVDOF(ids, components, comment=comment)
+        self._add_methods.add_rvdof_object(rvdof)
+        return rvdof
+
+    def add_rvdof1(self, ids: list[int], components: str,
+                   comment: str='') -> RVDOF1:
+        """
+        Creates an RVDOF1 card, which defines the degrees of freedom
+        where residual vectors are computed (RESVEC(RVDOF)).
+
+        Parameters
+        ----------
+        ids : list[int]
+            the GRID/SPOINT ids
+        components : str
+            the degrees of freedom (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+
+        """
+        rvdof1 = RVDOF1(ids, components, comment=comment)
+        self._add_methods.add_rvdof_object(rvdof1)
+        return rvdof1
+
     def add_qset(self, ids: list[int],
                  components: str | list[str],
                  comment: str='') -> QSET | QSET1:
@@ -9774,29 +9824,199 @@ class AddCards(AddCoords, AddContact, AddBolts,
             offset1, offset2]
         self.reject_card_lines('NLRSFD', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_nolin1(self, sid, gi, ci, s, gj, cj, t) -> None:
-        fields = ['NOLIN1', sid, gi, ci, s, gj, cj, t]
-        self.reject_card_lines('NOLIN1', print_card_8(fields).split('\n'), show_log=False)
+    def add_nolin1(self, sid: int, gi: int, ci: int, s: float,
+                   gj: int, cj: int, tid: int, comment: str='') -> NOLIN1:
+        """
+        Creates a NOLIN1 card (nonlinear transient load as a tabular
+        function: P_i = S * T(X_j)).
 
-    def add_nolin2(self, sid, g, ci, s, gj, cj, gk, ck) -> None:
-        fields = ['NOLIN2', sid, g, ci, s, gj, cj, gk, ck]
-        self.reject_card_lines('NOLIN2', print_card_8(fields).split('\n'), show_log=False)
+        Parameters
+        ----------
+        sid : int
+            nonlinear load set id (NONLINEAR=SID)
+        gi / ci : int
+            GRID/SPOINT/EPOINT id and component where the load is applied
+        s : float
+            scale factor
+        gj / cj : int
+            response GRID/SPOINT/EPOINT id and component
+            (1-6=displacement; 11-16=velocity)
+        tid : int
+            TABLEDi id
+        comment : str; default=''
+            a comment for the card
 
-    def add_nolin3(self, sid, gi, ci, s, gj, cj, a) -> None:
-        fields = ['NOLIN3', sid, gi, ci, s, gj, cj, a]
-        self.reject_card_lines('NOLIN3', print_card_8(fields).split('\n'), show_log=False)
+        """
+        nolin = NOLIN1(sid, gi, ci, s, gj, cj, tid, comment=comment)
+        self._add_methods.add_nolin_object(nolin)
+        return nolin
 
-    def add_nolin4(self, sid, gi, ci, s, gj, cj, a) -> None:
-        fields = ['NOLIN4', sid, gi, ci, s, gj, cj, a]
-        self.reject_card_lines('NOLIN4', print_card_8(fields).split('\n'), show_log=False)
+    def add_nolin2(self, sid: int, gi: int, ci: int, s: float,
+                   gj: int, cj: int, gk: int, ck: int, comment: str='') -> NOLIN2:
+        """
+        Creates a NOLIN2 card (nonlinear transient load as the product
+        of two variables: P_i = S * X_j * X_k).
+
+        Parameters
+        ----------
+        sid : int
+            nonlinear load set id (NONLINEAR=SID)
+        gi / ci : int
+            GRID/SPOINT/EPOINT id and component where the load is applied
+        s : float
+            scale factor
+        gj / cj, gk / ck : int
+            response GRID/SPOINT/EPOINT ids and components
+            (1-6=displacement; 11-16=velocity)
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nolin = NOLIN2(sid, gi, ci, s, gj, cj, gk, ck, comment=comment)
+        self._add_methods.add_nolin_object(nolin)
+        return nolin
+
+    def add_nolin3(self, sid: int, gi: int, ci: int, s: float,
+                   gj: int, cj: int, a: float, comment: str='') -> NOLIN3:
+        """
+        Creates a NOLIN3 card (nonlinear transient load as a positive
+        variable raised to a power: P_i = S * X_j^A for X_j > 0).
+
+        Parameters
+        ----------
+        sid : int
+            nonlinear load set id (NONLINEAR=SID)
+        gi / ci : int
+            GRID/SPOINT/EPOINT id and component where the load is applied
+        s : float
+            scale factor
+        gj / cj : int
+            response GRID/SPOINT/EPOINT id and component
+            (1-6=displacement; 11-16=velocity)
+        a : float
+            exponent
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nolin = NOLIN3(sid, gi, ci, s, gj, cj, a, comment=comment)
+        self._add_methods.add_nolin_object(nolin)
+        return nolin
+
+    def add_nolin4(self, sid: int, gi: int, ci: int, s: float,
+                   gj: int, cj: int, a: float, comment: str='') -> NOLIN4:
+        """
+        Creates a NOLIN4 card (nonlinear transient load as a negative
+        variable raised to a power: P_i = -S * (-X_j)^A for X_j < 0).
+
+        Parameters
+        ----------
+        sid : int
+            nonlinear load set id (NONLINEAR=SID)
+        gi / ci : int
+            GRID/SPOINT/EPOINT id and component where the load is applied
+        s : float
+            scale factor
+        gj / cj : int
+            response GRID/SPOINT/EPOINT id and component
+            (1-6=displacement; 11-16=velocity)
+        a : float
+            exponent
+        comment : str; default=''
+            a comment for the card
+
+        """
+        nolin = NOLIN4(sid, gi, ci, s, gj, cj, a, comment=comment)
+        self._add_methods.add_nolin_object(nolin)
+        return nolin
+
+    def add_elist(self, lid: int, eids: list[int | str], comment: str='') -> ELIST:
+        """
+        Creates an ELIST card (element list for MFLUID virtual fluid mass).
+
+        Parameters
+        ----------
+        lid : int
+            list id (referenced by MFLUID ELIST1/ELIST2)
+        eids : list[int | str]
+            signed element ids (negative: fluid on the side opposite the
+            element normal); 'THRU' is allowed between ids of the same
+            sign (e.g., [51, -62, 68, 'THRU', 102])
+        comment : str; default=''
+            a comment for the card
+
+        """
+        elist = ELIST(lid, eids, comment=comment)
+        self._add_methods.add_elist_object(elist)
+        return elist
+
+    def add_mfluid(self, sid: int, rho: float, cid: int=0,
+                   zfs: float | None=None, elist1: int=0, elist2: int=0,
+                   plane1: str='N', plane2: str='N',
+                   rmax: float=1.0e10, fmexact: float=1.0e15,
+                   comment: str='') -> MFLUID:
+        """
+        Creates an MFLUID card (incompressible fluid virtual mass).
+
+        Parameters
+        ----------
+        sid : int
+            set id (MFLUID=SID)
+        rho : float
+            fluid density
+        cid : int; default=0
+            rectangular coordinate system (free surface normal to X3)
+        zfs : float; default=None
+            free surface intercept on X3; None is +infinity
+        elist1 / elist2 : int; default=0
+            ELIST ids of elements wetted on one/both sides
+        plane1 / plane2 : str; default='N'
+            'S', 'A', or 'N' symmetry of the X1-X3 / X2-X3 planes
+        rmax : float; default=1.0e10
+            interaction cutoff distance
+        fmexact : float; default=1.0e15
+            exact integration distance factor
+        comment : str; default=''
+            a comment for the card
+
+        """
+        mfluid = MFLUID(sid, rho, cid=cid, zfs=zfs, elist1=elist1, elist2=elist2,
+                        plane1=plane1, plane2=plane2, rmax=rmax, fmexact=fmexact,
+                        comment=comment)
+        self._add_methods.add_mfluid_object(mfluid)
+        return mfluid
 
     def add_dynred(self, sid, fmax, nirv, nit, idir, nqdes) -> None:
         fields = ['DYNRED', sid, fmax, nirv, nit, idir, nqdes]
         self.reject_card_lines('DYNRED', print_card_8(fields).split('\n'), show_log=False)
 
-    def add_rcross(self, sid, rtype1, id1, comp1, rtype2, id2, comp2, curid) -> None:
-        fields = ['RCROSS', sid, rtype1, id1, comp1, rtype2, id2, comp2, curid]
-        self.reject_card_lines('RCROSS', print_card_8(fields).split('\n'), show_log=False)
+    def add_rcross(self, sid: int, rtype1: str | None, id1: int, comp1: int,
+                   rtype2: str | None, id2: int, comp2: int,
+                   curid: int | None=None, comment: str='') -> RCROSS:
+        """
+        Creates an RCROSS card (cross-PSD / cross-correlation output pair).
+
+        Parameters
+        ----------
+        sid : int
+            case control RCROSS id
+        rtype1 / rtype2 : str or None
+            DISP, VELO, ACCEL, OLOAD, SPCF, MPCF, STRESS, STRAIN, FORCE,
+            PRESS; None takes the other one
+        id1 / id2 : int
+            element, grid, or scalar point id
+        comp1 / comp2 : int
+            component/item code
+        curid : int; default=None
+            optional curve id
+        comment : str; default=''
+            a comment for the card
+
+        """
+        rcross = RCROSS(sid, rtype1, id1, comp1, rtype2, id2, comp2,
+                        curid=curid, comment=comment)
+        self._add_methods.add_rcross_object(rcross)
+        return rcross
 
 #----------------------------------------------------------------------------------
     # parametric

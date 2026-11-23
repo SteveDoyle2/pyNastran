@@ -166,8 +166,12 @@ dynamic_loads = {
     'DPHASE',  ## dphases
     'TF',  ## transfer_functions
     'TIC', ## initial conditions - sid (set ID)
+    'RCROSS',  ## rcrosses
+    'MFLUID',  ## mfluids
+    'ELIST',  ## elists
 }
 transient = {
+    'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4',  ## nolins
     'DELAY',  ## delays
     'NLPARM',  ## nlparms
     'NLPCI',  ## nlpcis
@@ -304,6 +308,7 @@ cards_to_read = [
     'SET1', 'SET3',  ## sets
     'ASET', 'ASET1',  ## asets
     'OMIT', 'OMIT1',  ## omits
+    'RVDOF', 'RVDOF1',  ## rvdofs
     'BSET', 'BSET1',  ## bsets
     'CSET', 'CSET1',  ## csets
     'QSET', 'QSET1',  ## qsets

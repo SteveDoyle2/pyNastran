@@ -347,10 +347,21 @@ def add_to_errored_mpcs(nid, component,
                         set_nid_to_components: set[tuple[int, str]],
                         dependent_nid_to_components: dict[int, set[str]],
                         errored_components: set[tuple[int, str]]):
-    if (nid, component) in set_nid_to_components:
-        errored_components.add((nid, component))
-    dependent_nid_to_components[nid].add(component)
-    set_nid_to_components.add((nid, component))
+    """
+    Adds the dependent DOFs of one node; a DOF that was already added is an error.
+
+    ``component`` may hold several DOFs (e.g., '123' from an RBE3 REFC or an
+    RBAR CMA); they are split, so '123' and '1' overlap on DOF 1.
+    """
+    if component is None:
+        return
+    for comp in str(component):
+        if comp in '0 ':  # 0/blank = scalar point/no DOF
+            continue
+        if (nid, comp) in set_nid_to_components:
+            errored_components.add((nid, comp))
+        dependent_nid_to_components[nid].add(comp)
+        set_nid_to_components.add((nid, comp))
 
 
 def get_lines_rigid(model: BDF) -> Any:

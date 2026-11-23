@@ -190,7 +190,7 @@ class FluentIO:
         form, cases = _fill_fluent_case(
             cases, idi, node_id, result_element_id,
             region, results, titles, normal,
-            nnodes_array, model.result_labels))
+            nnodes_array, model.result_labels)
 
         gui.node_ids = node_id
         gui.element_ids = result_element_id

@@ -185,6 +185,14 @@ class TestContact(unittest.TestCase):
         save_load_deck(model)
         #bgset = model.add_bgset
 
+        # a blank EXTi (default 0.0) must stay blank: NX rejects EXTi outside SOLs 401/402/601
+        model2 = BDF(log=log, mode='nx')
+        model2.add_card(['BGSET', 2, 16, 1, 0.07], 'BGSET', is_list=True, has_none=True)
+        bgset = model2.bgsets[2]
+        self.assertEqual(bgset.exts, [0.0])
+        self.assertEqual(bgset.repr_fields()[6], None)
+        self.assertNotIn('0.', bgset.write_card().split('\n')[0][40:48])
+
     def test_contact_bcbody(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log, mode='msc')

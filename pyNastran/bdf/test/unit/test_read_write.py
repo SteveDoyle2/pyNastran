@@ -1,5 +1,6 @@
 import os
 import unittest
+import tempfile
 from pathlib import Path
 from io import StringIO
 
@@ -259,6 +260,37 @@ class TestReadWrite(unittest.TestCase):
         bdf_file.close()
         assert 'JUNK           1       2       3' in msg, msg
         assert 'JUNK           a       b       c' in msg, msg
+
+    def test_reject_card_location(self):
+        """
+        Tests that a short rejected card reports its source file and line
+
+        Tests:
+         - a bad 'B' card inside an INCLUDE'd file is still rejected
+         - the error message lists the INCLUDE'd filename (not main.bdf)
+         - the error message lists the 1-based line number (line=3)
+        Tolerances: exact string matching
+        """
+        log = SimpleLogger(level='info', encoding='utf-8')
+        model = BDF(log=log, debug=False)
+        errors: list[str] = []
+        model.log.error = errors.append
+
+        with tempfile.TemporaryDirectory() as dirname:
+            main_filename = os.path.join(dirname, 'main.bdf')
+            include_filename = os.path.join(dirname, 'inc.blk')
+            with open(main_filename, 'w') as bdf_file:
+                bdf_file.write('CEND\nBEGIN BULK\nGRID,1\nINCLUDE inc.blk\nENDDATA\n')
+            with open(include_filename, 'w') as bdf_file:
+                bdf_file.write('$ comment\nGRID,2\nB\n')
+            model.read_bdf(main_filename, validate=False, xref=False)
+
+        assert len(model.reject_lines) == 1, model.reject_lines
+        msgs = [msg for msg in errors if "card_name='B'" in msg]
+        assert len(msgs) == 1, errors
+        msg = msgs[0]
+        assert f'file={include_filename!r}' in msg, msg
+        assert 'line=3' in msg, msg
 
     def test_add_card_fail(self):
         log = SimpleLogger(level='info', encoding='utf-8')

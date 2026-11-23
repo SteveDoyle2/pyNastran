@@ -120,7 +120,8 @@ from .cards.coordinate_systems import (MATCID,
 from .cards.deqatn import DEQATN
 from .cards.dynamic import (
     DELAY, DPHASE, FREQ, FREQ1, FREQ2, FREQ3, FREQ4, FREQ5, FREQs,
-    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC)
+    TSTEP, TSTEP1, TSTEPNL, NLPARM, NLPCI, TF, ROTORG, ROTORD, TIC,
+    NOLIN1, NOLIN2, NOLIN3, NOLIN4, RCROSS, MFLUID, ELIST)
 from .cards.loads.loads import (
     LSEQ, SLOAD, DAREA, RFORCE, RFORCE1, SPCD, DEFORM, LOADCYN, LOADCYH)
 from .cards.loads.dloads import ACSRCE, DLOAD, TLOAD1, TLOAD2, RLOAD1, RLOAD2
@@ -169,7 +170,7 @@ from .cards.superelements import (
 from .cards.bdf_sets import (
     ASET, BSET, CSET, QSET, USET,
     ASET1, BSET1, CSET1, QSET1, USET1,
-    OMIT, OMIT1,
+    OMIT, OMIT1, RVDOF, RVDOF1,
     SET1, SET2, SET3,
     SEBSET, SECSET, SEQSET,  # SEUSET
     SEBSET1, SECSET1, SEQSET1,  # SEUSET1
@@ -443,7 +444,7 @@ MISSING_CARDS = {
     'SPCR',
 
     # aero
-    'UXVEC', 'GUST2', 'RVDOF', 'RVDOF1', 'AEFORCE', 'AEPRESS',
+    'UXVEC', 'GUST2', 'AEFORCE', 'AEPRESS',
 
     # acoustics
     'MICPNT',
@@ -488,14 +489,13 @@ MISSING_CARDS = {
     'FTGDEF', 'CAMPBLL', 'UNBALNC', 'ECHO',
     'CINTC', 'GMBNDC',
     'SET4', 'PFTG', 'FTGPARM', 'UDNAME', 'FTGSEQ',
-    'ELIST', 'MFLUID',
     'TEMPF', 'TEMPG', 'HADAPTL', 'HADACRI',
     'CIFPENT',
     'ELAR2', 'EBDSET', 'TMCPARA',
     'PEULER1', 'MATDEUL', 'EOSPOL', 'SHREL', 'YLDMC', 'PMINC', 'COUPLE', 'COUCOHF',
     'COHFRIC', 'MESH', 'TICVAL', 'TICEUL1', 'TICREG', 'CYLINDR',
     'SWLDPRM', 'PLOTOPT', 'PLOTE', 'PLOTG',
-    'FTGEVNT', 'RADBND', 'RADMT', 'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4',
+    'FTGEVNT', 'RADBND', 'RADMT',
     'NLFREQ1', 'NLRGAP',
     'ACADAPT', 'ACORDER', 'AMLREG',
     'NLCNTL', 'NLCNTLG', 'NLCNTL2', 'NLSTRAT', 'NLRSFD', 'NLHARM',
@@ -510,7 +510,7 @@ MISSING_CARDS = {
     'MTAB', 'TIC3', 'TABSCTL', 'SPLINEX', 'BCONECT', 'BCONPRG',
     'BCSURF', 'BCGRID', 'PAXISYM', 'BEADVAR', 'BLDOUT', 'GRIDMOD',
     'IPSTRAIN', 'RESTART', 'TICD',
-    'RCROSS', 'CYSUP', 'FBODYLD', 'BDYOR', 'RANDVAR',
+    'CYSUP', 'FBODYLD', 'BDYOR', 'RANDVAR',
     'L16MOD', 'SECTAX',
     'ACIFPRM', 'BCBDPRP', 'MDMIOUT', 'MPROCS', 'FBODYSB',
     'CCRSFIL', 'COMBWLD',
@@ -884,6 +884,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'TSTEP',  # tsteps
             'TSTEPNL', 'TSTEP1',  # tstepnls
             'TF',  # transfer_functions
+            'NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4',  # nolins
+            'RCROSS',  # rcrosses
+            'MFLUID',  # mfluids
+            'ELIST',  # elists
             'TIC',  # initial conditions - sid (set ID)
 
             # frequencies
@@ -909,6 +913,7 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'SET1', 'SET2', 'SET3',  # sets
             'ASET', 'ASET1',  # asets
             'OMIT', 'OMIT1',  # omits
+            'RVDOF', 'RVDOF1',  # rvdofs
             'BSET', 'BSET1',  # bsets
             'CSET', 'CSET1',  # csets
             'QSET', 'QSET1',  # qsets
@@ -1594,9 +1599,10 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'load_combinations', 'spcadds', 'mpcadds', 'nsmadds',
             'tics', 'dareas', 'frequencies',
             'bcs', 'delays', 'dphases', 'matcid',
+            'nolins', 'rcrosses', 'mfluids',
         ]
         list_slots = [
-            'asets', 'bsets', 'csets', 'omits', 'qsets',
+            'asets', 'bsets', 'csets', 'omits', 'qsets', 'rvdofs',
             'se_bsets', 'se_csets', 'se_qsets',
             'mkaeros', 'monitor_points', 'suport',
             'aedw', 'aepress', 'aeforce',
@@ -2853,6 +2859,13 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             'TSTEPNL': (TSTEPNL, add_methods.add_tstepnl_object),
 
             'TF': (TF, add_methods.add_tf_object),
+            'NOLIN1': (NOLIN1, add_methods.add_nolin_object),
+            'NOLIN2': (NOLIN2, add_methods.add_nolin_object),
+            'NOLIN3': (NOLIN3, add_methods.add_nolin_object),
+            'NOLIN4': (NOLIN4, add_methods.add_nolin_object),
+            'RCROSS': (RCROSS, add_methods.add_rcross_object),
+            'MFLUID': (MFLUID, add_methods.add_mfluid_object),
+            'ELIST': (ELIST, add_methods.add_elist_object),
             'TIC': (TIC, add_methods.add_tic_object),
 
             'DCONADD': (DCONADD, add_methods.add_dconstr_object),
@@ -2935,6 +2948,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
             'OMIT': (OMIT, add_methods.add_omit_object),
             'OMIT1': (OMIT1, add_methods.add_omit_object),
+            'RVDOF': (RVDOF, add_methods.add_rvdof_object),
+            'RVDOF1': (RVDOF1, add_methods.add_rvdof_object),
 
             'SET1': (SET1, add_methods.add_set_object),
             'SET2': (SET2, add_methods.add_set_object),
@@ -3049,8 +3064,27 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         self.reject_cards.append(card_obj)
 
     def reject_card_lines(self, card_name: str, card_lines: list[str],
-                          show_log: bool=True, comment: str='') -> None:
-        """rejects a card"""
+                          show_log: bool=True, comment: str='',
+                          ifile: Optional[int]=None,
+                          iline: Optional[int]=None) -> None:
+        """
+        Rejects a card
+
+        Parameters
+        ----------
+        card_name : str
+            the card name
+        card_lines : list[str]
+            the raw lines of the card
+        show_log : bool; default=True
+            log the rejection
+        comment : str; default=''
+            the card comment
+        ifile : int; default=None
+            index into ``self.active_filenames``; used for the error message
+        iline : int; default=None
+            0-based line number in the file; reported as 1-based
+        """
         if card_name.isdigit():
             # TODO: this should technically work (I think), but it's a problem
             #       for the code
@@ -3081,10 +3115,27 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             elif show_log and self._warn_on_reject_cards:
                 self.log.info(f'    rejecting card_name = {card_name} (reject_lines)')
                 if len(card_name) <= 3 and card_name not in {'DMI'}:
-                    self.log.error(f'    card_name={card_name!r}; card_lines = {card_lines}')
+                    location = self._get_card_location(ifile, iline)
+                    self.log.error(f'    card_name={card_name!r}; card_lines = {card_lines}{location}')
             assert isinstance(show_log, bool), show_log
         self.increase_card_count(card_name)
         self.reject_lines.append([_format_comment(comment)] + card_lines)
+
+    def _get_card_location(self, ifile: Optional[int],
+                           iline: Optional[int]) -> str:
+        """
+        Gets a '; file=..., line=...' string for error messages
+
+        Notes
+        -----
+        ``iline`` is 0-based internally, so 1 is added for the message.
+        """
+        if ifile is None or not 0 <= ifile < len(self.active_filenames):
+            return ''
+        location = f'; file={self.active_filenames[ifile]!r}'
+        if iline is not None:
+            location += f', line={iline + 1}'
+        return location
 
     def _write_reject_message(self, card_name: str, unused_card_obj, comment: str=''):
         """common method to not write duplicate reject card names"""
@@ -4409,8 +4460,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
         save_file_structure = self.save_file_structure
         if save_file_structure:
             for icard, card in enumerate(cards_list):
-                card_name, comment, card_lines, (ifile, unused_iline) = card
-                # print(ifile, unused_iline, card_lines[0])
+                card_name, comment, card_lines, (ifile, iline) = card
+                # print(ifile, iline, card_lines[0])
                 card_name = cast(str, card_name)
                 comment = cast(str, comment)
                 card_lines = cast(list[str], card_lines)
@@ -4440,15 +4491,16 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
                     msg = f"save_file_structure=True doesn't support {card_name}\n"
                     msg += f'card_lines = {card_lines}'
                     #raise NotImplementedError(msg)
-                    self.reject_card_lines(card_name, card_lines, comment=comment)
+                    self.reject_card_lines(card_name, card_lines, comment=comment,
+                                           ifile=ifile, iline=iline)
                 else:
                     self.add_card_ifile(ifile, card_lines, card_name, comment=comment,
                                         is_list=False, has_none=False)
 
         else:
             for icard, card in enumerate(cards_list):
-                card_name, comment, card_lines, (ifile, unused_iline) = card
-                # print(unused_iline, card_lines[0])
+                card_name, comment, card_lines, (ifile, iline) = card
+                # print(iline, card_lines[0])
                 if card_name is None:
                     msg = f'card_name = {card_name!r}\n'
                     msg += f'card_lines = {card_lines}'
@@ -4473,7 +4525,8 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
                 if self.is_reject(card_name):
                     try:
-                        self.reject_card_lines(card_name, card_lines, comment=comment)
+                        self.reject_card_lines(card_name, card_lines, comment=comment,
+                                               ifile=ifile, iline=iline)
                     except:
                         card_old = cards_list[icard-1]
                         old_card_name, old_comment, old_card_lines, unused_ifile_iline = card_old

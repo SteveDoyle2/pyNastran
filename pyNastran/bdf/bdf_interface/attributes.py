@@ -41,6 +41,7 @@ if TYPE_CHECKING:  # pragma: no cover
         TABLEMs,  # TABLEM1, TABLEM2, TABLEM3, TABLEM4,
         TABDMP1,
         TF, DELAY,  # DPHASE,
+        NOLIN1, NOLIN2, NOLIN3, NOLIN4, RCROSS, MFLUID, ELIST,
         # axisymmetric
         # RINGAX, AXIF, RINGFL, AXIC,  # removed
         CYJOIN, CYAX,
@@ -117,7 +118,7 @@ if TYPE_CHECKING:  # pragma: no cover
         CMASS1, CMASS2, CMASS3, CMASS4, CONM1, CONM2,
         SET1, SET3,
         ASET, BSET, CSET, QSET, OMIT, USET,
-        ASET1, BSET1, CSET1, QSET1, OMIT1, USET1,
+        ASET1, BSET1, CSET1, QSET1, OMIT1, USET1, RVDOF, RVDOF1,
         SPC, SPC1, SPCAX, SPCADD, SPCOFF, SPCOFF1, MPC, MPCADD,
         # superelements
         SEBSET, SEBSET1, SECSET, SECSET1,
@@ -343,6 +344,10 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     'tsteps': ['TSTEP', 'TSTEP1'],
     'tstepnls': ['TSTEPNL'],
     'transfer_functions': ['TF'],
+    'nolins': ['NOLIN1', 'NOLIN2', 'NOLIN3', 'NOLIN4'],
+    'rcrosses': ['RCROSS'],
+    'mfluids': ['MFLUID'],
+    'elists': ['ELIST'],
     'delays': ['DELAY'],
     'rotors': ['ROTORG', 'ROTORD'],
 
@@ -381,6 +386,7 @@ SLOT_TO_TYPE_MAP: dict[str, list[str]] = {
     # sets
     'asets': ['ASET', 'ASET1'],
     'omits': ['OMIT', 'OMIT1'],
+    'rvdofs': ['RVDOF', 'RVDOF1'],
     'bsets': ['BSET', 'BSET1'],
     'qsets': ['QSET', 'QSET1'],
     'csets': ['CSET', 'CSET1'],
@@ -944,6 +950,8 @@ class BDFAttributes:
         self.sets: dict[int, SET1 | SET3] = {}
         self.asets: list[ASET | ASET1] = []
         self.omits: list[OMIT | OMIT1] = []
+        #: residual vector DOFs (RESVEC(RVDOF))
+        self.rvdofs: list[RVDOF | RVDOF1] = []
         self.bsets: list[BSET | BSET1] = []
         self.csets: list[CSET | CSET1] = []
         self.qsets: list[QSET | QSET1] = []
@@ -1024,6 +1032,14 @@ class BDFAttributes:
         self.tstepnls: dict[int, TSTEPNL] = {}
         #: stores TF
         self.transfer_functions: dict[int, list[TF]] = {}
+        #: stores NOLIN1-4 (NONLINEAR=SID)
+        self.nolins: dict[int, list[NOLIN1 | NOLIN2 | NOLIN3 | NOLIN4]] = {}
+        #: stores RCROSS (RCROSS=SID)
+        self.rcrosses: dict[int, list[RCROSS]] = {}
+        #: stores MFLUID (MFLUID=SID)
+        self.mfluids: dict[int, list[MFLUID]] = {}
+        #: stores ELIST (used by MFLUID)
+        self.elists: dict[int, ELIST] = {}
         #: stores DELAY
         self.delays: dict[int, DELAY] = {}
 

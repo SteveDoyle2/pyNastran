@@ -308,6 +308,23 @@ class BGSET(BaseCard):
             fields += [sid, tid, sdist, None, ext, None, None, None]
         return fields
 
+    def repr_fields(self):
+        """
+        Gets the fields in their simplified form.
+
+        Notes
+        -----
+        EXTi is only valid in SOLs 401/402/601; NX 2412 rejects a BGSET with
+        an explicit EXTi (even 0.0) in SOL 103 (USER FATAL 316), so the
+        default (0.0) is written as a blank.
+        """
+        fields = ['BGSET', self.glue_id]
+        for sid, tid, sdist, ext in zip(self.sids, self.tids, self.sdists,
+                                        self.exts):
+            ext = None if ext == 0.0 else ext
+            fields += [sid, tid, sdist, None, ext, None, None, None]
+        return fields
+
     def write_card(self, size: int=8, is_double: bool=False) -> str:
         card = self.repr_fields()
         if size == 8:

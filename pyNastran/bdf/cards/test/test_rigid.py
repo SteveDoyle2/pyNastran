@@ -383,6 +383,19 @@ class TestRigid(unittest.TestCase):
         rrod.raw_fields()
         save_load_deck(model)
 
+    def test_dependent_components_split(self):
+        """multi-DOF components ('123') are split per DOF, so overlaps are found"""
+        model = BDF(debug=None)
+        for nid in (1, 2, 3, 4):
+            model.add_grid(nid, [float(nid), 0., 0.])
+        model.add_rbe3(10, 1, '123', [1.0], ['123'], [[2, 3]])  # REFGRID 1, REFC 123
+        model.add_rbe2(11, 4, '23', [2])
+        dep = model.get_dependent_nid_to_components(mpc_id=None, stop_on_failure=True)
+        self.assertEqual(dep, {1: '123', 2: '23'})
+        model.add_rbe2(12, 4, '1', [1])  # DOF 1 of node 1 is the RBE3's REFC too
+        with self.assertRaises(RuntimeError):
+            model.get_dependent_nid_to_components(mpc_id=None, stop_on_failure=True)
+
     def test_rbe3_update(self):
         log = SimpleLogger(level='warning')
         model = BDF(log=log)

@@ -21,7 +21,7 @@ def norm2d(v: np.ndarray) -> np.ndarray:
     return mag
 
 
-def normalize_vector2d(v: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+def normalize_vector2d(v: np.ndarray) -> tuple[np.ndarray, int]:
     """normalzes a series of (N,3) vectors"""
     mag = norm2d(v)
     nmag = len(mag)
@@ -32,11 +32,13 @@ def normalize_vector2d(v: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 def axes_stack(i: np.ndarray,
                j: np.ndarray,
                k: np.ndarray,
-               nmag: int) -> np.ndarray:
+               nmag: int, copy: bool=True) -> np.ndarray:
     """stack coordinate axes in 3d"""
-    i.shape = (nmag, 1, 3)
-    j.shape = (nmag, 1, 3)
-    k.shape = (nmag, 1, 3)
+    shape = (nmag, 1, 3)
+    i = i.reshape(shape, copy=copy)
+    j = j.reshape(shape, copy=copy)
+    k = k.reshape(shape, copy=copy)
+    # i.shape = shape
     ijk = np.hstack([i, j, k])
     return ijk
 

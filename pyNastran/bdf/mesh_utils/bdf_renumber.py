@@ -16,6 +16,7 @@ from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from pyNastran.bdf.bdf import BDF, Material
+from pyNastran.bdf.cards.dynamic import RCROSS_ELEMENT_RTYPES, expand_elist
 from pyNastran.utils import PathLike
 from pyNastran.utils.numpy_utils import integer_types
 from pyNastran.utils.mathematics import roundup
@@ -394,6 +395,8 @@ def bdf_renumber(bdf_filename: PathLike | BDF | StringIO,
     _update_elements(
         model, starting_id_dict, eid,
         eid_map, mass_id_map, rigid_elements_map)
+
+    _update_dynamic_ids(model, nid_map, eid_map)
 
     _update_materials(
         model, starting_id_dict, mid,
@@ -1027,6 +1030,49 @@ def _update_elements(model: BDF,
             eid += 1
         #for eidi, elem in model.caeros.items():
             #pass
+
+
+def _update_dynamic_ids(model: BDF,
+                        nid_map: dict[int, int],
+                        eid_map: dict[int, int]) -> None:
+    """
+    Updates the raw GRID/element ids on NOLIN1-4, RCROSS, and ELIST.
+
+    Notes
+    -----
+    These cards store integer ids (they can reference SPOINTs/EPOINTs
+    and, for ELIST, THRU ranges), so the xref doesn't carry the
+    renumbering.  ELIST THRU ranges are replaced by the explicit list of
+    existing (renumbered) elements because renumbering can make the
+    range non-contiguous.  SPOINT/EPOINT ids are not renumbered.
+    """
+    for nolins in model.nolins.values():
+        for nolin in nolins:
+            nolin.gi = nid_map.get(nolin.gi, nolin.gi)
+            nolin.gj = nid_map.get(nolin.gj, nolin.gj)
+            if nolin.type == 'NOLIN2':
+                nolin.gk = nid_map.get(nolin.gk, nolin.gk)
+
+    for rcrosses in model.rcrosses.values():
+        for rcross in rcrosses:
+            (rtype1, unused_id1), (rtype2, unused_id2) = rcross.response_types_ids()
+            id_map1 = eid_map if rtype1 in RCROSS_ELEMENT_RTYPES else nid_map
+            id_map2 = eid_map if rtype2 in RCROSS_ELEMENT_RTYPES else nid_map
+            rcross.id1 = id_map1.get(rcross.id1, rcross.id1)
+            rcross.id2 = id_map2.get(rcross.id2, rcross.id2)
+
+    if not eid_map:
+        return
+    for elist in model.elists.values():
+        eids_new = []
+        for eid, is_explicit in expand_elist(elist.eids):
+            eid_abs = abs(eid)
+            if eid_abs in eid_map:
+                sign = 1 if eid > 0 else -1
+                eids_new.append(sign * eid_map[eid_abs])
+            elif is_explicit:
+                eids_new.append(eid)
+        elist.eids = eids_new
 
 
 def _update_materials(model: BDF,

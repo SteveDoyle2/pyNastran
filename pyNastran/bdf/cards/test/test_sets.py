@@ -6,10 +6,11 @@ from pyNastran.bdf.bdf import BDF
 from pyNastran.bdf.bdf_interface.bdf_card import BDFCard
 from pyNastran.bdf.field_writer_8 import print_int_card_blocks
 from pyNastran.bdf.cards.bdf_sets import (
-    SET1, SET2, SET3, ASET, ASET1, OMIT1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1,
+    SET1, SET2, SET3, ASET, ASET1, OMIT1, RVDOF, RVDOF1, BSET, BSET1, CSET, CSET1, QSET, QSET1, USET, USET1,
     SEBSET, SEBSET1, SECSET, SECSET1, SEQSET, SEQSET1, #SEUSET, SEUSET1,
 )
 from pyNastran.bdf.cards.test.utils import save_load_deck
+from pyNastran.bdf.mesh_utils.remove_unused import remove_unused
 
 
 class TestSets(unittest.TestCase):
@@ -273,6 +274,105 @@ class TestSets(unittest.TestCase):
         #omita.write_card()
         #omitb.write_card()
         save_load_deck(model)
+
+    def test_rvdof1(self) -> None:
+        """
+        Checks the RVDOF1 card (residual vector DOFs).
+
+        Tests:
+         - direct construction (list/THRU), add_card, add_rvdof1
+         - add_card from fields, validate,
+           cross-reference, write/read round trip (save_load_deck)
+         - remove_unused keeps the RVDOF1-referenced nodes
+        Tolerances: exact (integer ids / component strings)
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        for nid in range(1, 21):
+            model.add_grid(nid, [float(nid), 0., 0.])
+
+        rvdof1a = model.add_rvdof1([1, 'THRU', 10], '123', comment='rvdof1')
+        rvdof1b = RVDOF1.add_card(
+            BDFCard(['RVDOF1', '456', 11, 12, 13, 14, 15, 16, 17, 18, 19]),
+            comment='rvdof1')
+        model._add_methods.add_rvdof_object(rvdof1b)
+        self.assertEqual(rvdof1a.components, '123')
+        self.assertEqual(rvdof1a.node_ids, list(range(1, 11)))
+        self.assertEqual(rvdof1b.components, '456')
+        self.assertEqual(rvdof1b.node_ids, list(range(11, 20)))
+        self.assertEqual(len(model.rvdofs), 2)
+
+        lines = [
+            'RVDOF1,1,20',
+        ]
+        model.add_card(lines[0].split(','), 'RVDOF1', is_list=True)
+        self.assertEqual(len(model.rvdofs), 3)
+        self.assertEqual(model.rvdofs[2].node_ids, [20])
+
+        for rvdof in model.rvdofs:
+            rvdof.validate()
+            rvdof.write_card(size=8)
+            rvdof.write_card(size=16)
+        msg = rvdof1a.write_card(size=8)
+        self.assertIn('RVDOF1', msg)
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model2 = save_load_deck(model, run_remove_unused=False)
+        self.assertEqual(len(model2.rvdofs), 3)
+        self.assertEqual(model2.rvdofs[0].node_ids, list(range(1, 11)))
+        self.assertEqual(model2.rvdofs[1].components, '456')
+
+        # RVDOF1 nodes are "used"
+        remove_unused(model2)
+        self.assertEqual(len(model2.nodes), 20)
+
+    def test_rvdof(self) -> None:
+        """
+        Checks the RVDOF card (residual vector DOFs, ID/C pairs).
+
+        Tests:
+         - direct construction, add_card, add_rvdof
+         - validate, cross-reference, write (8/16) and
+           write/read round trip (save_load_deck)
+         - remove_unused keeps the RVDOF-referenced nodes
+        Tolerances: exact (integer ids / component strings)
+        """
+        log = SimpleLogger(level='warning')
+        model = BDF(log=log)
+        for nid in range(1, 6):
+            model.add_grid(nid, [float(nid), 0., 0.])
+
+        rvdofa = model.add_rvdof([1, 2], ['123', '456'], comment='rvdof')
+        rvdofb = RVDOF.add_card(
+            BDFCard(['RVDOF', 3, '1', 4, '2', 5, '123456']),
+            comment='rvdof')
+        model._add_methods.add_rvdof_object(rvdofb)
+        self.assertEqual(rvdofa.node_ids, [1, 2])
+        self.assertEqual(rvdofa.components, ['123', '456'])
+        self.assertEqual(rvdofb.node_ids, [3, 4, 5])
+        self.assertEqual(rvdofb.components, ['1', '2', '123456'])
+        # RVDOF and RVDOF1 share model.rvdofs
+        model.add_rvdof1([1, 2], '6')
+        self.assertEqual(len(model.rvdofs), 3)
+
+        for rvdof in model.rvdofs:
+            rvdof.validate()
+            rvdof.write_card(size=8)
+            rvdof.write_card(size=16)
+        self.assertIn('RVDOF ', rvdofa.write_card(size=8))
+
+        model.cross_reference()
+        model.uncross_reference()
+        model.safe_cross_reference()
+        model2 = save_load_deck(model, run_remove_unused=False)
+        self.assertEqual(len(model2.rvdofs), 3)
+        self.assertEqual(model2.rvdofs[1].type, 'RVDOF')
+        self.assertEqual(model2.rvdofs[1].components, ['1', '2', '123456'])
+
+        remove_unused(model2)
+        self.assertEqual(len(model2.nodes), 5)
 
     def test_bset(self):
         """checks the BSET/BSET1 cards"""

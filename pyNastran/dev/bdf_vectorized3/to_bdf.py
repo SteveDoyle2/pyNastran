@@ -105,6 +105,9 @@ SKIP_FINAL = [
     'include_filenames',
     # ?
     'app',
+    # TODO: not supported in bdf_vectorized3 (RVDOF/1, NOLIN1-4, RCROSS,
+    #       MFLUID, ELIST)
+    'rvdofs', 'nolins', 'rcrosses', 'mfluids', 'elists',
 ]
 SKIP = [
     'MATDMG', 'acmodl', 'acplnw', 'amlreg', 'ao_element_flags',

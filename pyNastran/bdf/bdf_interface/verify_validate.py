@@ -186,6 +186,10 @@ def validate_bdf(model: BDF) -> None:
     _validate_dict(model, model.tsteps)
     _validate_dict(model, model.tstepnls)
     _validate_dict_list(model, model.transfer_functions)
+    _validate_dict_list(model, model.nolins)
+    _validate_dict_list(model, model.rcrosses)
+    _validate_dict_list(model, model.mfluids)
+    _validate_dict(model, model.elists)
     _validate_dict(model, model.delays)
 
     #------------------------------------------------
@@ -278,6 +282,7 @@ def validate_bdf(model: BDF) -> None:
 
     _validate_list(model, model.asets)
     _validate_list(model, model.omits)
+    _validate_list(model, model.rvdofs)
     _validate_list(model, model.bsets)
     _validate_list(model, model.csets)
     _validate_list(model, model.qsets)

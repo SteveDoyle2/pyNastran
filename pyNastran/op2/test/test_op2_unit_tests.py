@@ -516,6 +516,35 @@ class TestOP2Unit(Tester):
         assert len(model.mpcadds) == 2, model.mpcadds
 
 
+class TestOP2LoadAsH5(unittest.TestCase):
+    """load_as_h5: results kept on disk in an h5 scratch file"""
+    def test_load_as_h5_filename(self):
+        """load_as_h5_filename puts the scratch file where asked (not next to the op2)
+        and the eigenvectors match the in-memory read exactly
+
+        TODO: load_as_h5 only works for some results (e.g. eigenvectors);
+        CBAR stress fails in _get_result_group (h5_file is None), so only
+        eigenvectors are read here.
+        """
+        import tempfile
+        op2_filename = MODEL_PATH / 'beam_modes' / 'beam_modes_m1.op2'
+        ref = read_op2(op2_filename, debug=None)
+        with tempfile.TemporaryDirectory() as tmp:
+            h5_filename = Path(tmp) / 'scratch.h5'
+            op2 = OP2(debug=None)
+            op2.set_results(['eigenvectors'])
+            op2.load_as_h5 = True
+            op2.load_as_h5_filename = str(h5_filename)
+            try:
+                op2.read_op2(op2_filename)
+                assert h5_filename.exists()
+                assert not op2_filename.with_suffix('.h5').exists()
+                eig = op2.eigenvectors[1]
+                assert np.array_equal(eig.data[...], ref.eigenvectors[1].data)
+            finally:
+                op2.h5_file.close()
+
+
 class TestOP2Params(unittest.TestCase):
     """PARAM (PVT/PVT0) reading"""
     def _get_op2(self) -> OP2:
@@ -1949,6 +1978,41 @@ class TestOP2Main(Tester):
         os.remove('temp.debug')
         os.remove(op2_filename_m1_out)
         os.remove(op2_filename_m2_out)
+
+    def test_beam_modes_rscon(self):
+        """tests the constraint/attachment mode tables (RA*CONS, RA*EATC)
+
+        NX 2412 SOL 103 of beam_modes with USET,U2 (3 constraint modes),
+        PARAM,RSCON,YES, PARAM,RSATT,YES, PARAM,RSOPT,1 and MEFFMASS.
+        CBEAM stress/force in RASCONS/RASEATC/RAFCONS/RAFEATC used to fail
+        (RASCONS was not a known OES table; no cbeam slots).
+        """
+        log = get_logger(level='warning')
+        op2_filename = MODEL_PATH / 'beam_modes' / 'beam_modes_rscon.op2'
+        op2 = read_op2(op2_filename, debug=False, log=log)
+        results = op2.op2_results
+        assert op2.eigenvectors[1].data.shape == (10, 12, 6)
+        for res in (results.RASCONS.cbeam_stress, results.RASEATC.cbeam_stress,
+                    results.RAFCONS.cbeam_force, results.RAFEATC.cbeam_force):
+            obj = res[1]
+            assert obj.data.shape == (3, 2, 8), obj.data.shape  # 3 modes, 1 CBEAM (2 stations)
+            assert obj.nelements == 1, obj.nelements
+            assert np.isfinite(obj.data).all()
+        assert results.RASCONS.cbar_stress[1].data.shape[:2] == (3, 9)
+        # a unit constraint-mode translation of the clamp is rigid motion: no stress
+        assert np.abs(results.RASCONS.cbeam_stress[1].data).max() < 1e-6
+        assert 'MEFMASS' in op2.matrices
+
+        run_op2(op2_filename, make_geom=False, write_bdf=False,
+                write_f06=True, write_op2=True, write_hdf5=True,
+                delete_f06=True, delete_op2=True, delete_hdf5=True,
+                compare=True, debug=False, quiet=True,
+                stop_on_failure=True, dev=False, log=log)
+        # write_f06 also writes the matrices (MEFMASS, ...) to <f06 base>.mat;
+        # delete_f06 only removes the .f06
+        mat_filename = MODEL_PATH / 'beam_modes' / 'beam_modes_rscon.test_op2.mat'
+        if mat_filename.exists():
+            os.remove(mat_filename)
 
     def test_bdf_op2_elements_01(self):
         """tests a large number of elements and results in SOL 101"""

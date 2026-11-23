@@ -18,6 +18,10 @@ All dynamic control cards are defined in this file.  This includes:
  * ROTORD
  * TIC
  * TF
+ * NOLIN1, NOLIN2, NOLIN3, NOLIN4
+ * RCROSS
+ * MFLUID
+ * ELIST
 
 All cards are BaseCard objects.
 
@@ -2765,3 +2769,951 @@ class TIC(BaseCard):
         return msg
 
 FREQs = FREQ | FREQ1 | FREQ2 | FREQ3 | FREQ4 | FREQ5
+
+
+def _check_nolin_component(value: int, name: str, allow_velocity: bool) -> None:
+    """
+    Checks a NOLINi component.
+
+    CI (load point) is 0-6.  CJ/CK (response point) is 0-6 for displacement
+    and 10-16 for velocity (10 is the velocity of a scalar/extra point).
+    """
+    allowed = set(range(7))
+    if allow_velocity:
+        allowed.update(range(10, 17))
+    assert value in allowed, f'{name}={value!r} is not in {sorted(allowed)}'
+
+
+class NOLIN(BaseCard):
+    """Base class for the NOLIN1/NOLIN2/NOLIN3/NOLIN4 cards"""
+    _properties = ['node_ids']
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        self.cross_reference(model)
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    @property
+    def node_ids(self) -> list[int]:
+        """the GRID/SPOINT/EPOINT ids (load point first)"""
+        raise NotImplementedError(self.type)
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
+class NOLIN1(NOLIN):
+    """
+    Nonlinear transient load as a tabular function.
+
+    P_i(t) = S * T(u_j(t))
+
+    +--------+-----+----+----+-----+----+----+-----+
+    |    1   |  2  |  3 |  4 |  5  |  6 |  7 |  8  |
+    +========+=====+====+====+=====+====+====+=====+
+    | NOLIN1 | SID | GI | CI |  S  | GJ | CJ | TID |
+    +--------+-----+----+----+-----+----+----+-----+
+    | NOLIN1 |  21 |  3 |  4 | 2.1 |  3 | 10 |  6  |
+    +--------+-----+----+----+-----+----+----+-----+
+
+    Notes
+    -----
+    Selected by the NONLINEAR=SID case control command; cannot be
+    referenced by a DLOAD.  CJ=11-16 is velocity of component CJ-10.
+
+    """
+    type = 'NOLIN1'
+
+    @classmethod
+    def _init_from_empty(cls):
+        return NOLIN1(1, 2, 3, 1.0, 4, 5, 6)
+
+    def __init__(self, sid: int, gi: int, ci: int, s: float,
+                 gj: int, cj: int, tid: int, comment: str=''):
+        """
+        Creates a NOLIN1 card
+
+        Parameters
+        ----------
+        sid : int
+            nonlinear load set id (NONLINEAR=SID)
+        gi : int
+            GRID/SPOINT/EPOINT id where the load is applied
+        ci : int
+            component of GI (0 for scalar/extra points)
+        s : float
+            scale factor
+        gj : int
+            GRID/SPOINT/EPOINT id of the response
+        cj : int
+            component of GJ (1-6=displacement; 11-16=velocity;
+            0=scalar displacement; 10=scalar velocity)
+        tid : int
+            TABLEDi id
+        comment : str; default=''
+            a comment for the card
+
+        """
+        NOLIN.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.gi = gi
+        self.ci = ci
+        self.s = s
+        self.gj = gj
+        self.cj = cj
+        self.tid = tid
+        self.tid_ref = None
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a NOLIN1 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        gi = integer(card, 2, 'gi')
+        ci = integer_or_blank(card, 3, 'ci', default=0)
+        s = double(card, 4, 's')
+        gj = integer(card, 5, 'gj')
+        cj = integer_or_blank(card, 6, 'cj', default=0)
+        tid = integer(card, 7, 'tid')
+        assert len(card) <= 8, f'len(NOLIN1 card) = {len(card):d}\ncard={card}'
+        return NOLIN1(sid, gi, ci, s, gj, cj, tid, comment=comment)
+
+    def validate(self) -> None:
+        assert self.sid > 0, f'sid={self.sid}'
+        _check_nolin_component(self.ci, 'ci', allow_velocity=False)
+        _check_nolin_component(self.cj, 'cj', allow_velocity=True)
+        assert self.Tid() > 0, f'tid={self.Tid()}'
+
+    def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required by NOLIN1 sid={self.sid}'
+        self.tid_ref = model.TableD(self.tid, msg=msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        msg = f', which is required by NOLIN1 sid={self.sid}'
+        if self.tid in model.tables_d:
+            self.tid_ref = model.TableD(self.tid, msg=msg)
+        else:
+            model.log.warning(f'tid={self.tid} not found{msg}')
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.tid = self.Tid()
+        self.tid_ref = None
+
+    def Tid(self) -> int:
+        """gets the TABLEDi id"""
+        if self.tid_ref is not None:
+            return self.tid_ref.tid
+        return self.tid
+
+    @property
+    def node_ids(self) -> list[int]:
+        return [self.gi, self.gj]
+
+    def raw_fields(self) -> list:
+        return ['NOLIN1', self.sid, self.gi, self.ci, self.s,
+                self.gj, self.cj, self.Tid()]
+
+
+class NOLIN2(NOLIN):
+    """
+    Nonlinear transient load as the product of two variables.
+
+    P_i(t) = S * X_j(t) * X_k(t)
+
+    +--------+-----+----+----+-----+----+----+----+----+
+    |    1   |  2  |  3 |  4 |  5  |  6 |  7 |  8 |  9 |
+    +========+=====+====+====+=====+====+====+====+====+
+    | NOLIN2 | SID | GI | CI |  S  | GJ | CJ | GK | CK |
+    +--------+-----+----+----+-----+----+----+----+----+
+    | NOLIN2 |  14 |  2 |  1 | 2.9 |  2 |  1 |  2 |    |
+    +--------+-----+----+----+-----+----+----+----+----+
+
+    Notes
+    -----
+    Selected by the NONLINEAR=SID case control command.
+    GI-CI, GJ-CJ, and GK-CK may be the same point.
+
+    """
+    type = 'NOLIN2'
+
+    @classmethod
+    def _init_from_empty(cls):
+        return NOLIN2(1, 2, 3, 1.0, 4, 5, 6, 1)
+
+    def __init__(self, sid: int, gi: int, ci: int, s: float,
+                 gj: int, cj: int, gk: int, ck: int, comment: str=''):
+        """
+        Creates a NOLIN2 card
+
+        Parameters
+        ----------
+        sid : int
+            nonlinear load set id (NONLINEAR=SID)
+        gi : int
+            GRID/SPOINT/EPOINT id where the load is applied
+        ci : int
+            component of GI (0 for scalar/extra points)
+        s : float
+            scale factor
+        gj / gk : int
+            GRID/SPOINT/EPOINT ids of the two response variables
+        cj / ck : int
+            components of GJ/GK (1-6=displacement; 11-16=velocity;
+            0=scalar displacement; 10=scalar velocity)
+        comment : str; default=''
+            a comment for the card
+
+        """
+        NOLIN.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.gi = gi
+        self.ci = ci
+        self.s = s
+        self.gj = gj
+        self.cj = cj
+        self.gk = gk
+        self.ck = ck
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a NOLIN2 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        gi = integer(card, 2, 'gi')
+        ci = integer_or_blank(card, 3, 'ci', default=0)
+        s = double(card, 4, 's')
+        gj = integer(card, 5, 'gj')
+        cj = integer_or_blank(card, 6, 'cj', default=0)
+        gk = integer(card, 7, 'gk')
+        ck = integer_or_blank(card, 8, 'ck', default=0)
+        assert len(card) <= 9, f'len(NOLIN2 card) = {len(card):d}\ncard={card}'
+        return NOLIN2(sid, gi, ci, s, gj, cj, gk, ck, comment=comment)
+
+    def validate(self) -> None:
+        assert self.sid > 0, f'sid={self.sid}'
+        _check_nolin_component(self.ci, 'ci', allow_velocity=False)
+        _check_nolin_component(self.cj, 'cj', allow_velocity=True)
+        _check_nolin_component(self.ck, 'ck', allow_velocity=True)
+
+    @property
+    def node_ids(self) -> list[int]:
+        return [self.gi, self.gj, self.gk]
+
+    def raw_fields(self) -> list:
+        return ['NOLIN2', self.sid, self.gi, self.ci, self.s,
+                self.gj, self.cj, self.gk, self.ck]
+
+
+class NOLIN34(NOLIN):
+    """Base class for NOLIN3/NOLIN4 (variable raised to a power)"""
+
+    @classmethod
+    def _init_from_empty(cls):
+        return cls(1, 2, 3, 1.0, 4, 5, 2.0)
+
+    def __init__(self, sid: int, gi: int, ci: int, s: float,
+                 gj: int, cj: int, a: float, comment: str=''):
+        """
+        Creates a NOLIN3/NOLIN4 card
+
+        Parameters
+        ----------
+        sid : int
+            nonlinear load set id (NONLINEAR=SID)
+        gi : int
+            GRID/SPOINT/EPOINT id where the load is applied
+        ci : int
+            component of GI (0 for scalar/extra points)
+        s : float
+            scale factor
+        gj : int
+            GRID/SPOINT/EPOINT id of the response
+        cj : int
+            component of GJ (1-6=displacement; 11-16=velocity;
+            0=scalar displacement; 10=scalar velocity)
+        a : float
+            exponent of the forcing function
+        comment : str; default=''
+            a comment for the card
+
+        """
+        NOLIN.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.gi = gi
+        self.ci = ci
+        self.s = s
+        self.gj = gj
+        self.cj = cj
+        self.a = a
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds a NOLIN3/NOLIN4 card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        gi = integer(card, 2, 'gi')
+        ci = integer_or_blank(card, 3, 'ci', default=0)
+        s = double(card, 4, 's')
+        gj = integer(card, 5, 'gj')
+        cj = integer_or_blank(card, 6, 'cj', default=0)
+        a = double(card, 7, 'a')
+        assert len(card) <= 8, f'len({cls.type} card) = {len(card):d}\ncard={card}'
+        return cls(sid, gi, ci, s, gj, cj, a, comment=comment)
+
+    def validate(self) -> None:
+        assert self.sid > 0, f'sid={self.sid}'
+        _check_nolin_component(self.ci, 'ci', allow_velocity=False)
+        _check_nolin_component(self.cj, 'cj', allow_velocity=True)
+
+    @property
+    def node_ids(self) -> list[int]:
+        return [self.gi, self.gj]
+
+    def raw_fields(self) -> list:
+        return [self.type, self.sid, self.gi, self.ci, self.s,
+                self.gj, self.cj, self.a]
+
+
+class NOLIN3(NOLIN34):
+    """
+    Nonlinear transient load as a positive variable raised to a power.
+
+    P_i(t) = S * X_j(t)^A  for X_j > 0;  0 for X_j <= 0
+
+    +--------+-----+-----+----+------+----+----+------+
+    |    1   |  2  |  3  |  4 |   5  |  6 |  7 |   8  |
+    +========+=====+=====+====+======+====+====+======+
+    | NOLIN3 | SID |  GI | CI |   S  | GJ | CJ |   A  |
+    +--------+-----+-----+----+------+----+----+------+
+    | NOLIN3 |  4  | 102 |    | -6.1 |  2 | 15 | -3.5 |
+    +--------+-----+-----+----+------+----+----+------+
+
+    Notes
+    -----
+    Use a NOLIN4 for the negative range of X_j.
+
+    """
+    type = 'NOLIN3'
+
+
+class NOLIN4(NOLIN34):
+    """
+    Nonlinear transient load as a negative variable raised to a power.
+
+    P_i(t) = -S * (-X_j(t))^A  for X_j < 0;  0 for X_j >= 0
+
+    +--------+-----+----+----+-----+-----+----+------+
+    |    1   |  2  |  3 |  4 |  5  |  6  |  7 |   8  |
+    +========+=====+====+====+=====+=====+====+======+
+    | NOLIN4 | SID | GI | CI |  S  |  GJ | CJ |   A  |
+    +--------+-----+----+----+-----+-----+----+------+
+    | NOLIN4 |  2  |  4 |  6 | 2.0 | 101 |    | 16.3 |
+    +--------+-----+----+----+-----+-----+----+------+
+
+    Notes
+    -----
+    Use a NOLIN3 for the positive range of X_j.
+
+    """
+    type = 'NOLIN4'
+
+
+RCROSS_RTYPES = {'DISP', 'VELO', 'ACCEL', 'OLOAD', 'SPCF', 'MPCF',
+                 'STRESS', 'STRAIN', 'FORCE', 'PRESS'}
+#: RCROSS RTYPEs whose ID is an element; the rest are GRID/SPOINT ids
+#: (PRESS is a fluid grid)
+RCROSS_ELEMENT_RTYPES = {'STRESS', 'STRAIN', 'FORCE'}
+
+
+class RCROSS(BaseCard):
+    """
+    Defines a pair of response quantities for computing the cross-power
+    spectral density and cross-correlation functions in random analysis.
+
+    +--------+-----+--------+-----+-------+--------+-----+-------+-------+
+    |    1   |  2  |    3   |  4  |   5   |    6   |  7  |   8   |   9   |
+    +========+=====+========+=====+=======+========+=====+=======+=======+
+    | RCROSS | SID | RTYPE1 | ID1 | COMP1 | RTYPE2 | ID2 | COMP2 | CURID |
+    +--------+-----+--------+-----+-------+--------+-----+-------+-------+
+    | RCROSS |  20 |  DISP  |  50 |   2   | STRESS | 150 |   8   |   4   |
+    +--------+-----+--------+-----+-------+--------+-----+-------+-------+
+
+    Notes
+    -----
+    Selected by the RCROSS=SID case control command.  If one of
+    RTYPE1/RTYPE2 is blank, it takes the value of the other one (the
+    blank is kept on the card so the deck round-trips).  For complex
+    element items, COMPi must be the real-part item code.
+
+    """
+    type = 'RCROSS'
+
+    @classmethod
+    def _init_from_empty(cls):
+        return RCROSS(1, 'DISP', 2, 3, 'DISP', 4, 5)
+
+    def __init__(self, sid: int, rtype1: str | None, id1: int, comp1: int,
+                 rtype2: str | None, id2: int, comp2: int,
+                 curid: int | None=None, comment: str=''):
+        """
+        Creates an RCROSS card
+
+        Parameters
+        ----------
+        sid : int
+            case control RCROSS id
+        rtype1 / rtype2 : str or None
+            response type (DISP, VELO, ACCEL, OLOAD, SPCF, MPCF,
+            STRESS, STRAIN, FORCE, PRESS); None takes the other one
+        id1 / id2 : int
+            element, grid, or scalar point id
+        comp1 / comp2 : int
+            component/item code (1-6 for grids; 1 for scalar/PRESS)
+        curid : int; default=None
+            optional curve id
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.rtype1 = rtype1
+        self.id1 = id1
+        self.comp1 = comp1
+        self.rtype2 = rtype2
+        self.id2 = id2
+        self.comp2 = comp2
+        # the OP2 (DYNAMICS table) stores a blank CURID as 0
+        self.curid = None if curid == 0 else curid
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds an RCROSS card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        rtype1 = string_or_blank(card, 2, 'rtype1')
+        id1 = integer(card, 3, 'id1')
+        comp1 = integer(card, 4, 'comp1')
+        rtype2 = string_or_blank(card, 5, 'rtype2')
+        id2 = integer(card, 6, 'id2')
+        comp2 = integer(card, 7, 'comp2')
+        curid = integer_or_blank(card, 8, 'curid')
+        assert len(card) <= 9, f'len(RCROSS card) = {len(card):d}\ncard={card}'
+        return RCROSS(sid, rtype1, id1, comp1, rtype2, id2, comp2,
+                      curid=curid, comment=comment)
+
+    def validate(self) -> None:
+        assert self.sid > 0, f'sid={self.sid}'
+        assert self.rtype1 is not None or self.rtype2 is not None, \
+            'at least one of rtype1/rtype2 must be defined'
+        for rtype in (self.rtype1, self.rtype2):
+            assert rtype is None or rtype in RCROSS_RTYPES, \
+                f'rtype={rtype!r} not in {sorted(RCROSS_RTYPES)}'
+        assert self.id1 > 0 and self.id2 > 0, f'id1={self.id1} id2={self.id2}'
+        assert self.comp1 > 0 and self.comp2 > 0, \
+            f'comp1={self.comp1} comp2={self.comp2}'
+        assert self.curid is None or self.curid > 0, f'curid={self.curid}'
+
+    def cross_reference(self, model: BDF) -> None:
+        pass
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        pass
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        pass
+
+    def response_types_ids(self) -> list[tuple[str, int]]:
+        """
+        Gets the effective (rtype, id) pairs; a blank RTYPE takes the
+        value of the other one.
+        """
+        rtype1 = self.rtype1 if self.rtype1 is not None else self.rtype2
+        rtype2 = self.rtype2 if self.rtype2 is not None else self.rtype1
+        return [(rtype1, self.id1), (rtype2, self.id2)]
+
+    def raw_fields(self) -> list:
+        return ['RCROSS', self.sid, self.rtype1, self.id1, self.comp1,
+                self.rtype2, self.id2, self.comp2, self.curid]
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
+class MFLUID(BaseCard):
+    """
+    Defines the properties of an incompressible fluid volume for the
+    purpose of generating a virtual (added) mass matrix.
+
+    +--------+------+---------+-----+-----+--------+--------+--------+--------+
+    |    1   |   2  |    3    |  4  |  5  |    6   |    7   |    8   |    9   |
+    +========+======+=========+=====+=====+========+========+========+========+
+    | MFLUID |  SID |   CID   | ZFS | RHO | ELIST1 | ELIST2 | PLANE1 | PLANE2 |
+    +--------+------+---------+-----+-----+--------+--------+--------+--------+
+    |        | RMAX | FMEXACT |     |     |        |        |        |        |
+    +--------+------+---------+-----+-----+--------+--------+--------+--------+
+
+    Notes
+    -----
+    Selected by the MFLUID=SID case control command; several MFLUID
+    entries may share a SID.  ELIST1/ELIST2 reference ELIST cards
+    (0 means unused).
+    zfs=None means the free surface is at +infinity in X3.
+
+    """
+    type = 'MFLUID'
+
+    @classmethod
+    def _init_from_empty(cls):
+        return MFLUID(1, 1.0, elist1=2)
+
+    def __init__(self, sid: int, rho: float, cid: int=0,
+                 zfs: float | None=None, elist1: int=0, elist2: int=0,
+                 plane1: str='N', plane2: str='N',
+                 rmax: float=1.0e10, fmexact: float=1.0e15,
+                 comment: str=''):
+        """
+        Creates an MFLUID card
+
+        Parameters
+        ----------
+        sid : int
+            set id (MFLUID=SID)
+        rho : float
+            fluid density
+        cid : int; default=0
+            rectangular coordinate system; the free surface is normal
+            to X3 and the symmetry planes are X1-X3 and X2-X3
+        zfs : float; default=None
+            free surface intercept on X3 (no fluid where X3 > ZFS);
+            None means the free surface is at +infinity
+        elist1 : int; default=0
+            ELIST id of 2D elements wetted on one side
+        elist2 : int; default=0
+            ELIST id of 2D elements wetted on both sides
+            (elist1 + elist2 > 0)
+        plane1 / plane2 : str; default='N'
+            'S' (symmetric), 'A' (antisymmetric), or 'N' (neither) for
+            the X1-X3 / X2-X3 planes
+        rmax : float; default=1.0e10
+            interactions between elements farther apart than RMAX
+            are neglected
+        fmexact : float; default=1.0e15
+            exact integration is used when the element separation is
+            less than FMEXACT*sqrt(area of the larger element)
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        self.sid = sid
+        self.cid = cid
+        self.zfs = zfs
+        self.rho = rho
+        self.elist1 = elist1
+        self.elist2 = elist2
+        self.plane1 = plane1
+        self.plane2 = plane2
+        self.rmax = rmax
+        self.fmexact = fmexact
+        self.cid_ref = None
+        self.elist1_ref = None
+        self.elist2_ref = None
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds an MFLUID card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        sid = integer(card, 1, 'sid')
+        cid = integer_or_blank(card, 2, 'cid', default=0)
+        zfs = double_or_blank(card, 3, 'zfs')
+        rho = double(card, 4, 'rho')
+        elist1 = integer_or_blank(card, 5, 'elist1', default=0)
+        elist2 = integer_or_blank(card, 6, 'elist2', default=0)
+        plane1 = string_or_blank(card, 7, 'plane1', default='N')
+        plane2 = string_or_blank(card, 8, 'plane2', default='N')
+        rmax = double_or_blank(card, 9, 'rmax', default=1.0e10)
+        fmexact = double_or_blank(card, 10, 'fmexact', default=1.0e15)
+        assert len(card) <= 11, f'len(MFLUID card) = {len(card):d}\ncard={card}'
+        return MFLUID(sid, rho, cid=cid, zfs=zfs, elist1=elist1, elist2=elist2,
+                      plane1=plane1, plane2=plane2, rmax=rmax, fmexact=fmexact,
+                      comment=comment)
+
+    def validate(self) -> None:
+        assert self.sid > 0, f'sid={self.sid}'
+        assert self.Cid() >= 0, f'cid={self.Cid()}'
+        elist1 = self.Elist1()
+        elist2 = self.Elist2()
+        assert elist1 >= 0 and elist2 >= 0, f'elist1={elist1} elist2={elist2}'
+        assert elist1 + elist2 > 0, \
+            f'elist1 + elist2 must be > 0; elist1={elist1} elist2={elist2}'
+        assert self.plane1 in {'S', 'A', 'N'}, f'plane1={self.plane1!r}'
+        assert self.plane2 in {'S', 'A', 'N'}, f'plane2={self.plane2!r}'
+        assert self.rmax > 0., f'rmax={self.rmax}'
+
+    def _get_elist(self, model: BDF, lid: int, msg: str) -> ELIST:
+        """gets an ELIST with a helpful error message"""
+        try:
+            return model.elists[lid]
+        except KeyError:
+            raise KeyError(f'ELIST lid={lid} not found{msg}.  '
+                           f'Allowed ELISTs={sorted(model.elists)}')
+
+    def cross_reference(self, model: BDF) -> None:
+        msg = f', which is required by MFLUID sid={self.sid}'
+        self.cid_ref = model.Coord(self.cid, msg=msg)
+        if self.elist1 > 0:
+            self.elist1_ref = self._get_elist(model, self.elist1, msg)
+        if self.elist2 > 0:
+            self.elist2_ref = self._get_elist(model, self.elist2, msg)
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        msg = f', which is required by MFLUID sid={self.sid}'
+        self.cid_ref = model.safe_coord(self.cid, self.sid, xref_errors, msg=msg)
+        for name in ('elist1', 'elist2'):
+            lid = getattr(self, name)
+            if lid == 0:
+                continue
+            if lid in model.elists:
+                setattr(self, f'{name}_ref', model.elists[lid])
+            else:
+                model.log.warning(f'{name.upper()}={lid} not found{msg}')
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.cid = self.Cid()
+        self.elist1 = self.Elist1()
+        self.elist2 = self.Elist2()
+        self.cid_ref = None
+        self.elist1_ref = None
+        self.elist2_ref = None
+
+    def Elist1(self) -> int:
+        """gets the one-sided ELIST id (0=unused)"""
+        if self.elist1_ref is not None:
+            return self.elist1_ref.lid
+        return self.elist1
+
+    def Elist2(self) -> int:
+        """gets the two-sided ELIST id (0=unused)"""
+        if self.elist2_ref is not None:
+            return self.elist2_ref.lid
+        return self.elist2
+
+    def Cid(self) -> int:
+        """gets the coordinate system id"""
+        if self.cid_ref is not None:
+            return self.cid_ref.cid
+        return self.cid
+
+    def raw_fields(self) -> list:
+        return ['MFLUID', self.sid, self.Cid(), self.zfs, self.rho,
+                self.Elist1(), self.Elist2(), self.plane1, self.plane2,
+                self.rmax, self.fmexact]
+
+    def repr_fields(self) -> list:
+        cid = set_blank_if_default(self.Cid(), 0)
+        plane1 = set_blank_if_default(self.plane1, 'N')
+        plane2 = set_blank_if_default(self.plane2, 'N')
+        rmax = set_blank_if_default(self.rmax, 1.0e10)
+        fmexact = set_blank_if_default(self.fmexact, 1.0e15)
+        return ['MFLUID', self.sid, cid, self.zfs, self.rho,
+                self.Elist1(), self.Elist2(), plane1, plane2,
+                rmax, fmexact]
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)
+
+
+def expand_elist(eids: list[int | str]) -> list[tuple[int, bool]]:
+    """
+    Expands an ELIST id list with THRU.
+
+    Returns
+    -------
+    expanded : list[(eid, is_explicit)]
+        signed element ids; is_explicit=False for ids generated by THRU
+        (NX only includes the THRU ids that exist)
+
+    """
+    expanded = []
+    i = 0
+    n = len(eids)
+    while i < n:
+        eid = eids[i]
+        if i + 2 < n and isinstance(eids[i + 1], str) and eids[i + 1].upper() == 'THRU':
+            eid1 = eid
+            eid2 = eids[i + 2]
+            sign = 1 if eid1 > 0 else -1
+            start, end = abs(eid1), abs(eid2)
+            assert start <= end, f'ELIST THRU must be increasing; {eid1} THRU {eid2}'
+            expanded.append((eid1, True))
+            for eidi in range(start + 1, end):
+                expanded.append((sign * eidi, False))
+            if end != start:
+                expanded.append((eid2, True))
+            i += 3
+        else:
+            expanded.append((eid, True))
+            i += 1
+    return expanded
+
+
+class ELIST(BaseCard):
+    """
+    Defines a list of structural elements for virtual fluid mass.
+
+    +-------+-----+-----+-----+------+-----+-----+-----+-----+
+    |   1   |  2  |  3  |  4  |   5  |  6  |  7  |  8  |  9  |
+    +=======+=====+=====+=====+======+=====+=====+=====+=====+
+    | ELIST | LID |  E1 |  E2 |  E3  |  E4 |  E5 |  E6 |  E7 |
+    +-------+-----+-----+-----+------+-----+-----+-----+-----+
+    |       |  E8 |  E9 | E10 | etc. |     |     |     |     |
+    +-------+-----+-----+-----+------+-----+-----+-----+-----+
+    | ELIST |  3  |  51 | -62 |  68  | THRU | 102 | 122 |    |
+    +-------+-----+-----+-----+------+-----+-----+-----+-----+
+
+    Notes
+    -----
+    Referenced by MFLUID (ELIST1/ELIST2).  A negative id means the fluid
+    is on the side opposite the element's positive normal.  With THRU,
+    the ids on both sides must have the same sign, and only the
+    elements that exist in the range are included, so the ids are kept
+    as entered (with THRU) and expanded on demand; explicitly listed
+    ids must exist, THRU-generated ids may not.
+
+    """
+    type = 'ELIST'
+
+    @classmethod
+    def _init_from_empty(cls):
+        return ELIST(1, [1, -2])
+
+    def __init__(self, lid: int, eids: list[int | str], comment: str=''):
+        """
+        Creates an ELIST card
+
+        Parameters
+        ----------
+        lid : int
+            list id (referenced by MFLUID)
+        eids : list[int | str]
+            signed element ids; 'THRU' is allowed between two ids
+            of the same sign (e.g., [51, -62, 68, 'THRU', 102, 122])
+        comment : str; default=''
+            a comment for the card
+
+        """
+        BaseCard.__init__(self)
+        if comment:
+            self.comment = comment
+        if isinstance(eids, integer_types):
+            eids = [eids]
+        elif isinstance(eids, np.ndarray):
+            eids = eids.tolist()
+        self.lid = lid
+        self.eids = [eid.upper() if isinstance(eid, str) else eid for eid in eids]
+        self.elements_ref = None
+
+    @classmethod
+    def add_card(cls, card: BDFCard, comment: str=''):
+        """
+        Adds an ELIST card from ``BDF.add_card(...)``
+
+        Parameters
+        ----------
+        card : BDFCard()
+            a BDFCard object
+        comment : str; default=''
+            a comment for the card
+
+        """
+        lid = integer(card, 1, 'lid')
+        eids = fields(integer_string_or_blank, card, 'eid', i=2, j=len(card))
+        eids = [eid for eid in eids if eid is not None]
+        return ELIST(lid, eids, comment=comment)
+
+    def validate(self) -> None:
+        assert self.lid > 0, f'lid={self.lid}'
+        eids = self.eids
+        assert len(eids) > 0, f'ELIST lid={self.lid} has no elements'
+        for i, eid in enumerate(eids):
+            if isinstance(eid, str):
+                assert eid == 'THRU', f'ELIST lid={self.lid}; invalid field {eid!r}'
+                assert 0 < i < len(eids) - 1, \
+                    f'ELIST lid={self.lid}; THRU may not lead/trail the list'
+                eid1, eid2 = eids[i - 1], eids[i + 1]
+                assert isinstance(eid1, int) and isinstance(eid2, int), \
+                    f'ELIST lid={self.lid}; invalid THRU range {eid1} THRU {eid2}'
+                assert (eid1 > 0) == (eid2 > 0), \
+                    f'ELIST lid={self.lid}; THRU ids must have the same sign: {eid1} THRU {eid2}'
+                assert abs(eid1) <= abs(eid2), \
+                    f'ELIST lid={self.lid}; THRU must be increasing: {eid1} THRU {eid2}'
+            else:
+                assert eid != 0, f'ELIST lid={self.lid}; eid=0 is not allowed'
+
+    @property
+    def signed_element_ids(self) -> list[int]:
+        """all signed element ids, with THRU fully expanded"""
+        return [eid for eid, unused_is_explicit in expand_elist(self.eids)]
+
+    @property
+    def element_ids(self) -> list[int]:
+        """the (unsigned) element ids that exist (once cross-referenced)"""
+        if self.elements_ref is not None:
+            return [elem.eid for elem in self.elements_ref]
+        return [abs(eid) for eid in self.signed_element_ids]
+
+    def cross_reference(self, model: BDF) -> None:
+        """
+        Cross-references the elements; ids generated by THRU that don't
+        exist are skipped (per the NX definition)
+        """
+        msg = f', which is required by ELIST lid={self.lid}'
+        elements_ref = []
+        for eid, is_explicit in expand_elist(self.eids):
+            eid_abs = abs(eid)
+            if eid_abs in model.elements:
+                elements_ref.append(model.elements[eid_abs])
+            elif is_explicit:
+                elements_ref.append(model.Element(eid_abs, msg=msg))
+        self.elements_ref = elements_ref
+
+    def safe_cross_reference(self, model: BDF, xref_errors) -> None:
+        elements_ref = []
+        missing = []
+        for eid, is_explicit in expand_elist(self.eids):
+            eid_abs = abs(eid)
+            if eid_abs in model.elements:
+                elements_ref.append(model.elements[eid_abs])
+            elif is_explicit:
+                missing.append(eid_abs)
+        if missing:
+            model.log.warning(f'ELIST lid={self.lid}: missing elements {missing}')
+        self.elements_ref = elements_ref
+
+    def uncross_reference(self) -> None:
+        """Removes cross-reference links"""
+        self.elements_ref = None
+
+    def raw_fields(self) -> list:
+        return ['ELIST', self.lid] + self.eids
+
+    def repr_fields(self) -> list:
+        """
+        Lays out the ids so an "a THRU b" group never puts THRU in the
+        first/last data field of a row (NX Remark 3).  The input order is
+        kept; when a THRU group doesn't fit in the rest of a row, the next
+        single ids after it are moved up to fill the row (blanks are only
+        used if there are none).
+        """
+        # tokens: an int, or an [eid1, 'THRU', eid2] group
+        tokens = []
+        eids = self.eids
+        i = 0
+        while i < len(eids):
+            if i + 2 < len(eids) and eids[i + 1] == 'THRU':
+                tokens.append(eids[i:i + 3])
+                i += 3
+            else:
+                tokens.append(eids[i])
+                i += 1
+
+        data = []
+        nslots = 7  # free slots in the current row; row 1 has 7, others 8
+        def _add(value) -> None:
+            nonlocal nslots
+            data.append(value)
+            nslots -= 1
+            if nslots == 0:
+                nslots = 8
+
+        while tokens:
+            token = tokens.pop(0)
+            if not isinstance(token, list):
+                _add(token)
+                continue
+            while nslots < 3:
+                isingle = next((j for j, tok in enumerate(tokens)
+                                if not isinstance(tok, list)), None)
+                _add(None if isingle is None else tokens.pop(isingle))
+            for value in token:
+                _add(value)
+        return ['ELIST', self.lid] + data
+
+    def write_card(self, size: int=8, is_double: bool=False) -> str:
+        card = self.repr_fields()
+        if size == 8:
+            return self.comment + print_card_8(card)
+        return self.comment + print_card_16(card)

@@ -635,6 +635,9 @@ class OP2(OP2_Scalar, OP2Writer):
         #load_as_h5 : default=False
             #loads the op2 as an h5 file to save memory
             #stores the result.element/data attributes in h5 format
+        #load_as_h5_filename : default=None -> <op2 base>.h5
+            #where the load_as_h5 scratch file goes (set as an attribute,
+            #like load_as_h5); the file is overwritten
         build_dataframe : bool; default=False
             builds a pandas DataFrame for op2 objects
             None: True if in iPython, False otherwise

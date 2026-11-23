@@ -1,79 +1,82 @@
 # this variable is automatically set by the .spec file; should be False
 is_pynastrangui_exe = False
 is_installed = False
-if is_pynastrangui_exe or is_installed:
-    # pyInstaller
 
-    #from importlib.metadata import version, PackageNotFoundError
-    #__version__ = version('pyNastran')
-    #try:
-        #__version__ = version('pyNastran')
-    #except PackageNotFoundError:
-        ## package is not installed
-        #pass
+import os
+import sys
+
+# Version scheme (PEP 440):
+#   release : 1.5.0                       (IS_RELEASE = True)
+#   dev     : 1.5.0.dev20261122+gad78709ca (.dev<commit date YYYYMMDD>+g<git hash>)
+# A dev version sorts *below* the 1.5.0 release, so pip upgrades to the
+# release once it exists.  pip skips dev versions unless asked, so depend
+# on one with 'pyNastran>=1.5.0.dev0' (or use 'pip install --pre').
+__version_release__ = '1.5.0'
+IS_RELEASE = False
+RELEASE_DATE = ('2026', '2', 'xx')  # (year, month, day); used for releases and without git
+
+if is_pynastrangui_exe or is_installed:
+    # pyInstaller / 'setup.py install' write a frozen version.py
     from pyNastran.version import __version__, __releaseDate__, __releaseDate2__
 else:
-    import os
-    import sys
-    import subprocess
     # this is still a requirement, but disabling it so readthedocs works
     if sys.version_info < (3, 10):  # pragma: no cover
         IMAJOR, MINOR1, MINOR2 = sys.version_info[:3]
         raise ImportError('Upgrade your Python to >= 3.10.0; version=(%s.%s.%s)' % (
             IMAJOR, MINOR1, MINOR2))
 
-    def get_git_revision_short_hash_date() -> tuple[str, tuple[str, str, str]]:
-        """determines the git revision; only works if the packages was checked
-        out using git"""
+    def _git_hash_date() -> tuple[str, str]:
+        """Returns the short git hash and commit date (YYYY-MM-DD) of the checkout.
+
+        Returns ('', '') when pyNastran isn't in a git checkout (e.g., it was
+        installed from a wheel) or git isn't installed.
+
+        Notes
+        -----
+        One ``git log`` call gets both values (previously ``git describe`` +
+        ``git show``), and git isn't run at all unless ``<repo>/.git`` exists
+        (a folder, or a file for git worktrees).
+        """
+        pkg_dir = os.path.dirname(os.path.abspath(__file__))
+        if not os.path.exists(os.path.join(os.path.dirname(pkg_dir), '.git')):
+            return '', ''
+        import subprocess
         try:
-            #ghash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'])
+            out = subprocess.check_output(
+                ['git', 'log', '-1', '--format=%h %cs'],  # ad78709ca 2026-11-21
+                cwd=pkg_dir, stderr=subprocess.DEVNULL)
+        except (OSError, subprocess.CalledProcessError):
+            # git isn't installed or the repository is unreadable
+            return '', ''
+        ghash, date = out.decode('utf-8').split()
+        return ghash, date
 
-            # independent of pyNastran location as long as there is a git folder
-            #   what about if you use setup_user.py install?
-            #   what about if you don't have git?
-            # can raise a subprocess.CalledProcessError, which means the return code != 0
-            ghash_bytes = subprocess.check_output(['git', 'describe', '--always'],
-                                                  cwd=os.path.dirname(__file__))
-            ghash = ghash_bytes.decode('utf-8').rstrip()
+    def _installed_version() -> str:
+        """Version from the installed package metadata ('' if not installed)."""
+        from importlib.metadata import version, PackageNotFoundError
+        try:
+            return version('pyNastran')
+        except PackageNotFoundError:
+            return ''
 
-            #git show -s --format=%cd --date=short
-            #Mon Mar 11 23:00:39 2024 -0700
-            #
-            #git show --no-patch --format=%ai
-            #2024-03-11 16:37:20 -0700
-            date_bytes = subprocess.check_output(
-                ['git', 'show', '-s', '--format=%cd', '--date=short'],
-                cwd=os.path.dirname(__file__))
-            date = date_bytes.decode('utf-8').rstrip()
+    year, month, day = RELEASE_DATE
+    if IS_RELEASE:
+        __version__ = __version_release__
+    else:
+        ghash, date = _git_hash_date()
+        if ghash:
             year, month, day = date.split('-')
-            month = month.lstrip('0')
-            day = day.lstrip('0')
-            date_out = (year, month, day)
-        except Exception:
-            # git isn't installed
-            ghash = 'no.git.checksum'
-            date_out = ('2026', '2', 'xx')
-        # 1.5.0+dev.0eccfa918
-        return 'dev.%s' % ghash, date_out
+            month, day = month.lstrip('0'), day.lstrip('0')
+            __version__ = f'{__version_release__}.dev{date.replace("-", "")}+g{ghash}'
+        else:
+            # no git: report what pip installed (e.g., from a wheel)
+            __version__ = _installed_version() or f'{__version_release__}.dev0'
 
-    revision, (year, month, day) = get_git_revision_short_hash_date()
-    __version_release__ = '1.5.0'
-
-    # only for release; 1.4.0
-    #__version__ = __version_release__
-    # 1.4.0+dev.0eccfa918
-    # __version__ = f'{__version_release__}'  # release version
-    # year, month, day = ('2025', '9', 'xx')  # release version
-    __version__ = f'{__version_release__}+{revision}'
-    months = {
-        '1': 'JANUARY', '2': 'FEBRUARY', '3': 'MARCH',
-        '4': 'APRIL', '5': 'MAY', '6': 'JUNE',
-        '7': 'JULY', '8': 'AUGUST', '9': 'SEPTEMBER',
-        '10': 'OCTOBER', '11': 'NOVEMBER', '12': 'DECEMBER',
-    }
-    month_str = months[month]
-    __releaseDate__ = f'{year}/{month}/{day}'        # 2024/3/11
-    __releaseDate2__ = f'{month_str} {day}, {year}'  # MARCH 11, 2024
+    months = (
+        'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY',
+        'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER')
+    __releaseDate__ = f'{year}/{month}/{day}'                    # 2024/3/11
+    __releaseDate2__ = f'{months[int(month) - 1]} {day}, {year}'  # MARCH 11, 2024
 
 __author__ = 'Steven Doyle'
 __email__ = 'mesheb82@gmail.com'

@@ -413,12 +413,14 @@ class NRL(RandomObjects):
 class RAECONS:
     """storage class for the RAECONS objects"""
     def __init__(self):
+        self.cbeam_strain = {}
         self.ctria3_strain = {}
         self.cquad4_strain = {}
         self.chexa_strain = {}
 
     def get_table_types(self):
         tables = [
+            'cbeam_strain',
             'chexa_strain',
             'ctria3_strain', 'cquad4_strain',
         ]
@@ -428,6 +430,7 @@ class RASCONS:
     """storage class for the RASCONS objects"""
     def __init__(self):
         self.cbar_stress = {}
+        self.cbeam_stress = {}
 
         self.ctetra_stress = {}
         self.cpenta_stress = {}
@@ -454,7 +457,7 @@ class RASCONS:
     def get_table_types(self):
         tables = [
             # OES - isotropic CTRIA3/CQUAD4 stress
-            'cbar_stress',
+            'cbar_stress', 'cbeam_stress',
             'ctria3_stress', 'ctriar_stress', 'ctria6_stress',
             'cquadr_stress', 'cquad4_stress', 'cquad8_stress',
 
@@ -563,12 +566,13 @@ class RAFCONS:
     """storage class for the RAFCONS objects"""
     def __init__(self):
         self.cbar_force = {}
+        self.cbeam_force = {}
         self.cquad4_force = {}
         self.cbush_force = {}
 
     def get_table_types(self):
         tables = [
-            'cbar_force',
+            'cbar_force', 'cbeam_force',
             'cquad4_force',
             'cbush_force',
         ]
@@ -726,12 +730,13 @@ class RAFEATC:
     """storage class for the RAFEATC objects"""
     def __init__(self):
         self.cbar_force = {}
+        self.cbeam_force = {}
         self.cquad4_force = {}
         self.cbush_force = {}
 
     def get_table_types(self):
         tables = [
-            'cbar_force',
+            'cbar_force', 'cbeam_force',
             'cquad4_force',
             'cbush_force',
         ]
@@ -742,12 +747,13 @@ class RASEATC:
     """storage class for the RASEATC objects"""
     def __init__(self):
         self.cbar_stress = {}
+        self.cbeam_stress = {}
         self.chexa_stress = {}
         self.cquad4_stress = {}
 
     def get_table_types(self):
         tables = [
-            'cbar_stress',
+            'cbar_stress', 'cbeam_stress',
             'cquad4_stress',
             'chexa_stress',
         ]
@@ -756,12 +762,14 @@ class RASEATC:
 class RAEEATC:
     """storage class for the RAEEATC objects"""
     def __init__(self):
+        self.cbeam_strain = {}
         self.chexa_strain = {}
         self.ctria3_strain = {}
         self.cquad4_strain = {}
 
     def get_table_types(self):
         tables = [
+            'cbeam_strain',
             'chexa_strain',
             'ctria3_strain', 'cquad4_strain',
         ]

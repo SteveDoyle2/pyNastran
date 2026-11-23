@@ -5,6 +5,7 @@ All set cards are defined in this file.  This includes:
   * SET1, SET2, SET3, RADSET # ??? RADSET
 * asets - aset, aset1
 * omits - omit, omit1
+* rvdofs - rvdof, rvdof1
 * bsets - bset, bset1
 * csets - cset, cset1
 * qsets - qset, qset1
@@ -815,6 +816,102 @@ class OMIT1(ABCQSet1):
             the GRID/SPOINT ids
         components : str
             the degree of freedoms to be omitted (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+
+        """
+        ABCQSet1.__init__(self, ids, components, comment)
+
+
+class RVDOF(ABCQSet):
+    """
+    Degrees-of-freedom specification for residual vector computations.
+
+    +-------+-----+----+-----+------+-----+----+-----+----+
+    |   1   |  2  | 3  |  4  |  5   |  6  |  7 |  8  | 9  |
+    +=======+=====+====+=====+======+=====+====+=====+====+
+    | RVDOF | ID1 | C1 | ID2 |  C2  | ID3 | C3 | ID4 | C4 |
+    +-------+-----+----+-----+------+-----+----+-----+----+
+    | RVDOF | 16  |  2 |  23 | 3516 |  1  | 4  |     |    |
+    +-------+-----+----+-----+------+-----+----+-----+----+
+
+    Notes
+    -----
+    Used with the RESVEC(RVDOF) case control (or PARAM,RESVEC) to add
+    unit-load residual vectors at the listed DOFs.
+
+    """
+    type = 'RVDOF'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = ['123', '456']
+        return RVDOF(ids, components)
+
+    def __init__(self, ids: list[int], components: list[str],
+                 comment: str=''):
+        """
+        Creates an RVDOF card, which defines the degrees of freedom
+        where residual vectors are computed.
+
+        Parameters
+        ----------
+        ids : list[int]
+            the GRID/SPOINT ids
+        components : list[str]
+            the degrees of freedom for each id (e.g., '1', '123')
+        comment : str; default=''
+            a comment for the card
+
+        ..note :: the length of components and ids must be the same
+
+        """
+        ABCQSet.__init__(self, ids, components, comment)
+
+
+class RVDOF1(ABCQSet1):
+    """
+    Degrees-of-freedom specification for residual vector computations.
+
+    +--------+-----+-----+------+-----+-----+-----+-----+-----+
+    |    1   |  2  |  3  |   4  |  5  |  6  |  7  |  8  |  9  |
+    +========+=====+=====+======+=====+=====+=====+=====+=====+
+    | RVDOF1 |  C  | ID1 |  ID2 | ID3 | ID4 | ID5 | ID6 | ID7 |
+    +--------+-----+-----+------+-----+-----+-----+-----+-----+
+    |        | ID8 | ID9 |      |     |     |     |     |     |
+    +--------+-----+-----+------+-----+-----+-----+-----+-----+
+    | RVDOF1 |  C  | ID1 | THRU | ID2 |     |     |     |     |
+    +--------+-----+-----+------+-----+-----+-----+-----+-----+
+
+    Notes
+    -----
+    Used with the RESVEC(RVDOF) case control (or PARAM,RESVEC) to add
+    unit-load residual vectors at the listed DOFs (e.g., free-free
+    SOL 103 interface DOFs).
+
+    """
+    type = 'RVDOF1'
+    _properties = ['node_ids']
+
+    @classmethod
+    def _init_from_empty(cls):
+        ids = [1, 2]
+        components = '123'
+        return RVDOF1(ids, components)
+
+    def __init__(self, ids: list[int], components: str, comment: str=''):
+        """
+        Creates an RVDOF1 card, which defines the degrees of freedom
+        where residual vectors are computed.
+
+        Parameters
+        ----------
+        ids : list[int]
+            the GRID/SPOINT ids
+        components : str
+            the degrees of freedom (e.g., '1', '123')
         comment : str; default=''
             a comment for the card
 

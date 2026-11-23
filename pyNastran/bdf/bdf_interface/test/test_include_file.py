@@ -6,9 +6,14 @@ import tempfile
 from pathlib import PurePosixPath, PureWindowsPath
 from unittest.mock import patch
 
+from cpylog import SimpleLogger
 from pyNastran.bdf.bdf_interface.include_file import (
     parse_include_lines, split_filename_into_tokens, get_include_filename,
+    is_prefixed_include,
 )
+from pyNastran.bdf.bdf import read_bdf
+
+LOG = SimpleLogger(level='error')
 
 
 class TestParseIncludeLines(unittest.TestCase):
@@ -17,12 +22,12 @@ class TestParseIncludeLines(unittest.TestCase):
     def test_single_line_single_quotes(self):
         """INCLUDE 'path/to/file.bdf'"""
         lines = ["INCLUDE 'path/to/file.bdf'"]
-        self.assertEqual(parse_include_lines(lines), 'path/to/file.bdf')
+        self.assertEqual(parse_include_lines(lines, LOG), 'path/to/file.bdf')
 
     def test_single_line_double_quotes(self):
         '''INCLUDE "path/to/file.bdf"'''
         lines = ['INCLUDE "path/to/file.bdf"']
-        self.assertEqual(parse_include_lines(lines), 'path/to/file.bdf')
+        self.assertEqual(parse_include_lines(lines, LOG), 'path/to/file.bdf')
 
     def test_multiline(self):
         """INCLUDE split across multiple lines."""
@@ -31,7 +36,7 @@ class TestParseIncludeLines(unittest.TestCase):
             "         /dir2",
             "         /file.bdf'",
         ]
-        result = parse_include_lines(lines)
+        result = parse_include_lines(lines, LOG)
         self.assertEqual(result, '/dir1/dir2/file.bdf')
 
     def test_multiline_with_whitespace(self):
@@ -41,39 +46,115 @@ class TestParseIncludeLines(unittest.TestCase):
             "\t\t /middle  ",
             "   /end.dat'  ",
         ]
-        result = parse_include_lines(lines)
+        result = parse_include_lines(lines, LOG)
         self.assertEqual(result, '/start/middle/end.dat')
 
     def test_no_quotes(self):
         """INCLUDE without quotes (valid Nastran)."""
         lines = ["INCLUDE myfile.bdf"]
-        result = parse_include_lines(lines)
+        result = parse_include_lines(lines, LOG)
         self.assertEqual(result, 'myfile.bdf')
 
     def test_windows_path(self):
         r"""INCLUDE with Windows backslash path."""
         lines = [r"INCLUDE 'C:\work\model.bdf'"]
-        result = parse_include_lines(lines)
+        result = parse_include_lines(lines, LOG)
         self.assertEqual(result, r'C:\work\model.bdf')
 
     def test_empty_filename_raises(self):
         """INCLUDE with only whitespace filename raises SyntaxError."""
         lines = ["INCLUDE '   '"]
         with self.assertRaises(SyntaxError):
-            parse_include_lines(lines)
+            parse_include_lines(lines, LOG)
 
     def test_include_lowercase(self):
         """INCLUDE keyword is removed regardless of case in the first 7 chars."""
         lines = ["INCLUDE '/path/file.dat'"]
-        result = parse_include_lines(lines)
+        result = parse_include_lines(lines, LOG)
         self.assertEqual(result, '/path/file.dat')
 
     def test_leading_trailing_spaces_in_filename(self):
         """Spaces inside quotes are NOT stripped by parse_include_lines (only quotes removed)."""
         lines = ["INCLUDE '  model.bdf  '"]
-        result = parse_include_lines(lines)
+        result = parse_include_lines(lines, LOG)
         # parse_include_lines strips quotes but not inner whitespace
         self.assertEqual(result, '  model.bdf  ')
+
+    def test_valid_include_forms(self):
+        """Valid INCLUDE forms parse to the expected filename (exact match)."""
+        cases = [
+            (["INCLUDE materials.blk"], 'materials.blk'),
+            (["INCLUDE 'materials.blk'"], 'materials.blk'),
+            (['INCLUDE "materials.blk"'], 'materials.blk'),
+            (["INCLUDE 'path/materials.blk'"], 'path/materials.blk'),
+            (["include 'materials.blk'"], 'materials.blk'),
+            (["INCLUDE\t'materials.blk'"], 'materials.blk'),
+            (["INCLUDE'materials.blk'"], 'materials.blk'),
+            (["INCLUDE 'ENV_VAR:sub/materials.blk'"], 'ENV_VAR:sub/materials.blk'),
+            (["INCLUDE '/dir1", "  /materials.blk'"], '/dir1/materials.blk'),
+        ]
+        for lines, expected in cases:
+            with self.subTest(lines=lines):
+                self.assertEqual(parse_include_lines(lines, LOG), expected)
+
+    def test_invalid_include_forms_raise(self):
+        """Malformed INCLUDE cards raise SyntaxError."""
+        cases = [
+            ["INCLUDE 'INCLUDE 'materials.blk'"],  # doubled keyword/quote
+            ["INCLUDE INCLUDE materials.blk"],     # doubled keyword
+            ["INCLUDE 'materials.blk"],            # unclosed quote
+            ["INCLUDE materials.blk'"],            # unopened quote
+            ["INCLUDE 'materials.blk\""],          # mismatched quotes
+            ["INCLUDE '/mydir' 'materials.blk'"],  # multiple quoted segments
+            ["INCLUDEmaterials.blk"],              # no separator
+        ]
+        for lines in cases:
+            with self.subTest(lines=lines):
+                with self.assertRaises(SyntaxError):
+                    parse_include_lines(lines, LOG)
+
+    def test_is_prefixed_include(self):
+        """Stray characters before INCLUDE are flagged; comments are not."""
+        bad = ["%INCLUDE 'materials.blk'", "'INCLUDE 'materials.blk'",
+               "  %INCLUDE materials.blk", "#INCLUDE 'a.blk'", "% include 'a.blk'"]
+        good = ["INCLUDE 'materials.blk'", "$INCLUDE 'materials.blk'",
+                "$ %INCLUDE 'materials.blk'", "GRID,1", "XINCLUDE 'a.blk'",
+                "%INCLUDES"]
+        for line in bad:
+            with self.subTest(line=line):
+                self.assertTrue(is_prefixed_include(line))
+        for line in good:
+            with self.subTest(line=line):
+                self.assertFalse(is_prefixed_include(line))
+
+    def test_read_bdf_bad_include(self):
+        """read_bdf raises SyntaxError for malformed INCLUDEs; valid ones read MAT1 1."""
+        bad_lines = [
+            "INCLUDE 'INCLUDE 'materials.blk'",
+            "%INCLUDE 'materials.blk'",
+        ]
+        good_lines = [
+            "INCLUDE materials.blk",
+            "INCLUDE 'materials.blk'",
+            "INCLUDE 'sub/materials.blk'",
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            os.makedirs(os.path.join(tmpdir, 'sub'))
+            for dirname in [tmpdir, os.path.join(tmpdir, 'sub')]:
+                with open(os.path.join(dirname, 'materials.blk'), 'w') as blk_file:
+                    blk_file.write('MAT1,1,3.0e7,,0.3\n')
+            bdf_filename = os.path.join(tmpdir, 'tmp_include.bdf')
+            for include_line, is_valid in ([(line, False) for line in bad_lines] +
+                                           [(line, True) for line in good_lines]):
+                with open(bdf_filename, 'w') as bdf_file:
+                    bdf_file.write(f'CEND\nBEGIN BULK\n{include_line}\nENDDATA\n')
+                with self.subTest(line=include_line):
+                    if is_valid:
+                        model = read_bdf(bdf_filename, xref=False, log=LOG)
+                        self.assertIn(1, model.materials)
+                    else:
+                        with self.assertRaises(SyntaxError):
+                            read_bdf(bdf_filename, xref=False, log=LOG)
 
 
 class TestSplitFilenameIntoTokens(unittest.TestCase):

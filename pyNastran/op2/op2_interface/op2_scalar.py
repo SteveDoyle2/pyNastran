@@ -531,6 +531,7 @@ class OP2_Scalar(OP2Common, FortranFormat):
         self.f06_filename = None
         self.des_filename = None
         self.h5_filename = None
+        self.load_as_h5_filename = None
         self._encoding = 'utf8'
 
         #: should a MATPOOL "symmetric" matrix be stored as symmetric
@@ -1936,7 +1937,10 @@ class OP2_Scalar(OP2Common, FortranFormat):
         if load_as_h5:
             h5_file = None
             import h5py
-            self.h5_file = h5py.File(self.h5_filename, 'w')
+            # load_as_h5_filename: put the scratch file somewhere other than next to
+            # the op2 (default: <op2 base>.h5, overwritten)
+            h5_filename = getattr(self, 'load_as_h5_filename', None) or self.h5_filename
+            self.h5_file = h5py.File(h5_filename, 'w')
             self.op2_reader.h5_file = self.h5_file
 
         self._count = 0

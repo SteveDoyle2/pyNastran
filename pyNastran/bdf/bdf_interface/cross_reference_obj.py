@@ -163,13 +163,14 @@ class CrossReference:
         model = self.model
         set_lists = [
             model.asets, model.bsets, model.csets, model.omits,
-            model.qsets,
+            model.qsets, model.rvdofs,
             # superelements
             model.se_bsets, model.se_csets,
             model.se_qsets,
         ]
         set_dicts = [model.se_sets, model.se_usets,]
-        names = 'abcoq1234'
+        names = ['aset', 'bset', 'cset', 'omit', 'qset', 'rvdof', 'sebset', 'secset', seqset']
+        assert len(names) == len(set_lists), (names, set_lists)
         for name, set_list in zip(names, set_lists):
             assert isinstance(set_list, list), (name, set_list)
             for set_obj in set_list:
@@ -189,7 +190,7 @@ class CrossReference:
         model = self.model
         set_lists = [
             model.asets, model.bsets, model.csets, model.omits,
-            model.qsets,
+            model.qsets, model.rvdofs,
             # superelements
             model.se_bsets, model.se_csets,
             model.se_qsets,
@@ -766,6 +767,20 @@ class CrossReference:
             except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
                 self._store_xref_error(error, tic)
 
+        for unused_key, elist in model.elists.items():
+            try:
+                elist.cross_reference(model)
+            except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+                self._store_xref_error(error, elist)
+
+        for slot in (model.nolins, model.rcrosses, model.mfluids):
+            for unused_key, cards in slot.items():
+                for card in cards:
+                    try:
+                        card.cross_reference(model)
+                    except (SyntaxError, RuntimeError, AssertionError, KeyError, ValueError) as error:  # pragma: no cover
+                        self._store_xref_error(error, card)
+
         for unused_key, dphase in model.dphases.items():
             try:
                 dphase.cross_reference(model)
@@ -808,6 +823,14 @@ class CrossReference:
 
         for unused_key, tic in model.tics.items():
             tic.safe_cross_reference(model, xref_errors)
+
+        for unused_key, elist in model.elists.items():
+            elist.safe_cross_reference(model, xref_errors)
+
+        for slot in (model.nolins, model.rcrosses, model.mfluids):
+            for unused_key, cards in slot.items():
+                for card in cards:
+                    card.safe_cross_reference(model, xref_errors)
 
     def cross_reference_optimization(self) -> None:
         """cross references the optimization objects"""

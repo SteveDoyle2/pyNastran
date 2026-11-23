@@ -232,12 +232,20 @@ class UnXrefMesh(SafeXrefMesh):
             dphase.uncross_reference()
         for unused_key, tic in self.tics.items():
             tic.uncross_reference()
+        for unused_key, elist in self.elists.items():
+            elist.uncross_reference()
+        for slot in (self.nolins, self.rcrosses, self.mfluids):
+            for unused_key, cards in slot.items():
+                for card in cards:
+                    card.uncross_reference()
 
     def _uncross_reference_sets(self) -> None:
         """uncross references the set objects"""
         for set_obj in self.asets:
             set_obj.uncross_reference()
         for set_obj in self.omits:
+            set_obj.uncross_reference()
+        for set_obj in self.rvdofs:
             set_obj.uncross_reference()
         for set_obj in self.bsets:
             set_obj.uncross_reference()

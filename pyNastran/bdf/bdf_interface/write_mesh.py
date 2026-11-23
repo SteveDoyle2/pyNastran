@@ -788,6 +788,7 @@ class Writer:
                       model.methods or model.cMethods or model.tsteps or model.tstepnls or
                       model.transfer_functions or model.delays or model.rotors or model.tics or
                       model.nlpcis or model.acmodl is not None or
+                      model.nolins or model.rcrosses or model.mfluids or model.elists or
                       model.acplnw or model.amlreg or model.micpnt)
 
         if not is_dynamic:
@@ -822,6 +823,12 @@ class Writer:
         for (unused_id, tfs) in sorteddict(model.transfer_functions, sort_cards):
             for transfer_function in tfs:
                 bdf_file.write(transfer_function.write_card(size, is_double))
+        for slot in (model.nolins, model.rcrosses, model.mfluids):
+            for (unused_id, cards) in sorteddict(slot, sort_cards):
+                for card in cards:
+                    bdf_file.write(card.write_card(size, is_double))
+        for (unused_id, elist) in sorteddict(model.elists, sort_cards):
+            bdf_file.write(elist.write_card(size, is_double))
         if model.acmodl:
             bdf_file.write(model.acmodl.write_card(size, is_double))
         for key, acplnw in model.acplnw.items():
@@ -953,7 +960,7 @@ class Writer:
         """Writes the SETx cards sorted by ID"""
         model = self.model
         is_sets = (model.sets or model.asets or model.omits or model.bsets
-                   or model.csets or model.qsets or model.usets)
+                   or model.csets or model.qsets or model.usets or model.rvdofs)
         if not is_sets:
             return
         bdf_file.write('$SETS\n')
@@ -962,6 +969,7 @@ class Writer:
         #     bdf_file.write(set_obj.write_card(size, is_double))
         write_list(bdf_file, model.asets, size, is_double, is_csv, is_long_ids)
         write_list(bdf_file, model.omits, size, is_double, is_csv, is_long_ids)
+        write_list(bdf_file, model.rvdofs, size, is_double, is_csv, is_long_ids)
         write_list(bdf_file, model.bsets, size, is_double, is_csv, is_long_ids)
         write_list(bdf_file, model.csets, size, is_double, is_csv, is_long_ids)
         write_list(bdf_file, model.qsets, size, is_double, is_csv, is_long_ids)
@@ -1606,7 +1614,8 @@ class Writer:
         is_dynamic = (model.dareas or model.dphases or model.nlparms or model.frequencies or
                       model.methods or model.cMethods or model.tsteps or model.tstepnls or
                       model.transfer_functions or model.delays or model.rotors or model.tics or
-                      model.nlpcis)
+                      model.nlpcis or model.nolins or model.rcrosses or model.mfluids or
+                      model.elists)
         if is_dynamic:
             return
         write_bdfs_dict(bdf_files, model.methods, size, is_double, is_long_ids)
@@ -1625,6 +1634,10 @@ class Writer:
         write_bdfs_dict(bdf_files, model.tics, size, is_double, is_long_ids)
 
         write_bdfs_dict_list(bdf_files, model.transfer_functions, size, is_double, is_long_ids)
+        write_bdfs_dict_list(bdf_files, model.nolins, size, is_double, is_long_ids)
+        write_bdfs_dict_list(bdf_files, model.rcrosses, size, is_double, is_long_ids)
+        write_bdfs_dict_list(bdf_files, model.mfluids, size, is_double, is_long_ids)
+        write_bdfs_dict(bdf_files, model.elists, size, is_double, is_long_ids)
 
     def write_loads_file(self, bdf_files: Any, size: int=8, is_double: bool=False,
                          is_long_ids: Optional[bool]=None) -> None:
@@ -1834,12 +1847,13 @@ class Writer:
         """Writes the SETx cards sorted by ID"""
         model = self.model
         is_sets = (model.sets or model.asets or model.omits or model.bsets or model.csets or
-                   model.qsets or model.usets)
+                   model.qsets or model.usets or model.rvdofs)
         if is_sets:
             return
         write_bdfs_dict(bdf_files, model.sets, size, is_double, is_long_ids)
         write_bdfs_list(bdf_files, model.asets, size, is_double, is_long_ids)
         write_bdfs_list(bdf_files, model.omits, size, is_double, is_long_ids)
+        write_bdfs_list(bdf_files, model.rvdofs, size, is_double, is_long_ids)
         write_bdfs_list(bdf_files, model.bsets, size, is_double, is_long_ids)
         write_bdfs_list(bdf_files, model.csets, size, is_double, is_long_ids)
         write_bdfs_list(bdf_files, model.qsets, size, is_double, is_long_ids)

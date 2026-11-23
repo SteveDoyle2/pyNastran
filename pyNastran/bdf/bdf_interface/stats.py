@@ -33,6 +33,7 @@ def get_stats_groups():
         'dmi', 'dmig', 'dmij', 'dmiji', 'dmik', 'dmiax',
         'dequations',
         'transfer_functions',
+        'nolins', 'rcrosses', 'mfluids', 'elists',
         'tics',
 
         # frequencies - dict[list[FREQ]]
@@ -107,7 +108,7 @@ def get_stats_groups():
     ]
 
     list_attrs = [
-        'asets', 'bsets', 'csets', 'omits', 'qsets',
+        'asets', 'bsets', 'csets', 'omits', 'qsets', 'rvdofs',
         'aeforce', 'aepress', 'aedw',
         'se_bsets', 'se_csets', 'se_qsets',
         'suport', 'se_suport',

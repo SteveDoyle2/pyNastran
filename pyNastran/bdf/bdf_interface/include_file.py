@@ -5,6 +5,7 @@ Defines utilities for parsing include files:
 """
 from __future__ import annotations
 import os
+import re
 import ntpath
 import posixpath
 from typing import Optional, TYPE_CHECKING
@@ -15,6 +16,8 @@ if TYPE_CHECKING:  # pragma: no cover
     from cpylog import SimpleLogger
 
 IS_WINDOWS = 'nt' in os.name
+# stray characters before INCLUDE (e.g., %INCLUDE); $ is a comment
+_PREFIXED_INCLUDE = re.compile(r'^\s*[^\w\s$]+\s*INCLUDE(?:[\s\'"]|$)', re.IGNORECASE)
 #is_linux = 'posix' in os.name
 #is_mac = 'darwin' in os.name
 
@@ -131,13 +134,22 @@ def parse_include_lines(card_lines: list[str], log: SimpleLogger,
     #
     # final (not the extra single quotes):
     # "'/dir123/dir456/dir789/filename.dat'"
-    card_lines2[0] = card_lines2[0][7:].strip()  # remove the INCLUDE
+    after_include = card_lines2[0][7:]
+    if after_include and after_include[0] not in " \t'\"":
+        # INCLUDEmodel.bdf
+        raise SyntaxError(f'INCLUDE must be followed by a space or quote; card_lines={card_lines}')
+    card_lines2[0] = after_include.strip()  # remove the INCLUDE
     filename = ''.join(card_lines2)
     #print(f'card_lines2 = {card_lines2}')
+    _check_include_quotes(filename, card_lines)
 
     # drop the single quotes:
     #     "'path1/path2/model.inc'" to "path1/path2/model.inc"
     filename = filename.strip('"').strip("'")
+    first_word = filename.split()[0].upper() if filename.strip() else ''
+    if first_word == 'INCLUDE':
+        # INCLUDE INCLUDE model.bdf
+        raise SyntaxError(f'INCLUDE is repeated; card_lines={card_lines}')
 
     if len(filename.strip()) == 0:
         raise SyntaxError(f'INCLUDE file is empty...card_lines={card_lines}\n'
@@ -159,6 +171,57 @@ def parse_include_lines(card_lines: list[str], log: SimpleLogger,
     #
     # -> C:\PROJECT\Data Files\SUBDIR\THISFILE
     return filename
+
+
+def _check_include_quotes(filename: str, card_lines: list[str]) -> None:
+    """
+    Verifies the quoting of the (joined) INCLUDE filename.
+
+    Valid:
+      - materials.blk
+      - 'materials.blk'
+      - "materials.blk"
+      - 'path/materials.blk'
+
+    Invalid:
+      - 'INCLUDE 'materials.blk'  (3 quotes)
+      - 'materials.blk            (unclosed quote)
+      - materials.blk'            (unopened quote)
+
+    Notes
+    -----
+    Nastran allows multiple quoted segments
+    (e.g., ``INCLUDE '/mydir' /level1 'myfile.x'``), but pyNastran never
+    supported that form (it produced a nonexistent filename), so it is
+    rejected here with a clear message.
+
+    """
+    nsingle = filename.count("'")
+    ndouble = filename.count('"')
+    quote = filename[0] if filename and filename[0] in '\'"' else ''
+    if quote:
+        other_count = ndouble if quote == "'" else nsingle
+        is_valid = (
+            len(filename) >= 2 and filename.endswith(quote) and
+            filename.count(quote) == 2 and other_count == 0)
+    else:
+        is_valid = (nsingle == 0 and ndouble == 0)
+    if not is_valid:
+        raise SyntaxError(
+            f'INCLUDE filename={filename!r} has invalid quotes; '
+            'expected no quotes or one matched pair around the filename\n'
+            f'card_lines={card_lines}')
+
+
+def is_prefixed_include(line: str) -> bool:
+    """
+    Detects an INCLUDE preceded by stray characters (e.g., ``%INCLUDE 'a.blk'``
+    or ``'INCLUDE 'a.blk'``), which Nastran rejects but would otherwise be
+    silently skipped/rejected as an unknown card.
+
+    Comments (``$INCLUDE 'a.blk'``) are not flagged.
+    """
+    return _PREFIXED_INCLUDE.match(line) is not None
 
 
 def split_filename_into_tokens(include_dir: str, filename: str,
