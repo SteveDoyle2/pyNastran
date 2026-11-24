@@ -109,6 +109,9 @@ class QSettingsLike2:
                 assert isinstance(value_out, tuple), (key, value_out)
             elif key == 'recent_files':
                 value_out = value
+            elif key == 'format_enabled':
+                # {format: is_enabled}
+                value_out = {str(fmt): bool(is_enabled) for fmt, is_enabled in value.items()}
             elif value.__class__.__name__ == 'QByteArray':
                 value2 = bytes(value.toBase64())
                 value_out = value2.decode('ascii')

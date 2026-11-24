@@ -47,6 +47,8 @@ class PreferencesObject(BaseGui):
             'close' : False,
         }
         settings.add_settings_to_dict(data)
+        if hasattr(self.gui, 'get_format_preferences'):
+            data['formats'] = self.gui.get_format_preferences()
 
         if not self._preferences_window_shown:
             self._preferences_window = PreferencesWindow(data, win_parent=self.gui)

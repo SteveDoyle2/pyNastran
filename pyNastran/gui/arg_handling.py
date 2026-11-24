@@ -8,6 +8,7 @@ import pyNastran
 from pyNastran import DEV
 from pyNastran.utils import check_path
 from pyNastran.utils.arg_handling import argparse_to_dict, swap_key, update_message
+from pyNastran.gui.user_formats import read_user_formats
 
 #from gui.formats import format_string
 if sys.version_info < (3, 10):  # pragma: no cover
@@ -64,6 +65,34 @@ INPUT_FORMAT_TO_EXTENSION = {
 }
 
 
+def _get_user_formats() -> dict[str, dict[str, Any]]:
+    """reads ~/pynastrangui_formats.json; bad entries are logged and skipped"""
+    log = SimpleLogger(level='warning')
+    return read_user_formats(log=log)
+
+
+def get_input_format_to_extension() -> dict[str, list[str]]:
+    """
+    Gets INPUT_FORMAT_TO_EXTENSION with the user formats.
+
+    A user format with extensions overwrites the built-in extensions
+    (e.g., a user cart3d with .tri), so ``model.tri`` maps to the user format.
+    """
+    format_to_extension = {key: list(value) for key, value in INPUT_FORMAT_TO_EXTENSION.items()}
+    user_formats = _get_user_formats()
+    for name, user_format in user_formats.items():
+        extensions = user_format['extensions']
+        if not extensions:
+            continue
+        # an extension belongs to one format
+        for exts in format_to_extension.values():
+            for ext in extensions:
+                if ext in exts:
+                    exts.remove(ext)
+        format_to_extension[name] = list(extensions)
+    return format_to_extension
+
+
 def determine_input_output_formats(log: SimpleLogger,
                                    filenames: list[str],
                                    allowed_formats: list[str]) -> list[str]:
@@ -82,7 +111,7 @@ def determine_input_output_formats(log: SimpleLogger,
         return formats
 
     extension_to_format = {
-        ext: formati for formati, format_exts in INPUT_FORMAT_TO_EXTENSION.items()
+        ext: formati for formati, format_exts in get_input_format_to_extension().items()
         for ext in format_exts}
     for formati, format_exts in OUTPUT_FORMAT_TO_EXTENSION.items():
         for ext in format_exts:
@@ -131,10 +160,12 @@ def determine_format(input_filename: str,
         ]
         if DEV:
             allowed_formats.extend(['degen_geom', 'obj', 'vrml', 'h5nastran', 'nastran2', 'nastran3'])
+        allowed_formats.extend(name for name in _get_user_formats()
+                               if name not in allowed_formats)
     print(f'allowed_formats = {allowed_formats}')
 
     in_ext = os.path.splitext(input_filename)[1].lower()
-    in_extension_to_format = {val: key for key, value in INPUT_FORMAT_TO_EXTENSION.items()
+    in_extension_to_format = {val: key for key, value in get_input_format_to_extension().items()
                               for val in value}
     out_extension_to_format = {val: key for key, value in OUTPUT_FORMAT_TO_EXTENSION.items()
                                for val in value}
@@ -546,6 +577,8 @@ def _validate_format(input_formats: list[str]) -> None:
 
     if DEV:
         allowed_formats += ['obj', 'h5nastran', 'nastran2', 'nastran3']
+    allowed_formats += [name for name in _get_user_formats()
+                        if name not in allowed_formats]
 
     for input_format in input_formats:
         if None in allowed_formats:

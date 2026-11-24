@@ -519,6 +519,18 @@ class NastranSettings:
         return msg
 
 
+def _load_format_enabled(settings: QSettings,
+                         setting_keys: list[str]) -> dict[str, bool]:
+    """loads the {format: is_enabled} dictionary; bad values are skipped"""
+    if 'format_enabled' not in setting_keys:
+        return {}
+    value = settings.value('format_enabled', default={})
+    if not isinstance(value, dict):
+        return {}
+    return {str(key): value_i for key, value_i in value.items()
+            if isinstance(value_i, bool)}
+
+
 class Settings:
     """storage class for various settings"""
     def __init__(self, parent: MainWindow):
@@ -542,6 +554,8 @@ class Settings:
         self.on_set_font_size(out_data['font_size'])
         self.nastran_settings.update(out_data)
         self.other_settings.update(out_data)
+        if 'format_enabled' in out_data:
+            self.format_enabled = dict(out_data['format_enabled'])
         # self.set_annotation_size_color(self._annotation_size)
 
     def reset_settings(self, resize: bool=True,
@@ -615,6 +629,11 @@ class Settings:
         # string
         self.colormap = 'jet'  # 'viridis'
 
+        # format name -> is_enabled; only formats that differ from
+        # the default (see formats.is_format_enabled_by_default) are stored,
+        # so the DEV formats follow the DEV flag unless the user changes them
+        self.format_enabled: dict[str, bool] = {}
+
         if resize:
             self.parent.resize(1100, 700)
 
@@ -643,6 +662,7 @@ class Settings:
             'recent_files': self.recent_files,
 
             'use_new_terms': self.use_new_terms,
+            'format_enabled': dict(self.format_enabled),
 
             # rgb tuple
             'background_color': self.background_color,
@@ -931,6 +951,7 @@ class Settings:
             self.recent_files = recent_files2[:NFILES_TO_SAVE]
 
         self.recent_files = filter_recent_files(self.recent_files)
+        self.format_enabled = _load_format_enabled(settings, setting_keys)
         for key in object_attributes(self, keys_to_skip='nastran_settings'):
             assert 'nastran' not in key, f'v1: key={key!r}'
         self.nastran_settings.load_settings(settings, setting_keys)

@@ -347,6 +347,9 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
                 ('save_vtk', 'Export VTK...',        '',             'Export a VTK file', self.on_save_vtk, is_visible),
                 ('script',   'Run Python Script...', 'python48.png', 'Runs pyNastranGUI in batch mode', self.on_run_script, is_visible),
             ] + recent_file_tools
+            if hasattr(self, 'on_set_user_formats'):
+                file_tools.append(
+                    ('user_formats', 'User Formats...', '', 'Define user formats (~/pynastrangui_formats.json)', self.on_set_user_formats, is_visible))
 
             tools: list[tuple[str, str, str, str, Callable]] = [
                 # labels
@@ -603,6 +606,8 @@ class GuiCommon(QMainWindow, GuiVTKCommon):
             'load_custom_result', 'save_vtk', '',
             'load_csv_user_points', 'load_csv_user_geom', 'script', '',
             'screenshot', '']
+        if 'user_formats' in actions:
+            menu_file.extend(['user_formats', ''])
         if NFILES_TO_SAVE:
             filei = [f'file{ifile+1:d}' for ifile in range(NFILES_TO_SAVE)]
             #print(f'filei={filei}')

@@ -4,6 +4,18 @@ CLASS_MAP = {
     'nastran_aero': None,
 }
 
+# formats that are only enabled by default for dev versions;
+# a user can enable/disable them in the Preferences "Formats" tab
+DEV_FORMATS = ('nastran3', 'avus', 'degen_geom', 'obj', 'vrml')
+
+
+def is_format_enabled_by_default(fmt: str) -> bool:
+    """DEV formats follow the DEV flag; everything else is enabled"""
+    if fmt in DEV_FORMATS:
+        return DEV
+    return True
+
+
 CLASS_MAP['nastran_aero'] = None
 try:
     from pyNastran.converters.dev.avus.avus_io import AvusIO
@@ -164,21 +176,23 @@ if DEV:
     except ModuleNotFoundError:  # pragma: no cover
         pass
 
-    try:
-        from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
-        CLASS_MAP['degen_geom'] = DegenGeomIO
-    except ModuleNotFoundError:  # pragma: no cover
-        pass
 
-    try:
-        from pyNastran.converters.dev.obj.obj_io import ObjIO
-        CLASS_MAP['obj'] = ObjIO
-    except ModuleNotFoundError:  # pragma: no cover
-        pass
+# DEV_FORMATS are always imported, so they can be enabled in the Preferences
+try:
+    from pyNastran.converters.dev.openvsp.degen_geom_io import DegenGeomIO
+    CLASS_MAP['degen_geom'] = DegenGeomIO
+except ModuleNotFoundError:  # pragma: no cover
+    pass
 
-    try:
-        from pyNastran.converters.dev.vrml.vrml_io import Vrml_io
-        CLASS_MAP['vrml'] = Vrml_io
-    except ModuleNotFoundError:  # pragma: no cover
-        #raise
-        pass
+try:
+    from pyNastran.converters.dev.obj.obj_io import ObjIO
+    CLASS_MAP['obj'] = ObjIO
+except ModuleNotFoundError:  # pragma: no cover
+    pass
+
+try:
+    from pyNastran.converters.dev.vrml.vrml_io import Vrml_io
+    CLASS_MAP['vrml'] = Vrml_io
+except ModuleNotFoundError:  # pragma: no cover
+    #raise
+    pass

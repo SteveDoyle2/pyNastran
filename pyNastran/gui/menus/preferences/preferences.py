@@ -224,6 +224,10 @@ class PreferencesWindow(PyDialog):
         self._nastran_grid_point_force = data['nastran_grid_point_force']
         self._nastran_strain_energy = data['nastran_strain_energy']
 
+        # [(fmt, is_enabled, is_enabled_by_default), ...]; empty -> no Formats tab
+        self._formats: list[tuple[str, bool, bool]] = data.get('formats', [])
+        self._format_enabled: dict[str, bool] = dict(data.get('format_enabled', {}))
+
         self.setWindowTitle('Preferences')
         self.create_widgets()
         self.create_layout()
@@ -545,6 +549,7 @@ class PreferencesWindow(PyDialog):
         #-----------------------------------------------------------------------
         # closing
         self.reset_defaults_button = QPushButton('Reset Defaults')
+        self._create_format_widgets()
         self.apply_button = QPushButton('Apply')
         self.ok_button = QPushButton('OK')
         self.cancel_button = QPushButton('Cancel')
@@ -802,6 +807,10 @@ class PreferencesWindow(PyDialog):
             tabs.addTab(general_tab_widget, 'General')
             tabs.addTab(nastran_tab_widget, 'Nastran')
             tabs.addTab(other_tab_widget, 'Other')
+            if self.format_checkboxes:
+                formats_tab_widget = QWidget(self)
+                formats_tab_widget.setLayout(self._get_vbox_formats())
+                tabs.addTab(formats_tab_widget, 'Formats')
             vbox.addWidget(tabs)
 
         else:
@@ -817,6 +826,55 @@ class PreferencesWindow(PyDialog):
         vbox.addWidget(self.reset_defaults_button)
         vbox.addLayout(ok_cancel_box)
         self.setLayout(vbox)
+
+    def _create_format_widgets(self) -> None:
+        """one checkbox per format; nastran can't be disabled"""
+        self.formats_label = QLabel('Enabled Formats (applies to new loads):')
+        self.format_checkboxes: dict[str, QCheckBox] = {}
+        self._format_defaults: dict[str, bool] = {}
+        for fmt, is_enabled, is_enabled_by_default in self._formats:
+            checkbox = QCheckBox(fmt)
+            checkbox.setChecked(is_enabled)
+            self._format_defaults[fmt] = is_enabled_by_default
+            tooltip = f'Enables the {fmt} format'
+            if not is_enabled_by_default:
+                tooltip += ' (disabled by default because it is a dev format)'
+            if fmt == 'nastran':
+                checkbox.setChecked(True)
+                checkbox.setEnabled(False)
+                tooltip = 'nastran is always enabled'
+            checkbox.setToolTip(tooltip)
+            self.format_checkboxes[fmt] = checkbox
+
+    def _get_vbox_formats(self) -> QVBoxLayout:
+        """checkboxes in a 3 column grid"""
+        ncols = 3
+        grid = QGridLayout()
+        for i, checkbox in enumerate(self.format_checkboxes.values()):
+            irow, icol = divmod(i, ncols)
+            grid.addWidget(checkbox, irow, icol)
+        vbox = QVBoxLayout()
+        vbox.addWidget(self.formats_label)
+        vbox.addLayout(grid)
+        vbox.addStretch()
+        return vbox
+
+    def get_format_enabled(self) -> dict[str, bool]:
+        """
+        Gets the {fmt: is_enabled} overrides.
+
+        Only formats that differ from their default are kept, so the
+        DEV formats keep following the DEV flag.  Formats that aren't
+        shown (e.g., a removed user format) keep their saved value.
+        """
+        format_enabled = dict(self._format_enabled)
+        for fmt, checkbox in self.format_checkboxes.items():
+            is_enabled = checkbox.isChecked()
+            if is_enabled == self._format_defaults[fmt]:
+                format_enabled.pop(fmt, None)
+            else:
+                format_enabled[fmt] = is_enabled
+        return format_enabled
 
     def _get_grid_other(self):
         vbox_other = QGridLayout()
@@ -1173,6 +1231,8 @@ class PreferencesWindow(PyDialog):
         set_pushbutton_color(self.background_color2_edit, self.background_color2_int)
         set_pushbutton_color(self.annotation_color_edit, self.annotation_color_int)
         #set_pushbutton_color(self.shear_moment_torque_color_edit, self.shear_moment_torque_color_int)
+        for fmt, checkbox in self.format_checkboxes.items():
+            checkbox.setChecked(self._format_defaults[fmt] or fmt == 'nastran')
 
         for key in NASTRAN_BOOL_KEYS:
             checkbox_name = f'{key}_checkbox'
@@ -1557,6 +1617,8 @@ class PreferencesWindow(PyDialog):
             self.out_data['cref'] = cref_value
             self.out_data['bref'] = bref_value
             self.out_data['xyz_ref'] = [xref_value, yref_value, zref_value]
+            if self.format_checkboxes:
+                self.out_data['format_enabled'] = self.get_format_enabled()
 
             self.out_data['clicked_ok'] = True
             return True
@@ -1570,6 +1632,8 @@ class PreferencesWindow(PyDialog):
             #self.win_parent.element_picker_size = self._picker_size / 100.
         if passed and self.win_parent is not None:
             self.win_parent.clipping_obj.apply_clipping(self.out_data)
+            if self.format_checkboxes and hasattr(self.win_parent, 'update_formats'):
+                self.win_parent.update_formats()
             self.win_parent._save_settings()
         return passed
 

@@ -38,10 +38,14 @@ from pyNastran.gui import SCRIPT_PATH, ICON_PATH
 from pyNastran.gui.utils.qt.qsettings import QSettingsLike2
 from pyNastran.gui.utils.version import check_for_newer_version
 from pyNastran.gui.plugins import plugin_name_to_path
-from pyNastran.gui.formats import NastranIO
+from pyNastran.gui.formats import NastranIO, CLASS_MAP, is_format_enabled_by_default
+from pyNastran.gui.user_formats import (
+    USER_FORMATS_FILENAME, read_user_formats, load_user_format_classes,
+    load_plugin_class)
 from pyNastran.gui.gui_common import GuiCommon
 from pyNastran.gui.menus.download import DownloadWindow
 from pyNastran.gui.menus.about.about import AboutWindow
+from pyNastran.gui.menus.user_formats.user_formats import UserFormatsWindow
 #try:
     #import pyNastran2
     #ISPY2 = True
@@ -117,13 +121,13 @@ class MainWindow(GuiCommon, NastranIO):
 
         # these are in alphabetical order except for Nastran
         # this includes the bedge, surf, ugrid line (listed as AFLR in the gui)
+        # DEV_FORMATS are included, but disabled by default if not DEV
+        # (see the Preferences "Formats" tab)
         fmt_order = [
             # no results unless specified
             'nastran', 'nastran_aero', # results
+            'nastran3', # ['h5nastran', 'nastran2']
         ]
-        if DEV:
-            # fmt_order += ['h5nastran', 'nastran2']
-            fmt_order.append('nastran3')
 
         fmt_order += [
             'abaqus',
@@ -142,9 +146,8 @@ class MainWindow(GuiCommon, NastranIO):
             'avl', # no results
             'vtk',
         ]
-        if DEV:
-            # no results
-            fmt_order.extend(['avus', 'degen_geom', 'obj', 'vrml'])
+        # no results
+        fmt_order.extend(['avus', 'degen_geom', 'obj', 'vrml'])
         #GuiCommon2.__init__(self, fmt_order, html_logging, inputs, parent)
         kwds['inputs'] = inputs
         kwds['fmt_order'] = fmt_order
@@ -158,7 +161,9 @@ class MainWindow(GuiCommon, NastranIO):
         else:  # pragma: no cover
             raise NotImplementedError('qt_version=%r is not supported' % qt_version)
 
-        self.build_fmts(fmt_order, stop_on_failure=False)
+        # the built-in formats; user formats are added on top of these
+        self.base_fmt_order = list(fmt_order)
+        self.user_formats_filename = inputs.get('user_formats_filename', USER_FORMATS_FILENAME)
 
         self.logo = os.path.join(ICON_PATH, 'logo.png')
         self.set_script_path(SCRIPT_PATH)
@@ -169,8 +174,12 @@ class MainWindow(GuiCommon, NastranIO):
             is_gui = inputs['is_gui']
             assert isinstance(is_gui, bool), is_gui
         self.start_logging()
+        # needs the log, so it's after start_logging
+        self.load_user_formats(self.user_formats_filename)
         self._load_plugins()
         self.setup_gui(is_gui)
+        # the format preferences are loaded in setup_gui
+        self.update_formats()
         self.setup_controls()
         self.setup_post(inputs)
 
@@ -301,6 +310,82 @@ class MainWindow(GuiCommon, NastranIO):
             self.tools += tools
             for key, is_active in checkables.items():
                 self.checkables[key] = is_active
+
+    def load_user_formats(self, user_formats_filename: Optional[str]=None) -> list[str]:
+        """
+        Adds the user-defined formats (``~/pynastrangui_formats.json``) to
+        the built-in formats and rebuilds the supported formats.
+
+        Parameters
+        ----------
+        user_formats_filename : str; default=None -> self.user_formats_filename
+            the json file
+
+        Returns
+        -------
+        user_format_names : list[str]
+            the user formats that loaded
+
+        Notes
+        -----
+        A user format with the same name as a built-in format
+        (e.g., cart3d) overwrites the built-in format.
+
+        """
+        if user_formats_filename is None:
+            user_formats_filename = self.user_formats_filename
+        self.user_formats_filename = user_formats_filename
+        user_formats = read_user_formats(user_formats_filename, log=self.log)
+        user_class_map = load_user_format_classes(user_formats, self.log)
+
+        # don't modify the module-level CLASS_MAP; reloading starts from the built-ins
+        format_class_map = dict(CLASS_MAP)
+        format_class_map.update(user_class_map)
+        self.format_class_map = format_class_map
+
+        all_fmt_order = list(self.base_fmt_order)
+        for name in user_class_map:
+            if name not in all_fmt_order:
+                all_fmt_order.append(name)
+        self.all_fmt_order = all_fmt_order
+        self.update_formats()
+
+        user_format_names = list(user_class_map)
+        if user_format_names:
+            self.log_info(f'loaded user formats {user_format_names} from {user_formats_filename}')
+        return user_format_names
+
+    def is_format_enabled(self, fmt: str) -> bool:
+        """
+        Is the format enabled (Preferences "Formats" tab)?
+
+        nastran is always enabled (MainWindow is a NastranIO).
+        DEV formats default to the DEV flag; others default to enabled.
+        """
+        if fmt == 'nastran':
+            return True
+        return self.settings.format_enabled.get(fmt, is_format_enabled_by_default(fmt))
+
+    def get_format_preferences(self) -> list[tuple[str, bool, bool]]:
+        """gets [(fmt, is_enabled, is_enabled_by_default), ...] for the preferences menu"""
+        return [(fmt, self.is_format_enabled(fmt), is_format_enabled_by_default(fmt))
+                for fmt in self.all_fmt_order]
+
+    def update_formats(self) -> None:
+        """rebuilds the supported formats from the enabled formats"""
+        self.fmt_order = [fmt for fmt in self.all_fmt_order
+                          if self.is_format_enabled(fmt)]
+        self.build_fmts(self.fmt_order, stop_on_failure=False)
+
+    def on_set_user_formats(self) -> None:
+        """opens the user-defined formats menu"""
+        data = {
+            'font_size': self.settings.font_size,
+            'filename': self.user_formats_filename,
+            'user_formats': read_user_formats(self.user_formats_filename, log=self.log),
+        }
+        window = UserFormatsWindow(data, win_parent=self)
+        window.show()
 
     def _check_for_latest_version(self, check: bool=True) -> bool:
         """
@@ -458,39 +543,3 @@ def load_module_compat(loader, spec):
 #         return
 #     return my_class
 
-def load_plugin_class(module_name: str, plugin_file: str, class_name: str,
-                      log: SimpleLogger) -> type:
-    """Dynamically loads a Python file and returns a specific class from it.
-
-    Compatible with Python 3.5-3.15+ (avoids deprecated load_module).
-    """
-    # 1. Generate the module metadata (spec)
-    spec = importlib.util.spec_from_file_location(module_name, plugin_file)
-    if spec is None or spec.loader is None:
-        log.warning(f"Could not load spec for {plugin_file}")
-        return None
-
-    # 2. Create the empty module object
-    module = importlib.util.module_from_spec(spec)
-
-    # 3. Register it in sys.modules so internal imports work correctly
-    sys.modules[module_name] = module
-
-    try:
-        # 4. Execute the file contents to populate the module
-        spec.loader.exec_module(module)
-    except Exception as error:
-        # Clean up sys.modules if the plugin has a syntax/runtime error on load
-        sys.modules.pop(module_name, None)
-        log.warning(f"Could not load module for {plugin_file}")
-        log.warning(str(error))
-        return None
-
-    # 5. Extract and return the requested class
-    try:
-        my_class = getattr(module, class_name)
-    except AttributeError as error:
-        log.warning(f"Class '{class_name}' not found in {plugin_file}")
-        log.warning(str(error))
-        return None
-    return my_class
