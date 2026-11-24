@@ -169,7 +169,7 @@ class CrossReference:
             model.se_qsets,
         ]
         set_dicts = [model.se_sets, model.se_usets,]
-        names = ['aset', 'bset', 'cset', 'omit', 'qset', 'rvdof', 'sebset', 'secset', seqset']
+        names = ['aset', 'bset', 'cset', 'omit', 'qset', 'rvdof', 'sebset', 'secset', 'seqset']
         assert len(names) == len(set_lists), (names, set_lists)
         for name, set_list in zip(names, set_lists):
             assert isinstance(set_list, list), (name, set_list)

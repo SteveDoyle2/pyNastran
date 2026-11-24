@@ -1184,6 +1184,11 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
             if key.startswith('__') and key.endswith('__'):
                 continue
 
+            if not hasattr(obj, key):
+                # obj saved by an older pyNastran; keep this model's default
+                # for attributes added since (e.g., elists)
+                self.log.warning(f'{obj_filename} is missing {key!r}; using the default')
+                continue
             val = getattr(obj, key)
             # print(key)
             # if isinstance(val, types.FunctionType):
