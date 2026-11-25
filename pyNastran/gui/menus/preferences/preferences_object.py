@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 from pyNastran.gui.menus.preferences.preferences import PreferencesWindow
 from pyNastran.gui.gui_objects.settings import (
     Settings, NASTRAN_BOOL_KEYS,
@@ -21,6 +21,32 @@ class PreferencesObject(BaseGui):
         if self._preferences_window_shown:
             self._preferences_window.set_font_size(font_size)
 
+    def get_preferences_data(self) -> dict[str, Any]:
+        """gets the input data for the PreferencesWindow"""
+        camera = self.gui.GetCamera()
+        min_clip, max_clip = camera.GetClippingRange()
+        settings: Settings = self.gui.settings
+        nastran_settings: NastranSettings = settings.nastran_settings
+        data = {
+            'picker_size' : self.gui.element_picker_size,
+            'show_corner_coord' : self.gui.get_corner_axis_visiblity(),
+
+            'min_clip' : min_clip,
+            'max_clip' : max_clip,
+
+            # not saved to the json, so they're not in add_settings_to_dict
+            'nastran_real_modes_to_include': nastran_settings.real_modes_to_include,
+            'nastran_complex_modes_to_include': nastran_settings.complex_modes_to_include,
+
+            #----------------------------------------
+            'clicked_ok' : False,
+            'close' : False,
+        }
+        settings.add_settings_to_dict(data)
+        if hasattr(self.gui, 'get_format_preferences'):
+            data['formats'] = self.gui.get_format_preferences()
+        return data
+
     def set_preferences_menu(self) -> None:
         """
         Opens a dialog box to set:
@@ -32,23 +58,8 @@ class PreferencesObject(BaseGui):
         #if not hasattr(self, 'case_keys'):  # TODO: maybe include...
             #self.log_error('No model has been loaded.')
             #return
-        camera = self.gui.GetCamera()
-        min_clip, max_clip = camera.GetClippingRange()
         settings: Settings = self.gui.settings
-        data = {
-            'picker_size' : self.gui.element_picker_size,
-            'show_corner_coord' : self.gui.get_corner_axis_visiblity(),
-
-            'min_clip' : min_clip,
-            'max_clip' : max_clip,
-
-            #----------------------------------------
-            'clicked_ok' : False,
-            'close' : False,
-        }
-        settings.add_settings_to_dict(data)
-        if hasattr(self.gui, 'get_format_preferences'):
-            data['formats'] = self.gui.get_format_preferences()
+        data = self.get_preferences_data()
 
         if not self._preferences_window_shown:
             self._preferences_window = PreferencesWindow(data, win_parent=self.gui)

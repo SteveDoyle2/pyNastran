@@ -120,11 +120,7 @@ class TestUserFormatsMenu(UsesQApplication):
                 self.assertEqual(fmt in gui.fmt_order, DEV)
             self.assertIn('stl', gui.supported_formats)
 
-            data = {'picker_size': 0.01, 'show_corner_coord': False,
-                    'min_clip': 0.1, 'max_clip': 100.,
-                    'clicked_ok': False, 'close': False}
-            gui.settings.add_settings_to_dict(data)
-            data['formats'] = gui.get_format_preferences()
+            data = gui.preferences_obj.get_preferences_data()
             window = PreferencesWindow(data, win_parent=gui)
             self.assertEqual(list(window.format_checkboxes), gui.all_fmt_order)
             self.assertFalse(window.format_checkboxes['nastran'].isEnabled())

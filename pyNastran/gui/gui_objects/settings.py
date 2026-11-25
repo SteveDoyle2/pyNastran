@@ -1327,7 +1327,7 @@ class Settings:
         color : (float, float, float)
             RGB values as floats
         """
-        self.text_color = color
+        self.corner_text_color = color
         text_actors = self.parent.corner_text_actors
         for text_actor in text_actors.values():
             text_actor.GetTextProperty().SetColor(color)
@@ -1350,7 +1350,7 @@ class Settings:
         text_actors = self.parent.corner_text_actors
         i = len(text_actors) - 1
         dtext_size = corner_text_size + 1
-        self.text_size = corner_text_size
+        self.corner_text_size = corner_text_size
         for text_actor in text_actors.values():
             text_prop = text_actor.GetTextProperty()
             text_prop.SetFontSize(corner_text_size)

@@ -52,6 +52,7 @@ from pyNastran.gui.gui_objects.settings import (
     MAGNIFY_MIN, MAGNIFY_MAX,
     ANNOTATION_SIZE_MIN, ANNOTATION_SIZE_MAX,
     NASTRAN_VERSIONS,
+    CAERO_COLOR, RBE_LINE_COLOR, PLOTEL_COLOR,
 )
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -74,6 +75,41 @@ AREA_UNITS = [f'{unit}^2' for unit in LENGTH_UNITS]
 DISPLAMCENT_UNITS = LENGTH_UNITS
 VELOCITY_UNITS = [f'{unit}/s' for unit in LENGTH_UNITS]
 ACCELERATION_UNITS = [f'{unit}/s^2' for unit in LENGTH_UNITS] + ['g']
+
+# Nastran tab checkboxes: settings key -> (label, tooltip)
+# the checkbox is self.<key>_checkbox and toggles nastran_settings.<key without 'nastran_'>
+NASTRAN_CHECKBOXES: dict[str, tuple[str, str]] = {
+    # geometry
+    'nastran_create_coords': ('Coords', 'Create the coordinate systems'),
+    'nastran_is_element_quality': ('Element Quality', 'Calculate Aspect Ratio, Skew Angle, Max/Min Interior Angle, etc.'),
+    'nastran_is_properties': ('Properties', 'Breakdown each layer of a PCOMP/PSHELL'),
+    'nastran_is_constraints': ('Constraints', 'Create actors for the constraints (SPC, MPC, SUPORT)'),
+    'nastran_is_rbe': ('RBEs', 'Create MPC/RBE2/RBE3 dependent and independent nodes and lines'),
+    'nastran_is_shell_mcids': ('Shell MCIDs', 'Calculate the Material Coordinate Systems for Shells'),
+    'nastran_is_aero': ('Aero', 'Create aero panel (CAERO/SPLINE/SET) visualization'),
+    'nastran_is_bar_axes': ('Bar Axes', 'Create the Bar/Beam element axes'),
+    'nastran_is_3d_bars': ('3D Bars', 'Create 3D Bar/Beam geometry'),
+    'nastran_is_3d_bars_update': ('Update 3D Bars', 'Update the 3D geometry (Bar/Beam cross-sections and CONM2) '
+                                  'when deformations are applied'),
+    'nastran_is_mass_update': ('Update Masses', 'Update the masses when nodes change'),
+    'nastran_is_plotel': ('PLOTELs', 'Create PLOTELs'),
+    # results
+    'nastran_displacement': ('Displacement', ''),
+    'nastran_velocity': ('Velocity', ''),
+    'nastran_acceleration': ('Acceleration', ''),
+    'nastran_eigenvector': ('Eigenvector', ''),
+    'nastran_eigenvector_complex': ('Eigenvector (Complex)', ''),
+    'nastran_spc_force': ('SPC Force', ''),
+    'nastran_mpc_force': ('MPC Force', ''),
+    'nastran_applied_load': ('Applied Load', ''),
+    'nastran_temperature': ('Temperature', ''),
+    'nastran_heat_flux': ('Heat Flux', ''),
+    'nastran_stress': ('Stress', ''),
+    'nastran_strain': ('Strain', ''),
+    'nastran_force': ('Force', ''),
+    'nastran_strain_energy': ('Strain Energy', ''),
+    'nastran_grid_point_force': ('Grid Point Force', ''),
+}
 
 
 class PreferencesWindow(PyDialog):
@@ -182,47 +218,10 @@ class PreferencesWindow(PyDialog):
         #self._shear_moment_torque_line_thickness = data['shear_moment_torque_line_thickness']
 
         self._nastran_version = data['nastran_version']
-        self._nastran_is_element_quality = data['nastran_is_element_quality']
-        self._nastran_is_properties = data['nastran_is_properties']
-        self._nastran_is_3d_bars = data['nastran_is_3d_bars']
-        self._nastran_is_3d_bars_update = data['nastran_is_3d_bars_update']
-        self._nastran_is_mass_update = data['nastran_is_mass_update']
-        self._nastran_is_constraints = data['nastran_is_constraints']
-        self._nastran_is_bar_axes = data['nastran_is_bar_axes']
-        self._nastran_create_coords = data['nastran_create_coords']
-        self._nastran_is_shell_mcids = data['nastran_is_shell_mcids']
-        self._nastran_is_rbe = data['nastran_is_rbe']
-        self._nastran_is_aero = data['nastran_is_aero']
-        self._nastran_is_plotel = data['nastran_is_plotel']
-
-        self._nastran_stress = data['nastran_stress']
-        self._nastran_plate_stress = data['nastran_plate_stress']
-        self._nastran_composite_plate_stress = data['nastran_composite_plate_stress']
-        self._nastran_strain = data['nastran_strain']
-        self._nastran_plate_strain = data['nastran_plate_strain']
-        self._nastran_composite_plate_strain = data['nastran_composite_plate_strain']
-        self._nastran_rod_stress = data['nastran_rod_stress']
-        self._nastran_bar_stress = data['nastran_bar_stress']
-        self._nastran_beam_stress = data['nastran_beam_stress']
-        self._nastran_rod_strain = data['nastran_rod_strain']
-        self._nastran_bar_strain = data['nastran_bar_strain']
-        self._nastran_beam_strain = data['nastran_beam_strain']
-
-        self._nastran_displacement = data['nastran_displacement']
-        self._nastran_velocity = data['nastran_velocity']
-        self._nastran_acceleration = data['nastran_acceleration']
-        self._nastran_eigenvector = data['nastran_eigenvector']
-        self._nastran_eigenvector_complex = data['nastran_eigenvector_complex']
-        self._nastran_temperature = data['nastran_temperature']
-
-        self._nastran_spc_force = data['nastran_spc_force']
-        self._nastran_mpc_force = data['nastran_mpc_force']
-        self._nastran_applied_load = data['nastran_applied_load']
-        self._nastran_heat_flux = data['nastran_heat_flux']
-
-        self._nastran_force = data['nastran_force']
-        self._nastran_grid_point_force = data['nastran_grid_point_force']
-        self._nastran_strain_energy = data['nastran_strain_energy']
+        # {'nastran_displacement': True, ...}
+        self._nastran_bools: dict[str, bool] = {key: data[key] for key in NASTRAN_CHECKBOXES}
+        self._nastran_real_modes_to_include = data.get('nastran_real_modes_to_include')
+        self._nastran_complex_modes_to_include = data.get('nastran_complex_modes_to_include')
 
         # [(fmt, is_enabled, is_enabled_by_default), ...]; empty -> no Formats tab
         self._formats: list[tuple[str, bool, bool]] = data.get('formats', [])
@@ -248,8 +247,8 @@ class PreferencesWindow(PyDialog):
         # Corner Text Color
         self.corner_text_size_label = QLabel('Corner Text Size:')
         self.corner_text_size_edit = QSpinBox(self)
-        self.corner_text_size_edit.setValue(self._default_corner_text_size)
         self.corner_text_size_edit.setRange(CORNER_TEXT_SIZE_MIN, CORNER_TEXT_SIZE_MAX)
+        self.corner_text_size_edit.setValue(self._corner_text_size)
         self.corner_text_size_edit.setToolTip('Sets the lower left corner text size')
         self.corner_text_size_button = QPushButton("Default")
 
@@ -384,7 +383,7 @@ class PreferencesWindow(PyDialog):
         self.coord_scale_edit.setDecimals(3)
         self.coord_scale_edit.setSingleStep(1.0)
         self.coord_scale_edit.setValue(self._coord_scale)
-        self.picker_size_edit.setToolTip('Increase/decrease the coordinate system size')
+        self.coord_scale_edit.setToolTip('Increase/decrease the coordinate system size')
 
         self.coord_text_scale_label = QLabel('Coordinate System Text Scale:')
         self.coord_text_scale_button = QPushButton("Default")
@@ -394,7 +393,7 @@ class PreferencesWindow(PyDialog):
         self.coord_text_scale_edit.setDecimals(3)
         self.coord_text_scale_edit.setSingleStep(2.)
         self.coord_text_scale_edit.setValue(self._coord_text_scale)
-        self.picker_size_edit.setToolTip('Increase/decrease the coordinate system text size')
+        self.coord_text_scale_edit.setToolTip('Increase/decrease the coordinate system text size')
 
         # Show corner coord
         self.corner_coord_label = QLabel('Show Corner Coordinate System:')
@@ -417,120 +416,24 @@ class PreferencesWindow(PyDialog):
         self.nastran_version_pulldown.addItems(NASTRAN_VERSIONS)
         nastran_versions_lower = [version.lower() for version in NASTRAN_VERSIONS]
         iversion = nastran_versions_lower.index(self._nastran_version.lower())
-        self.nastran_version_pulldown.setItemText(iversion, self._nastran_version)
+        self.nastran_version_pulldown.setCurrentIndex(iversion)
 
         self.nastran_real_modes_to_include_label = QLabel('Real Modes')
-        self.nastran_real_modes_to_include_edit = QLineEdit('1:#')
-
+        self.nastran_real_modes_to_include_edit = QLineEdit(
+            modes_to_str(self._nastran_real_modes_to_include))
         self.nastran_complex_modes_to_include_label = QLabel('Complex Modes')
-        self.nastran_complex_modes_to_include_edit = QLineEdit('1:#')
+        self.nastran_complex_modes_to_include_edit = QLineEdit(
+            modes_to_str(self._nastran_complex_modes_to_include))
+        for edit in (self.nastran_real_modes_to_include_edit,
+                     self.nastran_complex_modes_to_include_edit):
+            edit.setToolTip('Modes to load (e.g., "1:10 15"); "1:#" or blank is all')
 
-        self.nastran_is_element_quality_checkbox = QCheckBox('Element Quality')
-        self.nastran_is_element_quality_checkbox.setToolTip('Cacluate Aspect Ratio, Skew Angle, Max/Min Interior Angle, etc.')
-        self.nastran_is_element_quality_checkbox.setChecked(self._nastran_is_element_quality)
-
-        self.nastran_is_properties_checkbox = QCheckBox('Properties')
-        self.nastran_is_properties_checkbox.setToolTip('Breakdown each layer of a PCOMP/PSHELL')
-        self.nastran_is_properties_checkbox.setChecked(self._nastran_is_properties)
-
-        self.nastran_is_3d_bars_checkbox = QCheckBox('3D Bars')
-        self.nastran_is_3d_bars_checkbox.setToolTip('Crete 3D Bar/Beam geometry')
-        self.nastran_is_3d_bars_checkbox.setChecked(self._nastran_is_3d_bars)
-        #self.nastran_is_3d_bars_checkbox.setDisabled(True)
-
-        self.nastran_is_3d_bars_update_checkbox = QCheckBox('Update 3D Bars')
-        self.nastran_is_3d_bars_update_checkbox.setToolTip('Update the 3D geometry (Bar/Beam cross-sections and CONMw) when deformations are applied')
-        self.nastran_is_3d_bars_update_checkbox.setChecked(self._nastran_is_3d_bars_update)
-
-        self.nastran_is_mass_update_checkbox = QCheckBox('Update Masses')
-        self.nastran_is_mass_update_checkbox.setToolTip('Update the masses when nodes change')
-        self.nastran_is_mass_update_checkbox.setChecked(self._nastran_is_mass_update)
-
-        self.nastran_is_constraints_checkbox = QCheckBox('Constraints')
-        self.nastran_is_constraints_checkbox.setToolTip('Create actors for the constraints (SPC, MPC, SUPORT)')
-        self.nastran_is_constraints_checkbox.setChecked(self._nastran_is_constraints)
-
-        self.nastran_is_shell_mcids_checkbox = QCheckBox('Shell MCIDs')
-        self.nastran_is_shell_mcids_checkbox.setToolTip('Calculate the Material Coordinate Systems for Shells')
-        self.nastran_is_shell_mcids_checkbox.setChecked(self._nastran_is_shell_mcids)
-
-        self.nastran_is_rbe_checkbox = QCheckBox('RBEs')
-        self.nastran_is_rbe_checkbox.setToolTip('Create MPC/RBE2/RBE3 dependent and indepdent nodes and lines')
-        self.nastran_is_rbe_checkbox.setChecked(self._nastran_is_rbe)
-
-        self.nastran_is_aero_checkbox = QCheckBox('Aero')
-        self.nastran_is_aero_checkbox.setToolTip('Create aero panel (CAERO/SPLINE/SET) visualization')
-        self.nastran_is_aero_checkbox.setChecked(self._nastran_is_aero)
-
-        self.nastran_is_plotel_checkbox = QCheckBox('PLOTELs')
-        self.nastran_is_plotel_checkbox.setToolTip('Create PLOTELs')
-        self.nastran_is_plotel_checkbox.setChecked(self._nastran_is_plotel)
-
-        self.nastran_create_coords_checkbox = QCheckBox('Coords')
-        self.nastran_create_coords_checkbox.setChecked(self._nastran_create_coords)
-
-        self.nastran_is_bar_axes_checkbox = QCheckBox('Bar Axes')
-        self.nastran_is_bar_axes_checkbox.setChecked(self._nastran_is_bar_axes)
-        #self.nastran_is_bar_axes_checkbox.setDisabled(True)
-
-        if 1:
-            self.nastran_displacement_checkbox = QCheckBox('Displacement')
-            self.nastran_velocity_checkbox = QCheckBox('Velocity')
-            self.nastran_acceleration_checkbox = QCheckBox('Acceleration')
-            self.nastran_eigenvector_checkbox = QCheckBox('Eigenvector')
-            self.nastran_eigenvector_complex_checkbox = QCheckBox('Eigenvector (Complex)')
-            self.nastran_temperature_checkbox = QCheckBox('Temperature')
-            self.nastran_displacement_checkbox.setChecked(self._nastran_displacement)
-            self.nastran_velocity_checkbox.setChecked(self._nastran_velocity)
-            self.nastran_acceleration_checkbox.setChecked(self._nastran_acceleration)
-            self.nastran_eigenvector_checkbox.setChecked(self._nastran_eigenvector)
-            self.nastran_eigenvector_complex_checkbox.setChecked(self._nastran_eigenvector_complex)
-            self.nastran_temperature_checkbox.setChecked(self._nastran_temperature)
-
-            self.nastran_spc_force_checkbox = QCheckBox('SPC Force')
-            self.nastran_mpc_force_checkbox = QCheckBox('MPC Force')
-            self.nastran_applied_load_checkbox = QCheckBox('Applied Load')
-            self.nastran_heat_flux_checkbox = QCheckBox('Heat Flux')
-            self.nastran_spc_force_checkbox.setChecked(self._nastran_spc_force)
-            self.nastran_mpc_force_checkbox.setChecked(self._nastran_mpc_force)
-            self.nastran_applied_load_checkbox.setChecked(self._nastran_applied_load)
-            self.nastran_heat_flux_checkbox.setChecked(self._nastran_heat_flux)
-
-            self.nastran_force_checkbox = QCheckBox('Force')
-            self.nastran_grid_point_force_checkbox = QCheckBox('Grid Point Force')
-            self.nastran_strain_energy_checkbox = QCheckBox('Strain Energy')
-
-            self.nastran_force_checkbox.setChecked(self._nastran_force)
-            self.nastran_grid_point_force_checkbox.setChecked(self._nastran_grid_point_force)
-            self.nastran_strain_energy_checkbox.setChecked(self._nastran_strain_energy)
-
-            self.nastran_stress_checkbox = QCheckBox('Stress')
-            #self.nastran_plate_stress_checkbox = QCheckBox('Plate Stress')
-            #self.nastran_composite_plate_stress_checkbox = QCheckBox('Composite Plate Stress')
-            #self.nastran_rod_stress_checkbox = QCheckBox('Rod Stress')
-            #self.nastran_bar_stress_checkbox = QCheckBox('Bar Stress')
-            #self.nastran_beam_stress_checkbox = QCheckBox('Beam Stress')
-
-            self.nastran_stress_checkbox.setChecked(self._nastran_stress)
-            #self.nastran_plate_stress_checkbox.setChecked(self._nastran_plate_stress)
-            #self.nastran_composite_plate_stress_checkbox.setChecked(self._nastran_composite_plate_stress)
-            #self.nastran_rod_stress_checkbox.setChecked(self._nastran_rod_stress)
-            #self.nastran_bar_stress_checkbox.setChecked(self._nastran_bar_stress)
-            #self.nastran_beam_stress_checkbox.setChecked(self._nastran_beam_stress)
-
-            self.nastran_strain_checkbox = QCheckBox('Strain')
-            #self.nastran_plate_strain_checkbox = QCheckBox('Plate Strain')
-            #self.nastran_composite_plate_strain_checkbox = QCheckBox('Composite Plate Strain')
-            #self.nastran_rod_strain_checkbox = QCheckBox('Rod Strain')
-            #self.nastran_bar_strain_checkbox = QCheckBox('Bar Strain')
-            #self.nastran_beam_strain_checkbox = QCheckBox('Beam Strain')
-
-            self.nastran_strain_checkbox.setChecked(self._nastran_strain)
-            #self.nastran_plate_strain_checkbox.setChecked(self._nastran_plate_strain)
-            #self.nastran_composite_plate_strain_checkbox.setChecked(self._nastran_composite_plate_strain)
-            #self.nastran_rod_strain_checkbox.setChecked(self._nastran_rod_strain)
-            #self.nastran_bar_strain_checkbox.setChecked(self._nastran_bar_strain)
-            #self.nastran_beam_strain_checkbox.setChecked(self._nastran_beam_strain)
+        for key, (label, tooltip) in NASTRAN_CHECKBOXES.items():
+            checkbox = QCheckBox(label)
+            if tooltip:
+                checkbox.setToolTip(tooltip)
+            checkbox.setChecked(self._nastran_bools[key])
+            setattr(self, f'{key}_checkbox', checkbox)
 
         #-----------------------------------------------------------------------
         # colors
@@ -1095,39 +998,10 @@ class PreferencesWindow(PyDialog):
     def _set_nastran_connections(self):
         # format-specific
         self.nastran_version_pulldown.currentIndexChanged.connect(self.on_nastran_version)
-        self.nastran_is_element_quality_checkbox.clicked.connect(partial(on_nastran, self, 'is_element_quality'))
-        self.nastran_is_properties_checkbox.clicked.connect(partial(on_nastran, self, 'is_properties'))
-        self.nastran_is_3d_bars_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars'))
-        self.nastran_is_3d_bars_update_checkbox.clicked.connect(partial(on_nastran, self, 'is_3d_bars_update'))
-        self.nastran_is_mass_update_checkbox.clicked.connect(partial(on_nastran, self, 'is_mass_update'))
-
-        self.nastran_is_bar_axes_checkbox.clicked.connect(partial(on_nastran, self, 'is_bar_axes'))
-        self.nastran_create_coords_checkbox.clicked.connect(partial(on_nastran, self, 'create_coords'))
-        self.nastran_is_shell_mcids_checkbox.clicked.connect(partial(on_nastran, self, 'is_shell_mcids'))
-        self.nastran_is_aero_checkbox.clicked.connect(partial(on_nastran, self, 'is_aero'))
-        self.nastran_is_plotel_checkbox.clicked.connect(partial(on_nastran, self, 'is_plotel'))
-        self.nastran_is_rbe_checkbox.clicked.connect(partial(on_nastran, self, 'is_rbe'))
-        self.nastran_is_constraints_checkbox.clicked.connect(partial(on_nastran, self, 'is_constraints'))
-
-        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids)
-        #self.nastran_is_shell_mcid_checkbox.clicked.connect(self.on_nastran_is_shell_mcids2)
-
-        self.nastran_displacement_checkbox.clicked.connect(partial(on_nastran, self, 'displacement'))
-        self.nastran_velocity_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
-        self.nastran_acceleration_checkbox.clicked.connect(partial(on_nastran, self, 'acceleration'))
-        self.nastran_eigenvector_checkbox.clicked.connect(partial(on_nastran, self, 'eigenvector'))
-        self.nastran_eigenvector_complex_checkbox.clicked.connect(partial(on_nastran, self, 'eigenvector_complex'))
-        self.nastran_temperature_checkbox.clicked.connect(partial(on_nastran, self, 'temperature'))
-
-        self.nastran_spc_force_checkbox.clicked.connect(partial(on_nastran, self, 'spc_force'))
-        self.nastran_mpc_force_checkbox.clicked.connect(partial(on_nastran, self, 'mpc_force'))
-        self.nastran_applied_load_checkbox.clicked.connect(partial(on_nastran, self, 'applied_load'))
-        self.nastran_grid_point_force_checkbox.clicked.connect(partial(on_nastran, self, 'grid_point_force'))
-
-        self.nastran_force_checkbox.clicked.connect(partial(on_nastran, self, 'force'))
-        self.nastran_strain_checkbox.clicked.connect(partial(on_nastran, self, 'strain'))
-        self.nastran_stress_checkbox.clicked.connect(partial(on_nastran, self, 'stress'))
-        self.nastran_strain_energy_checkbox.clicked.connect(partial(on_nastran, self, 'strain_energy'))
+        for key in NASTRAN_CHECKBOXES:
+            # nastran_displacement -> displacement
+            checkbox: QCheckBox = getattr(self, f'{key}_checkbox')
+            checkbox.clicked.connect(partial(on_nastran, self, key.split('_', 1)[1]))
 
         # --------------------------
         # colors
@@ -1190,7 +1064,8 @@ class PreferencesWindow(PyDialog):
 
     def on_reset_defaults(self):
         """reset all of the preferences to their defaults"""
-        self.on_font(FONT_SIZE)
+        # triggers on_font
+        self.font_size_edit.setValue(FONT_SIZE)
         self.on_default_annotation_size()
         self.on_default_clipping_max()
         self.on_default_clipping_min()
@@ -1234,22 +1109,32 @@ class PreferencesWindow(PyDialog):
         for fmt, checkbox in self.format_checkboxes.items():
             checkbox.setChecked(self._format_defaults[fmt] or fmt == 'nastran')
 
-        for key in NASTRAN_BOOL_KEYS:
-            checkbox_name = f'{key}_checkbox'
-            if hasattr(self, checkbox_name):
-                checkbox = getattr(self, checkbox_name)
-                checkbox.setChecked(True)
+        # all the nastran flags default to True
+        for key in NASTRAN_CHECKBOXES:
+            getattr(self, f'{key}_checkbox').setChecked(True)
+        self.nastran_version_pulldown.setCurrentIndex(0)  # Guess
+        self.nastran_real_modes_to_include_edit.setText(modes_to_str(None))
+        self.nastran_complex_modes_to_include_edit.setText(modes_to_str(None))
+        self.caero_color_float, self.caero_color_int = check_color(CAERO_COLOR)
+        self.rbe_line_color_float, self.rbe_line_color_int = check_color(RBE_LINE_COLOR)
+        self.plotel_color_float, self.plotel_color_int = check_color(PLOTEL_COLOR)
+        set_pushbutton_color(self.caero_color_edit, self.caero_color_int)
+        set_pushbutton_color(self.rbe_line_color_edit, self.rbe_line_color_int)
+        set_pushbutton_color(self.plotel_color_edit, self.plotel_color_int)
 
         if self.win_parent is not None:
             settings: Settings = self.settings
+            # these aren't on the preferences menu, so keep the current values
             is_min = settings.is_min_visible
             is_max = settings.is_max_visible
             is_edges_black = settings.is_edges_black
             is_edges_visible = settings.is_edges_visible
             settings.reset_settings(resize=False, reset_dim_max=False)
+            settings.is_min_visible = is_min
+            settings.is_max_visible = is_max
 
-            self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
-            self.win_parent.on_set_edge_visibility(is_edges_black, render=False)
+            self.win_parent.on_set_edge_visibility(is_edges_visible, render=False)
+            self.win_parent.on_set_edge_color(is_edges_black, render=False)
 
             settings.set_highlight_color(self.highlight_color_float, render=False)
             settings.set_corner_text_color(self.corner_text_color_float, render=False)
@@ -1584,7 +1469,7 @@ class PreferencesWindow(PyDialog):
         cart3d_fluent_remove, flag6 = check_tuple_ints(self.cart3d_fluent_regions_remove)
         is_regions = len(cart3d_fluent_include) and len(cart3d_fluent_remove)
         if is_regions and ([flag5, flag6]):
-            # error
+            # warn: include and remove are both defined (this doesn't fail validation)
             self.cart3d_fluent_regions_include.setStyleSheet(QLINEEDIT_ERROR)
             self.cart3d_fluent_regions_remove.setStyleSheet(QLINEEDIT_ERROR)
 
@@ -1703,17 +1588,24 @@ def set_pushbutton_color(color_edit: QPushButtonColor,
         "}")
 
 
-def check_float(cell: QDoubleSpinBox) -> tuple[str, bool]:
-    text = cell.text()
-    value = float_locale(text)
+def check_float(cell: QDoubleSpinBox | QLineEdit) -> tuple[Optional[float], bool]:
+    """reads a float; an invalid value (e.g., a blank QLineEdit) flags the cell"""
+    try:
+        value = float_locale(cell.text())
+    except ValueError:
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return None, False
+    cell.setStyleSheet(QLINEEDIT_GOOD)
     return value, True
 
 
-def check_float_positive(cell: QDoubleSpinBox) -> tuple[str, bool]:
-    text = cell.text()
-    value = float_locale(text)
-    assert value > 0, value
-    return value, True
+def check_float_positive(cell: QDoubleSpinBox | QLineEdit) -> tuple[Optional[float], bool]:
+    """reads a float > 0; an invalid value flags the cell"""
+    value, is_passed = check_float(cell)
+    if is_passed and value <= 0:
+        cell.setStyleSheet(QLINEEDIT_ERROR)
+        return None, False
+    return value, is_passed
 
 
 def check_label_float(cell) -> tuple[Optional[float], bool]:
@@ -1764,6 +1656,13 @@ def check_tuple_ints(cell: QLineEdit) -> tuple[tuple[int, ...], bool]:
     except ValueError:
         cell.setStyleSheet(QLINEEDIT_ERROR)
         return tuple(), False
+
+
+def modes_to_str(modes) -> str:
+    """(1, 2, 3, 5) -> '1:3 5'; None/() -> '1:#' (all modes)"""
+    if modes is None or len(modes) == 0:
+        return '1:#'
+    return write_patran_syntax(np.asarray(modes, dtype='int32')).strip()
 
 
 def on_nastran(self: PreferencesWindow,
