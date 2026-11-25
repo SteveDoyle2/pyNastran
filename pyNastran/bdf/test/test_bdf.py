@@ -2765,7 +2765,7 @@ def compute(cards1: dict[str, int],
             print(msg)
 
 
-def test_bdf_argparse(argv=None):
+def parse_args(argv=None):
     """test_bdf argument parser"""
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
@@ -3167,7 +3167,7 @@ def main(argv=None):
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    data = test_bdf_argparse(argv)
+    data = parse_args(argv)
     for key, value in sorted(data.items()):
         print("%-12s = %r" % (key.strip('--'), value))
 
@@ -3331,6 +3331,13 @@ def main(argv=None):
             stop_on_failure=False,
         )
     print("total time:  %.2f sec" % (time.time() - time0))
+
+
+# command-line / helper functions, not pytest tests (pytest collects any
+# test_* name in a test_*.py file, including `main as test_op2` imports)
+main.__test__ = False
+test_bdf.__test__ = False
+test_get_cards_by_card_types.__test__ = False
 
 
 if __name__ == '__main__':  # pragma: no cover

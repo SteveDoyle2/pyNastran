@@ -700,5 +700,10 @@ def main(argv=None, show_args: bool=True) -> None:
         )
     print("dt = %f" % (time.time() - time0))
 
+# command-line / helper functions, not pytest tests (pytest collects any
+# test_* name in a test_*.py file, including `main as test_op2` imports)
+main.__test__ = False
+
+
 if __name__ == '__main__':  # pragma: no cover
     main(show_args=True)

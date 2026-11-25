@@ -7,6 +7,7 @@ from unittest import mock
 
 from cpylog import SimpleLogger
 import pyNastran
+from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
 from pyNastran.gui import user_formats as user_formats_module
 from pyNastran.gui.user_formats import (
     strip_json_comments, read_user_formats, write_user_formats,
@@ -110,7 +111,6 @@ class TestUserFormats(unittest.TestCase):
                        'class': 'Cart3dIO', 'extensions': []},
         }
         class_map = load_user_format_classes(user_formats, self.log)
-        from pyNastran.converters.cart3d.cart3d_io import Cart3dIO
         self.assertIs(class_map['cart3d'], Cart3dIO)
 
     def test_arg_handling(self) -> None:

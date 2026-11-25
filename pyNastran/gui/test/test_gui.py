@@ -287,5 +287,10 @@ def main():
     #test_gui.load_nastran_results(op2_filename, None)
 
 
+# command-line / helper functions, not pytest tests (pytest collects any
+# test_* name in a test_*.py file, including `main as test_op2` imports)
+main.__test__ = False
+
+
 if __name__ == '__main__':   # pragma: no cover
     main()

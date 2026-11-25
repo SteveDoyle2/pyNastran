@@ -4,7 +4,7 @@ import tempfile
 from pathlib import Path
 from io import StringIO
 
-from cpylog import SimpleLogger
+from cpylog import SimpleLogger, capture_log
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy
@@ -486,6 +486,39 @@ class TestReadWrite(unittest.TestCase):
             lines = bdf_file.readlines()
             compare_lines(self, lines, lines_expected, has_endline=False)
 
+
+    def test_encoding_read_header(self):
+        """read_bdf(encoding='latin1') reads non-utf-8 comment bytes.
+
+        Tested: a comment with 0x91/0x92 (Word quotes) and 0x81 (undefined in
+        cp1252, invalid in utf-8, so the platform default fails on Windows and
+        Linux):
+        - read_bdf(encoding='latin1'): the GRID is read
+        - the header parse with encoding='utf-8' does not raise: the flag
+          before the bad line is parsed (punch=True), the bad line is logged
+          once as a warning, and the header read stops there
+        """
+        log = SimpleLogger(level='warning', encoding='utf-8')
+        comment = b"$ ALTER \x91IF (DDRMM >=-1)\x92 \x81\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            bdf_filename = Path(tmp) / 'latin1.bdf'
+            bdf_filename.write_bytes(
+                comment + b"CEND\nBEGIN BULK\nGRID,1,,1.0,2.0,3.0\nENDDATA\n")
+            model = read_bdf(bdf_filename, xref=False, encoding='latin1', log=log)
+            self.assertEqual(list(model.nodes), [1])
+
+            bdf_filename.write_bytes(
+                b"$pyNastran: punch=True\n" + comment +
+                b"$pyNastran: dumplines=True\nGRID,1,,1.0,2.0,3.0\n")
+            log2, msgs = capture_log(level='warning')
+            model = BDF(log=log2)
+            model._encoding = 'utf-8'
+            model.punch = False
+            model._parse_primary_file_header(bdf_filename)
+        self.assertTrue(model.punch)
+        self.assertFalse(model.dumplines)  # after the bad (non-flag) line
+        self.assertEqual(len(msgs), 1, msgs)
+        self.assertIn('line 2', msgs[0])
 
     def test_include_stop(self):
         log = SimpleLogger(level='info', encoding='utf-8')

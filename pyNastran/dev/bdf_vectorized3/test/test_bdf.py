@@ -2753,7 +2753,7 @@ def compare(fem1: BDFs, fem2: BDFs, xref=True, check=True, print_stats=True, qui
     #compute(fem1.params, fem2.params)
 
 
-def test_bdf_argparse(argv=None):
+def parse_args(argv=None):
     """test_bdf argument parser"""
     if argv is None:
         argv = sys.argv[1:]  # same as argparse
@@ -3030,7 +3030,7 @@ def main(argv=None, show_args: bool=True) -> None:
     if argv is None:  # pragma: no cover
         argv = sys.argv
 
-    data = test_bdf_argparse(argv)
+    data = parse_args(argv)
     if show_args:
         for key, value in sorted(data.items()):
             print("%-12s = %r" % (key.strip('--'), value))
@@ -3154,6 +3154,10 @@ def main(argv=None, show_args: bool=True) -> None:
             stop_on_failure=False,
         )
     print("total time:  %.2f sec" % (time.time() - time0))
+
+
+# command line, not a pytest test (imported as `main as test_bdf`)
+main.__test__ = False
 
 
 if __name__ == '__main__':  # pragma: no cover

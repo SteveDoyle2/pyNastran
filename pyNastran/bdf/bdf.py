@@ -4582,28 +4582,18 @@ class BDF(BDFMethods, GetCard, AddCards, WriteMesh, UnXrefMesh):
 
         """
         if isinstance(bdf_filename, (str, PurePath)):
-            try:
-                with open(bdf_filename, 'r') as bdf_file:
-                    lines = bdf_file.readlines()
-            except UnicodeDecodeError:
-                with open(bdf_filename, 'r', errors='replace') as bdf_file:
-                    line = 'temp'
-                    lines = []
-                    while line:
-                        line = bdf_file.readline()
-                        lines.append(line)
-                        try:
-                            # try to force a crash
-                            unused_bytes_line = line.encode('ascii')  # TODO: use the encoding
-                        except UnicodeEncodeError:
-                            break
-                    n = 20
-                    i = 0
-                    i0 = len(lines) - n
-                    for i, line in enumerate(lines[-n:-1]):
-                        self.log.debug(f'Line {i0+i}: {line.strip()!r}')
-                    self.log.error(f'Line {i0+i+1}: {lines[-1].strip()!r}')
-                    raise
+            lines = []
+            with open(bdf_filename, 'r', encoding=self._encoding,
+                      errors='replace') as bdf_file:
+                for line in bdf_file:
+                    lines.append(line)
+                    if '�' in line:
+                        self.log.warning(
+                            f'{bdf_filename} line {len(lines)}: characters '
+                            f'invalid in encoding={self._encoding!r} (shown as '
+                            f'�): {line.strip()!r}')
+                    if not line.startswith('$') or not _parse_pynastran_header(line)[0]:
+                        break  # the end of the header
         else:
             # StringIO
             if hasattr(bdf_filename, 'read') and hasattr(bdf_filename, 'write'):

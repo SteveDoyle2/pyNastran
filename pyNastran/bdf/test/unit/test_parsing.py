@@ -3,7 +3,7 @@ import os
 import unittest
 
 #from pyNastran.gui.arg_handling import get_inputs
-from pyNastran.bdf.test.test_bdf import test_bdf_argparse
+from pyNastran.bdf.test.test_bdf import parse_args
 
 
 class TestBDFParsing(unittest.TestCase):
@@ -16,53 +16,53 @@ class TestBDFParsing(unittest.TestCase):
             pass
 
         args = ['test_bdf', 'fem.bdf']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
         #print(out)
 
         #args = ['test_bdf', 'fem.bdf', 'fem2.bdf']
-        #out = test_bdf_argparse(argv=args)
+        #out = parse_args(argv=args)
         #assert isinstance(out, str), out # error
 
         args = ['test_bdf', 'fem.bdf', '-x']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--xref']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--safe']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         #args = ['test_bdf', 'fem.bdf', '--safe', '--xref']
-        #out = test_bdf_argparse(argv=args)
+        #out = parse_args(argv=args)
         #assert isinstance(out, str), out # error
 
         args = ['test_bdf', 'fem.bdf', '-xc']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
         #print(out)
 
         args = ['test_bdf', 'fem.bdf', '-xcd', '--skip_loads']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '-xcl', '--skip_loads']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--encoding', 'latin1']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '-e', '100']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--dumplines']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
         args = ['test_bdf', 'fem.bdf', '--dictsort']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
 
         args = ['test_bdf', 'fem.bdf', '--profile']
-        out = test_bdf_argparse(argv=args)
+        out = parse_args(argv=args)
         str(out)
 
         #args = ['test_bdf', '-h']
-        #out = test_bdf_argparse(argv=args)
+        #out = parse_args(argv=args)
         #print(out)
         os.remove('fem.bdf')
 
