@@ -524,7 +524,10 @@ def _load_format_enabled(settings: QSettings,
     """loads the {format: is_enabled} dictionary; bad values are skipped"""
     if 'format_enabled' not in setting_keys:
         return {}
-    value = settings.value('format_enabled', default={})
+    try:
+        value = settings.value('format_enabled', {})
+    except (TypeError, AttributeError):
+        return {}
     if not isinstance(value, dict):
         return {}
     return {str(key): value_i for key, value_i in value.items()
@@ -931,7 +934,7 @@ class Settings:
         #if 'recent_files' in setting_keys:
         recent_files_og = copy.deepcopy(self.recent_files)
         try:
-            recent_files = settings.value("recent_files", default=recent_files_og)
+            recent_files = settings.value("recent_files", recent_files_og)
         except (TypeError, AttributeError):
             recent_files = recent_files_og
 

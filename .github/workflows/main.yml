@@ -35,7 +35,8 @@ jobs:
           - {python-version: '3.11', mode: gui, extras: 'gui_pyside6,dev,ci', qt-api: pyside6}
           - {python-version: '3.12', mode: gui, extras: 'gui_pyqt6,dev,ci', qt-api: pyqt6}
           - {python-version: '3.12', mode: gui, extras: 'gui_pyside6,dev,ci', qt-api: pyside6}
-          - {python-version: '3.14', mode: gui, extras: 'gui_pyqt5,dev,ci', qt-api: pyqt5}
+          - {python-version: '3.13', mode: gui, extras: 'gui_pyqt6,dev,ci', qt-api: pyqt6}
+          - {python-version: '3.13', mode: gui, extras: 'gui_pyside6,dev,ci', qt-api: pyside6}
           - {python-version: '3.14', mode: gui, extras: 'gui_pyqt6,dev,ci', qt-api: pyqt6}
           - {python-version: '3.14', mode: gui, extras: 'gui_pyside6,dev,ci', qt-api: pyside6}
 
