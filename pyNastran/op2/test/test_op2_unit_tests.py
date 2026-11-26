@@ -1979,6 +1979,8 @@ class TestOP2Main(Tester):
         os.remove(op2_filename_m1_out)
         os.remove(op2_filename_m2_out)
 
+    @unittest.skipIf(not (MODEL_PATH / 'beam_modes' / 'beam_modes_rscon.op2').exists(),
+                     'beam_modes_rscon.op2 not found')
     def test_beam_modes_rscon(self):
         """tests the constraint/attachment mode tables (RA*CONS, RA*EATC)
 

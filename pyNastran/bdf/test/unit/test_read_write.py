@@ -4,7 +4,15 @@ import tempfile
 from pathlib import Path
 from io import StringIO
 
-from cpylog import SimpleLogger, capture_log
+from cpylog import SimpleLogger
+try:
+    from cpylog import capture_log
+except ImportError:
+    def capture_log(level: str = 'info') -> tuple[SimpleLogger, list[str]]:
+        msgs = []
+        log = SimpleLogger(level=level,
+                           log_func=lambda typ, filename, lineno, msg: msgs.append(msg))
+        return log, msgs
 import pyNastran
 from pyNastran.bdf.bdf import BDF, read_bdf
 from pyNastran.bdf.bdf_interface.pybdf import BDFInputPy
