@@ -31,6 +31,8 @@ _REMOVED_LINES = [
     '$SETS', '$CONTACT', '$REJECTS', '$REJECT_LINES',
     '$PROPERTIES_MASS', '$MASSES',
 ]
+# matrix data cards have variable-length rows; the 10-field line rule does not apply
+_DIRECT_MATRIX_CARDS = {'DMI', 'DMIG', 'DMIAX', 'DMIJ', 'DMIJI', 'DMIK', 'DTI'}
 EXPECTED_HEADER_KEYS_CHECK = [
     'version', 'encoding', 'nnodes', 'nelements',
     'punch', 'dumplines', 'is_superelements',  # booleans
@@ -427,6 +429,30 @@ def _strip_continuation_marker(new_fields: list[str]) -> None:
     new_fields[-1] = ''
 
 
+def _validate_free_field_line(card_name: str, line: str) -> None:
+    """Raises CardParseSyntaxError if a free-field line exceeds the 10-field
+    line grammar (the 10th field is the continuation-marker slot)."""
+    if card_name in _DIRECT_MATRIX_CARDS:
+        return
+    tokens = line.rstrip(',').split(',')
+    if len(tokens) > 10:
+        msg = (
+            f'card_name={card_name!r}\n'
+            f'{len(tokens)} free-field fields were found on one line; '
+            f'a free-field line has at most 10 fields, the 10th being the continuation marker\n'
+            f'line={line!r}')
+        raise CardParseSyntaxError(msg)
+    if len(tokens) == 10:
+        field10 = tokens[9].strip()
+        if field10 and field10[0] not in '+*':
+            msg = (
+                f'card_name={card_name!r}\n'
+                f'field 10 holds {field10!r}; field 10 is reserved for the '
+                f'continuation marker and cannot hold data\n'
+                f'line={line!r}')
+            raise CardParseSyntaxError(msg)
+
+
 def _to_fields_standard(card_lines: list[str], card_name: str) -> list[str]:
     fields: list[str] = []
     # first line
@@ -450,10 +476,12 @@ def _to_fields_standard(card_lines: list[str], card_name: str) -> list[str]:
         fields += new_fields
     else:  # small field
         if ',' in line:  # csv
+            _validate_free_field_line(card_name, line)
             new_fields = line.split(',')[:9]
             for unused_i in range(9 - len(new_fields)):
                 new_fields.append('')
             assert len(new_fields) == 9, new_fields
+            _strip_continuation_marker(new_fields)
         else:  # standard
             new_fields = [line[0:8], line[8:16], line[16:24], line[24:32],
                           line[32:40], line[40:48], line[48:56], line[56:64],
@@ -478,9 +506,11 @@ def _to_fields_standard(card_lines: list[str], card_name: str) -> list[str]:
                 new_fields = [line[8:24], line[24:40], line[40:56], line[56:72]]
         else:  # small field
             if ',' in line:  # csv
+                _validate_free_field_line(card_name, line)
                 new_fields = line.split(',')[1:9]
                 for unused_i in range(8 - len(new_fields)):
                     new_fields.append('')
+                _strip_continuation_marker(new_fields)
             else:  # standard
                 new_fields = [line[8:16], line[16:24], line[24:32],
                               line[32:40], line[40:48], line[48:56],
